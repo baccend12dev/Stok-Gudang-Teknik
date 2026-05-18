@@ -1,0 +1,16 @@
+services:
+  app:
+    container_name: teknik-stokgudang
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - .:/app
+      - /app/vendor
+    networks:
+      - laravel-network
+
+networks:
+  laravel-network:
+    external: true

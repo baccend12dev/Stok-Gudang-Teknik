@@ -1,0 +1,3 @@
+.table td.text-end, .table th.text-end { text-align: right; }
+.badge-reorder { background:#dc3545; } /* merah */
+.badge-ok { background:#198754; }      /* hijau */
