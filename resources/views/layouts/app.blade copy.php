@@ -13,23 +13,21 @@
     <link href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
     
-    {{-- Google Font (Roboto Flex & JetBrains Mono) --}}
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700;8..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    {{-- Google Font Modern (Inter) --}}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #2d3436;       /* Deep Charcoal */
-            --primary-dark: #181f21;  /* Primary dark */
-            --sidebar-from: #2d3436;  /* Gradasi Atas */
-            --sidebar-to: #181f21;    /* Gradasi Bawah */
-            --text-muted: #747879;    /* Outline / muted */
-            --bg-body: #fcf9f8;       /* Surface Background */
-            --warning: #ff9f43;       /* Industrial Orange */
-            --success: #27ae60;       /* Forest Green */
+            --primary: #3b82f6;       /* Biru Terang Modern */
+            --primary-dark: #2563eb;  /* Biru Gelap */
+            --sidebar-from: #0f172a;  /* Gradasi Atas */
+            --sidebar-to: #1e293b;    /* Gradasi Bawah */
+            --text-muted: #94a3b8;
+            --bg-body: #f3f4f6;       /* Abu Sangat Muda */
         }
 
         body {
-            font-family: 'Roboto Flex', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
             overflow-x: hidden;
             margin: 0; padding: 0;
@@ -79,10 +77,10 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .sidebar-brand i { 
-            color: var(--warning); 
+            color: var(--primary); 
             margin-right: 12px; 
             font-size: 22px;
-            text-shadow: 0 0 15px rgba(255, 159, 67, 0.4);
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
         }
 
         /* Sidebar Menu */
@@ -127,17 +125,17 @@
         }
         .sidebar-nav li a:hover i {
             transform: scale(1.15);
-            color: var(--warning);
+            color: #60a5fa;
         }
 
         /* Active State */
         .sidebar-nav li.active a {
-            background: linear-gradient(90deg, rgba(255, 159, 67, 0.15) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, transparent 100%);
             color: #fff;
-            border-left-color: var(--warning);
+            border-left-color: var(--primary);
             font-weight: 600;
         }
-        .sidebar-nav li.active a i { color: var(--warning); }
+        .sidebar-nav li.active a i { color: var(--primary); }
 
         /* Logic Toggle */
         #wrapper.toggled #sidebar-wrapper { width: 260px; }
@@ -171,44 +169,44 @@
         /* === HELP BUTTON STYLING (FIXED HOVER/FOCUS STATE) === */
         .btn-help-nav {
             display: flex; align-items: center; gap: 8px;
-            background: #f1f3f4; color: var(--primary); /* Default: Gray */
+            background: #eff6ff; color: var(--primary); /* Default: Biru Muda */
             font-weight: 700; font-size: 13px;
-            padding: 8px 16px; border-radius: 4px;
+            padding: 8px 16px; border-radius: 99px;
             text-decoration: none !important;
             cursor: pointer;
             transition: all 0.2s ease; margin-right: 20px;
-            border: 1px solid #dfe6e9;
+            border: 1px solid #dbeafe;
             outline: none; /* Hapus outline browser */
         }
 
-        /* HANYA berubah jadi Gelap saat HOVER atau saat di-KLIK (Active) */
+        /* HANYA berubah jadi Biru Tua saat HOVER atau saat di-KLIK (Active) */
         .btn-help-nav:hover, 
         .btn-help-nav:active { 
             background: var(--primary); 
             color: #fff; 
             border-color: var(--primary); 
             transform: translateY(-1px); 
-            box-shadow: 0 4px 12px rgba(45, 52, 54, 0.25);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
             text-decoration: none !important;
         }
 
-        /* FIX: Saat Focus (lepas klik/modal close), KEMBALI ke style DEFAULT */
+        /* FIX: Saat Focus (lepas klik/modal close), KEMBALI ke style DEFAULT (Biru Muda) */
         .btn-help-nav:focus {
-            background: #f1f3f4;
+            background: #eff6ff; /* Paksa balik ke Biru Muda */
             color: var(--primary);
-            border-color: #dfe6e9;
+            border-color: #dbeafe;
             text-decoration: none !important;
             outline: none;
-            box-shadow: none; 
+            box-shadow: none; /* Hapus shadow sisa klik */
             transform: none;
         }
 
-        /* Exception: Jika user masih Hover sambil Focus */
+        /* Exception: Jika user masih Hover sambil Focus, tetap Biru Tua */
         .btn-help-nav:focus:hover {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(45, 52, 54, 0.25);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
         }
 
         .user-info {
@@ -257,19 +255,19 @@
         .panel-heading { background: #fff !important; border-bottom: 1px solid #f1f5f9; padding: 15px 20px; border-radius: 10px 10px 0 0; font-weight: 700; }
         
         /* SweetAlert Custom Font */
-        .swal2-popup { font-family: 'Roboto Flex', sans-serif; border-radius: 4px; }
+        .swal2-popup { font-family: 'Inter', sans-serif; border-radius: 15px; }
 
         /* === HELP MODAL STYLING (OVERKILL UI) === */
-        .modal-help-content { border-radius: 4px; overflow: hidden; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2); font-family: 'Roboto Flex', sans-serif; }
-        .modal-help-header { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); padding: 25px 30px; border: none; position: relative; }
+        .modal-help-content { border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2); font-family: 'Inter', sans-serif; }
+        .modal-help-header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 25px 30px; border: none; position: relative; }
         .modal-help-title { color: #fff; font-weight: 800; font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px; }
         .modal-help-close { position: absolute; top: 20px; right: 20px; color: rgba(255,255,255,0.6); font-size: 24px; cursor: pointer; transition: 0.2s; }
         .modal-help-close:hover { color: #fff; transform: rotate(90deg); }
         
-        .help-tabs { display: flex; background: #f1f5f9; padding: 6px; border-radius: 4px; margin: 25px 30px 0; gap: 6px; }
-        .help-tab-link { flex: 1; text-align: center; padding: 10px; border-radius: 4px; font-weight: 700; font-size: 13px; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .help-tab-link:hover { background: rgba(255,255,255,0.6); color: var(--primary); }
-        .help-tab-link.active { background: #fff; color: var(--primary-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .help-tabs { display: flex; background: #f1f5f9; padding: 6px; border-radius: 12px; margin: 25px 30px 0; gap: 6px; }
+        .help-tab-link { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .help-tab-link:hover { background: rgba(255,255,255,0.6); color: #3b82f6; }
+        .help-tab-link.active { background: #fff; color: #2563eb; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
         .help-body { padding: 30px; min-height: 300px; max-height: 70vh; overflow-y: auto; }
         .help-section { display: none; animation: fadeIn 0.3s ease; }

@@ -18,7 +18,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: url('https://images.unsplash.com/photo-1586528116311-ad8ed3c84a0c?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+            background: url('{{ asset("img/bg-login.jpg") }}') center/cover no-repeat;
             position: relative;
         }
         .login-wrapper::before {
@@ -244,11 +244,11 @@
             
             <div class="form-group">
                 <div class="label-row">
-                    <label for="email">USERNAME / NIP</label>
+                    <label for="email">EMAIL</label>
                 </div>
                 <div class="input-wrapper">
                     <i class="fa-regular fa-user input-icon"></i>
-                    <input type="text" id="email" name="email" class="form-control" placeholder="Contoh: 1099238" value="{{ old('email') }}" required autofocus>
+                    <input type="text" id="email" name="email" class="form-control" placeholder="email@ottopharm.com" value="{{ old('email') }}" required autofocus>
                 </div>
                 @if ($errors->has('email'))
                     <span class="error-message">{{ $errors->first('email') }}</span>
