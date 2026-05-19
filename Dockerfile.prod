@@ -1,0 +1,29 @@
+# Gunakan image PHP 5.6 dengan Apache dari webdevops
+FROM webdevops/php-apache:5.6
+
+# Set environment agar production siap pakai
+ENV WEB_DOCUMENT_ROOT=/app/public
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+
+# Set working directory
+WORKDIR /app
+
+# (Opsional) Copy composer.json dan lock file jika Anda ingin menginstal library via build process
+# COPY composer.json composer.lock ./
+# RUN composer install --no-dev --optimize-autoloader --no-interaction || true
+
+# Salin seluruh isi project ke dalam image container
+COPY . .
+
+# Set permission yang benar untuk folder storage dan bootstrap/cache
+RUN chown -R application:application /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Optimasi Laravel (Clear & Cache) - jika Laravel 5.x versi Anda mendukung
+RUN php artisan config:clear || true
+RUN php artisan view:clear || true
+RUN php artisan cache:clear || true
+
+# Ekspos port 80
+EXPOSE 80

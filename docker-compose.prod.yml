@@ -1,0 +1,17 @@
+services:
+  app:
+    # Ganti "username_dockerhub" dengan username Docker Hub Anda 
+    # dan "nama_image" dengan nama image Anda
+    image: username_dockerhub/teknik-stokgudang:latest
+    container_name: teknik-stokgudang-prod
+    restart: always
+    # Menghapus volume mount source code agar murni menggunakan file dari dalam image
+    # Namun, Anda mungkin perlu mount folder yang menampung upload file dari user (storage)
+    volumes:
+      - ./storage/app/public:/app/storage/app/public
+    networks:
+      - laravel-network
+
+networks:
+  laravel-network:
+    external: true
