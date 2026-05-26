@@ -96,6 +96,7 @@
     
     .code-tag { background: #f1f5f9; color: #334155; font-family: monospace; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; }
     .desc-text { color: #64748b; font-size: 13px; max-width: 300px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .div-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
 
     /* Action Buttons */
     .act-btn { width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; color: #64748b; background: #fff; margin-right: 4px; transition: .15s; cursor: pointer; text-decoration: none !important; }
@@ -175,8 +176,9 @@
                     <thead>
                         <tr>
                             <th style="width:60px; text-align:center;">No</th>
-                            <th style="width:150px;">Kode</th>
+                            <th style="width:120px;">Kode</th>
                             <th>Nama Departemen</th>
+                            <th style="width:250px;">Divisi / Bagian</th>
                             <th>Deskripsi / Keterangan</th>
                             <th style="width:120px; text-align:center;">Aksi</th>
                         </tr>
@@ -187,6 +189,15 @@
                             <td style="text-align:center; color:#64748b; font-weight:600;">{{ $rows->firstItem() + $idx }}</td>
                             <td><span class="code-tag">{{ $r->code }}</span></td>
                             <td style="font-weight:700; color:#0f172a;">{{ $r->name }}</td>
+                            <td>
+                                @forelse($r->divisions as $div)
+                                    <span class="div-badge" title="{{ $div->description ?: 'Tidak ada keterangan.' }}">
+                                        {{ $div->name }}
+                                    </span>
+                                @empty
+                                    <span style="font-size:12px; color:#94a3b8; font-style:italic;">Tidak ada divisi.</span>
+                                @endforelse
+                            </td>
                             <td>
                                 <div class="desc-text" title="{{ $r->description ?: 'Tidak ada keterangan.' }}">
                                     {{ $r->description ?: '-' }}
@@ -201,7 +212,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="muted" style="text-align:center; padding:40px; color:#64748b;">
+                            <td colspan="6" class="muted" style="text-align:center; padding:40px; color:#64748b;">
                                 <div style="font-size:32px; margin-bottom:10px; color:#cbd5e1;"><i class="fa fa-folder-open-o"></i></div>
                                 Belum ada data departemen.
                             </td>

@@ -228,7 +228,7 @@
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label>Cari & Tambah Barang</label>
                     <select id="itemPicker" class="form-control"></select>
-                    <div class="help-text">Ketik minimal 1 huruf kode atau nama barang, lalu pilih untuk menambahkan ke tabel.</div>
+                    <div class="help-text">Pilih barang langsung dari daftar, atau ketik kata kunci untuk memfilter hasil.</div>
                 </div>
 
                 <div class="table-container">
@@ -337,7 +337,7 @@
 
         // 2. ITEM PICKER
         $('#itemPicker').select2({
-            theme: 'bootstrap', width: '100%', placeholder: 'Ketik Nama atau Kode Barang...', allowClear: true, minimumInputLength: 1,
+            theme: 'bootstrap', width: '100%', placeholder: 'Pilih atau cari barang...', allowClear: true, minimumInputLength: 0,
             ajax: {
                 url: '{{ route("bons.lookup.items") }}', dataType: 'json', delay: 250,
                 data: function(params) { return { q: params.term }; },

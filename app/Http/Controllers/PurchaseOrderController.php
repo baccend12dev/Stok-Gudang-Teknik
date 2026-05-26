@@ -50,6 +50,31 @@ class PurchaseOrderController extends Controller
 
         $pos = $query->paginate($perPage);
 
+        // Batch fetch received quantities for all loaded POs to avoid N+1 queries
+        $poIds = $pos->pluck('id')->toArray();
+        if (!empty($poIds)) {
+            $receivedData = DB::table('lpb_details as lpd')
+                ->join('lpb_headers as lph', 'lph.id', '=', 'lpd.lpb_header_id')
+                ->whereIn('lph.purchase_order_id', $poIds)
+                ->groupBy('lph.purchase_order_id', 'lpd.item_id')
+                ->select('lph.purchase_order_id', 'lpd.item_id', DB::raw('SUM(lpd.quantity) as total_received'))
+                ->get();
+                
+            $receivedMap = [];
+            foreach ($receivedData as $row) {
+                $receivedMap[$row->purchase_order_id . '-' . $row->item_id] = (float) $row->total_received;
+            }
+
+            foreach ($pos as $po) {
+                foreach ($po->details as $detail) {
+                    $key = $po->id . '-' . $detail->item_id;
+                    $receivedQty = isset($receivedMap[$key]) ? $receivedMap[$key] : 0.0;
+                    $detail->received_qty = $receivedQty;
+                    $detail->remaining_qty = max(0.0, (float) $detail->quantity - $receivedQty);
+                }
+            }
+        }
+
         return view('purchase_orders.index', compact('pos', 'q', 'status', 'perPage'));
     }
 

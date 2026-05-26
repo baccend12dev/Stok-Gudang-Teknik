@@ -64,8 +64,8 @@ select.form-control {
 
 .table-wrapper { border: 1px solid #eef2f7; border-radius: 10px; overflow-x: auto; margin-top: 16px; }
 .table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; table-layout: fixed; }
-.table thead th { background: #f8fafc; color: #475467; font-weight: 700; font-size: 12px; text-transform: uppercase; padding: 14px 12px; border-bottom: 1px solid #eef2f7; }
-.table tbody td { padding: 12px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 14px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.table thead th { background: #f8fafc; color: #475467; font-weight: 700; font-size: 11px; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid #eef2f7; }
+.table tbody td { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .table tbody tr:hover { background: #f8fafc; }
 
 .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -75,17 +75,71 @@ select.form-control {
 .badge-received { background: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
 .badge-cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
 
-.col-no { width: 150px; text-align: center; }
-.col-date { width: 120px; text-align: center; }
+.col-expand { width: 40px; text-align: center; }
+.col-no { width: 140px; text-align: center; }
+.col-date { width: 100px; text-align: center; }
 .col-supplier { width: 220px; }
-.col-items { width: 280px; }
-.col-status { width: 150px; text-align: center; }
-.col-act { width: 120px; text-align: center; }
+.col-items { width: 130px; text-align: center; }
+.col-status { width: 110px; text-align: center; }
+.col-act { width: 110px; text-align: center; }
 
 .pagination-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eef2f7; color: #64748b; }
 .pagination { display: inline-flex; margin: 0; gap: 4px; }
 .pagination > li > a, .pagination > li > span { border-radius: 6px; border: 1px solid #e2e8f0; color: #475467; background: #fff; padding: 8px 14px; font-size: 13px; text-decoration: none; }
 .pagination > .active > span { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+/* EXPANDABLE ROW STYLES */
+.table tbody tr.po-details-row:hover {
+    background: #f8fafc !important;
+}
+.table-po-details {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0;
+    table-layout: auto !important;
+}
+.table-po-details th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.table-po-details td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    color: #1e293b;
+    white-space: normal !important;
+}
+.table-po-details tr:last-child td {
+    border-bottom: none;
+}
+.btn-toggle-po {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    outline: none;
+    padding: 0;
+}
+.btn-toggle-po:hover, .btn-toggle-po:focus {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+    text-decoration: none;
+    outline: none;
+}
 </style>
 
 <div class="section">
@@ -134,10 +188,11 @@ select.form-control {
             <table class="table">
                 <thead>
                     <tr>
+                        <th class="col-expand"></th>
                         <th class="col-no">No. PO</th>
                         <th class="col-date">Tanggal</th>
                         <th class="col-supplier">Pemasok / Supplier</th>
-                        <th class="col-items">Item Barang</th>
+                        <th class="col-items">Total Barang</th>
                         <th class="col-status">Status</th>
                         <th class="col-act">Aksi</th>
                     </tr>
@@ -145,23 +200,18 @@ select.form-control {
                 <tbody>
                 @forelse($pos as $po)
                     <tr>
+                        <td style="text-align:center;">
+                            <button type="button" class="btn-toggle-po" data-id="{{ $po->id }}" title="Klik untuk lihat detail item">
+                                <i class="fa fa-chevron-down"></i>
+                            </button>
+                        </td>
                         <td style="font-weight:700; color:#374151; text-align:center;">
                             <a href="{{ route('purchase-orders.show', $po->id) }}" style="color:#2563eb; text-decoration:none;">{{ $po->po_number }}</a>
                         </td>
                         <td style="text-align:center;">{{ date('d/m/Y', strtotime($po->date)) }}</td>
                         <td>{{ $po->supplier_name ?: '-' }}</td>
-                        <td title="@foreach($po->details as $d)[{{ $d->item->code }}] {{ $d->item->name }} ({{ (float)$d->quantity }} {{ $d->item->unit }})&#10;@endforeach">
-                            @php
-                                $detailTexts = [];
-                                foreach($po->details->take(2) as $d) {
-                                    $detailTexts[] = $d->item->name . ' (' . (float)$d->quantity . ' ' . $d->item->unit . ')';
-                                }
-                                $text = implode(', ', $detailTexts);
-                                if($po->details->count() > 2) {
-                                    $text .= ' dan ' . ($po->details->count() - 2) . ' barang lainnya...';
-                                }
-                            @endphp
-                            {{ $text }}
+                        <td style="text-align:center; font-weight:500; color:#475569;">
+                            {{ $po->details->count() }} Item
                         </td>
                         <td style="text-align:center;">
                             @if($po->status === 'DRAFT')
@@ -189,9 +239,41 @@ select.form-control {
                             </div>
                         </td>
                     </tr>
+                    
+                    {{-- Expandable PO Details Row --}}
+                    <tr id="po-details-row-{{ $po->id }}" class="po-details-row" style="display: none; background: #f8fafc;">
+                        <td colspan="7" style="padding: 10px 12px; border-bottom: 1px solid #eef2f7; white-space: normal; overflow: visible;">
+                            <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.01);">
+                                <table class="table-po-details">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 150px; text-align: left;">Kode Barang</th>
+                                            <th style="text-align: left;">Nama Barang</th>
+                                            <th style="width: 80px; text-align: center;">Satuan</th>
+                                            <th style="width: 110px; text-align: center;">Qty Dipesan</th>
+                                            <th style="width: 110px; text-align: center;">Qty Diterima</th>
+                                            <th style="width: 120px; text-align: center;">Sedang Dipesan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach($po->details as $detail)
+                                        <tr>
+                                            <td style="font-weight: 600; color: #475569; text-align: left;">{{ $detail->item->code }}</td>
+                                            <td style="font-weight: 500; text-align: left; white-space: normal;">{{ $detail->item->name }}</td>
+                                            <td style="text-align: center; color: #64748b;">{{ $detail->item->unit }}</td>
+                                            <td style="text-align: center; font-weight: 700; color: #0f172a;">{{ (float)$detail->quantity }}</td>
+                                            <td style="text-align: center; font-weight: 700; color: #16a34a;">{{ (float)$detail->received_qty }}</td>
+                                            <td style="text-align: center; font-weight: 700; color: #dc2626;">{{ (float)$detail->remaining_qty }}</td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
                 @empty
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">
+                        <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
                             <i class="fa fa-shopping-bag" style="font-size:36px; margin-bottom:12px; opacity:0.5;"></i><br>
                             <span style="font-size:15px; font-weight:500;">Tidak ada data Purchase Order ditemukan.</span>
                         </td>
@@ -209,4 +291,38 @@ select.form-control {
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    (function($) {
+        'use strict';
+        $(document).ready(function() {
+            $('.btn-toggle-po').on('click', function(e) {
+                e.preventDefault();
+                var poId = $(this).data('id');
+                var targetRow = $('#po-details-row-' + poId);
+                var icon = $(this).find('i');
+                
+                targetRow.toggle();
+                
+                if (targetRow.is(':visible')) {
+                    icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                    $(this).css({
+                        'background': '#2563eb',
+                        'color': '#fff',
+                        'border-color': '#2563eb'
+                    });
+                } else {
+                    icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                    $(this).css({
+                        'background': '#eff6ff',
+                        'color': '#2563eb',
+                        'border-color': '#bfdbfe'
+                    });
+                }
+            });
+        });
+    })(jQuery);
+</script>
 @endsection

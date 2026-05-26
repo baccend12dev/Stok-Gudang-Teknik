@@ -12,8 +12,8 @@
     
     <ul class="help-list">
         <li>
-            <strong>Permintaan Baru (Kuning):</strong> Jumlah request dari user yang statusnya masih <em>OPEN</em>. 
-            <br><span style="font-size:11px; color:#64748b;">Tindakan: Klik untuk segera melakukan Approval.</span>
+            <strong>Barang Sedang PO (Kuning):</strong> Jumlah jenis item barang yang saat ini dalam proses pemesanan ke supplier (status ORDERED atau PARTIALLY_RECEIVED).
+            <br><span style="font-size:11px; color:#64748b;">Tindakan: Klik untuk melihat daftar Purchase Order (PO).</span>
         </li>
         <li>
             <strong>Total Keluar & Barang Masuk:</strong> Akumulasi pergerakan barang dalam periode tanggal yang dipilih.
@@ -351,19 +351,19 @@
     {{-- 1. KPI CARDS (HORIZONTAL LAYOUT) --}}
     <div class="dash-grid">
         
-        {{-- WIDGET REQUEST BARU (KUNING) --}}
-        <a href="{{ route('requests.index', ['status' => 'OPEN']) }}" class="kpi-card sc-yellow">
-            <div class="kpi-icon-wrapper"><i class="fa fa-inbox"></i></div>
+        {{-- WIDGET BARANG SEDANG PO (KUNING) --}}
+        <a href="{{ route('purchase-orders.index') }}" class="kpi-card sc-yellow">
+            <div class="kpi-icon-wrapper"><i class="fa fa-shopping-bag"></i></div>
             <div class="kpi-content">
-                <div class="kpi-title" style="color: #b45309;">Permintaan Baru</div>
+                <div class="kpi-title" style="color: #b45309;">Barang Sedang PO</div>
                 <div class="kpi-value-row">
                     <div class="kpi-value" style="color: #b45309;">
-                        {{ isset($pendingRequestCount) ? $pendingRequestCount : 0 }}
+                        {{ isset($uniquePoItems) ? $uniquePoItems : 0 }}
                     </div>
-                    <div class="kpi-unit" style="color: #d97706;">Request</div>
+                    <div class="kpi-unit" style="color: #d97706;">Item</div>
                 </div>
                 <div class="kpi-trend" style="color: #d97706; font-weight: 500;">
-                    Menunggu Approval
+                    Total: {{ isset($totalPoQty) ? (float)$totalPoQty : 0 }} unit
                 </div>
             </div>
         </a>

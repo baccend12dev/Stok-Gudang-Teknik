@@ -14,7 +14,7 @@ class DepartmentController extends Controller
         $q = $request->get('q', '');
 
         if ($has) {
-            $query = Department::query();
+            $query = Department::with('divisions');
             if ($q !== '') {
                 $like = '%' . $q . '%';
                 $op = (\DB::getDriverName() === 'pgsql') ? 'ILIKE' : 'like';
@@ -43,22 +43,45 @@ class DepartmentController extends Controller
     
     public function store(Request $request)
     {     
+        $this->validate($request, [
+            'code' => 'required|unique:departments,code',
+            'name' => 'required|string|max:255',
+            'divisions.*.code' => 'required|string|max:10',
+            'divisions.*.name' => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
         try {
-            Department::create([
+            $department = Department::create([
                 'code' => $request->code,
                 'name' => $request->name,
                 'description' => $request->description
             ]);
-            
-            return redirect()->route('departments.index')->with('success', 'Departemen berhasil ditambahkan');
+
+            $divisions = (array) $request->get('divisions', []);
+            foreach ($divisions as $div) {
+                if (empty($div['code']) || empty($div['name'])) {
+                    continue;
+                }
+                \App\Division::create([
+                    'department_id' => $department->id,
+                    'code' => $div['code'],
+                    'name' => $div['name'],
+                    'description' => isset($div['description']) ? $div['description'] : null,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('departments.index')->with('success', 'Departemen dan divisi berhasil ditambahkan');
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
     
     public function edit($id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::with('divisions')->findOrFail($id);
         return view('departments.edit', compact('department'));
     }
     
@@ -66,16 +89,60 @@ class DepartmentController extends Controller
     {
         $department = Department::findOrFail($id);
     
+        $this->validate($request, [
+            'code' => 'required|unique:departments,code,' . $id,
+            'name' => 'required|string|max:255',
+            'divisions.*.code' => 'required|string|max:10',
+            'divisions.*.name' => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
         try {
             $department->update([
                 'code' => $request->code,
                 'name' => $request->name,
                 'description' => $request->description
             ]);
-            
-            return redirect()->route('departments.index')->with('success', 'Departemen berhasil diperbarui');
+
+            $submittedDivs = (array) $request->get('divisions', []);
+            $submittedIds = [];
+
+            foreach ($submittedDivs as $div) {
+                if (empty($div['code']) || empty($div['name'])) {
+                    continue;
+                }
+                
+                if (isset($div['id']) && !empty($div['id'])) {
+                    $existingDiv = \App\Division::where('department_id', $department->id)->find($div['id']);
+                    if ($existingDiv) {
+                        $existingDiv->update([
+                            'code' => $div['code'],
+                            'name' => $div['name'],
+                            'description' => isset($div['description']) ? $div['description'] : null,
+                        ]);
+                        $submittedIds[] = $existingDiv->id;
+                    }
+                } else {
+                    $newDiv = \App\Division::create([
+                        'department_id' => $department->id,
+                        'code' => $div['code'],
+                        'name' => $div['name'],
+                        'description' => isset($div['description']) ? $div['description'] : null,
+                    ]);
+                    $submittedIds[] = $newDiv->id;
+                }
+            }
+
+            // Hapus divisi yang tidak disubmit
+            \App\Division::where('department_id', $department->id)
+                ->whereNotIn('id', $submittedIds)
+                ->delete();
+
+            DB::commit();
+            return redirect()->route('departments.index')->with('success', 'Departemen dan divisi berhasil diperbarui');
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
     
@@ -83,6 +150,7 @@ class DepartmentController extends Controller
     {
         $department = Department::findOrFail($id);
         
+        DB::beginTransaction();
         try {
             // Cek apakah masih ada item yang terkait
             $hasItems = DB::table('item_department_buffers')
@@ -93,9 +161,15 @@ class DepartmentController extends Controller
                 return back()->with('error', 'Departemen tidak bisa dihapus karena masih terkait dengan beberapa item');
             }
             
+            // Hapus semua divisi di bawah departemen ini terlebih dahulu
+            \App\Division::where('department_id', $id)->delete();
+            
             $department->delete();
-            return redirect()->route('departments.index')->with('success', 'Departemen berhasil dihapus');
+            
+            DB::commit();
+            return redirect()->route('departments.index')->with('success', 'Departemen dan divisinya berhasil dihapus');
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }

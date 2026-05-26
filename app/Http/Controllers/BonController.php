@@ -992,18 +992,17 @@ class BonController extends Controller
     {
         $q = trim($request->get('q', ''));
 
-        if ($q === '') {
-            return response()->json([]);
-        }
-
-        $like = '%' . $q . '%';
-
         $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
 
-        $items = Item::where(function ($qq) use ($like) {
+        $items = Item::query();
+
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            $items->where(function ($qq) use ($like) {
                 $qq->where('code', 'ILIKE', $like)
                    ->orWhere('name', 'ILIKE', $like);
             });
+        }
 
         if (is_array($allowedItemIds)) {
             $items->whereIn('id', $allowedItemIds);

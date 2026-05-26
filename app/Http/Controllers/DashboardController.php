@@ -174,22 +174,41 @@ class DashboardController extends Controller
         if (is_array($allowedItemIds)) $restockNeedQuery->whereIn('id', $allowedItemIds);
         $totalRestockNeed = (int) $restockNeedQuery->count();
 
-        // --- 7. WIDGET REQUEST PENDING (NEW ADDITION) ---
-        $pendingReqQuery = RequestHeader::where('status', 'OPEN');
-        // Filter Scope (PENTING)
-        $user = Auth::user();
-        $codes = null;
-        if (method_exists($user, 'categoryCodesForScope')) {
-            $codes = $user->categoryCodesForScope();
+        // --- 7. BARANG SEDANG PO (NEW ADDITION) ---
+        $poItemsQuery = DB::table('purchase_order_details as pod')
+            ->join('purchase_orders as po', 'po.id', '=', 'pod.purchase_order_id')
+            ->whereIn('po.status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+
+        if (is_array($allowedItemIds)) {
+            $poItemsQuery->whereIn('pod.item_id', $allowedItemIds);
         }
 
-        if (is_array($codes) && count($codes) > 0) {
-            // Filter STRICT: Hanya request yang mengandung item dalam scope user
-            $pendingReqQuery->whereHas('details.item.category', function ($q) use ($codes) {
-                $q->whereIn('code', $codes);
-            });
+        $poItemsData = $poItemsQuery->select(DB::raw("
+            pod.item_id,
+            GREATEST(0, pod.quantity - COALESCE(
+                (SELECT SUM(lpd.quantity)
+                 FROM lpb_details lpd
+                 JOIN lpb_headers lph ON lph.id = lpd.lpb_header_id
+                 WHERE lph.purchase_order_id = po.id AND lpd.item_id = pod.item_id
+                ), 0
+            )) as remaining
+        "))->get();
+
+        $uniquePoItems = 0;
+        $totalPoQty = 0;
+        
+        $itemQtyMap = [];
+        foreach ($poItemsData as $row) {
+            $rem = (float) $row->remaining;
+            if ($rem > 0) {
+                if (!isset($itemQtyMap[$row->item_id])) {
+                    $itemQtyMap[$row->item_id] = 0;
+                    $uniquePoItems++;
+                }
+                $itemQtyMap[$row->item_id] += $rem;
+                $totalPoQty += $rem;
+            }
         }
-        $pendingRequestCount = (int) $pendingReqQuery->count();
 
         // --- 6. AKTIVITAS TERBARU ---
         $recentBonQuery = BonHeader::with('department')
@@ -209,7 +228,7 @@ class DashboardController extends Controller
             'criticalCount', 'emptyStock', 'warningCount', 'totalRestockNeed', 'assetValue',
             'pieLabels', 'pieData',
             'monthsLabels', 'trendDataIn', 'trendDataOut',
-            'pendingBon', 'draftSo', 'pendingRequestCount', // Add variable here
+            'pendingBon', 'draftSo', 'uniquePoItems', 'totalPoQty',
             'recentBon', 'monthLabel'
         ));
     }

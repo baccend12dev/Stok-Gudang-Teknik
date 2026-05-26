@@ -4,25 +4,15 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Department extends Model
+class Division extends Model
 {
-    protected $table = 'departments';
+    protected $table = 'divisions';
 
-    protected $fillable = ['group_id', 'code', 'name', 'is_active', 'description'];
+    protected $fillable = ['department_id', 'code', 'name', 'description'];
 
-    public function group()
+    public function department()
     {
-        return $this->belongsTo('App\DepartmentGroup', 'group_id');
-    }
-
-    public function divisions()
-    {
-        return $this->hasMany('App\Division', 'department_id');
-    }
-
-    public function scopeActive($q)
-    {
-        return $q->where('is_active', true);
+        return $this->belongsTo('App\Department', 'department_id');
     }
 
     protected function asDateTime($value)

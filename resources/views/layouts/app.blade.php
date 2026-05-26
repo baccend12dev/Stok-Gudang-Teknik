@@ -265,15 +265,7 @@
         .modal-help-title { color: #fff; font-weight: 800; font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px; }
         .modal-help-close { position: absolute; top: 20px; right: 20px; color: rgba(255,255,255,0.6); font-size: 24px; cursor: pointer; transition: 0.2s; }
         .modal-help-close:hover { color: #fff; transform: rotate(90deg); }
-        
-        .help-tabs { display: flex; background: #f1f5f9; padding: 6px; border-radius: 4px; margin: 25px 30px 0; gap: 6px; }
-        .help-tab-link { flex: 1; text-align: center; padding: 10px; border-radius: 4px; font-weight: 700; font-size: 13px; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .help-tab-link:hover { background: rgba(255,255,255,0.6); color: var(--primary); }
-        .help-tab-link.active { background: #fff; color: var(--primary-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        
         .help-body { padding: 30px; min-height: 300px; max-height: 70vh; overflow-y: auto; }
-        .help-section { display: none; animation: fadeIn 0.3s ease; }
-        .help-section.active { display: block; }
         
         /* Typography Content */
         .help-h { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
@@ -507,145 +499,21 @@
                     </div>
                 </div>
 
-                {{-- TABS NAV --}}
-                <div class="help-tabs">
-                    <div class="help-tab-link active" onclick="switchHelpTab('guide')">
-                        <i class="fa fa-lightbulb-o"></i> Panduan Halaman Ini
-                    </div>
-                    <div class="help-tab-link" onclick="switchHelpTab('flow')">
-                        <i class="fa fa-random"></i> Alur Sistem
-                    </div>
-                    <div class="help-tab-link" onclick="switchHelpTab('contact')">
-                        <i class="fa fa-phone"></i> Kontak Admin
-                    </div>
-                </div>
-
                 <div class="help-body">
-                    {{-- TAB 1: CONTEXTUAL GUIDE --}}
-                    <div id="help-tab-guide" class="help-section active">
-                        @hasSection('help-content')
-                            {{-- Jika View Anak punya section 'help-content', tampilkan disini --}}
-                            @yield('help-content')
-                        @else
-                            {{-- Fallback jika tidak ada panduan khusus --}}
-                            <div style="text-align:center; padding:40px 0;">
-                                <img src="https://img.icons8.com/color/96/000000/info--v1.png" style="margin-bottom:15px; opacity:0.8;">
-                                <h4 class="help-h" style="justify-content:center;">Selamat Datang di Inventory HR</h4>
-                                <p class="help-p">
-                                    Silakan gunakan menu di samping kiri untuk navigasi.<br>
-                                    Jika Anda bingung, hubungi Admin HR untuk bantuan lebih lanjut.
-                                </p>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- TAB 2: GENERAL FLOW (DYNAMIC USER VS ADMIN) --}}
-                    <div id="help-tab-flow" class="help-section">
-                        <h4 class="help-h"><i class="fa fa-retweet text-primary"></i> Alur Permintaan Barang</h4>
-                        
-                        {{-- === TAMPILAN KHUSUS USER DEPARTEMEN === --}}
-                        @if(auth()->user()->role === 'USER')
-                            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; margin-top:15px;">
-                                <ul style="list-style:none; padding:0; position:relative;">
-                                    <li style="display:flex; gap:15px; margin-bottom:20px;">
-                                        <div style="width:30px; height:30px; background:#eff6ff; color:#2563eb; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">1</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Input Permintaan (Request)</div>
-                                            <div style="font-size:13px; color:#64748b;">
-                                                Isi form "Buat Permintaan" pada tanggal <strong>1 s.d 7</strong> awal bulan. Pastikan jenis dan jumlah barang sesuai kebutuhan.
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li style="display:flex; gap:15px; margin-bottom:20px;">
-                                        <div style="width:30px; height:30px; background:#fff7ed; color:#ea580c; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">2</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Menunggu Verifikasi</div>
-                                            <div style="font-size:13px; color:#64748b;">
-                                                Admin akan mengecek stok gudang. Status akan berubah dari <span style="background:#fffbeb; color:#92400e; padding:0 4px; border-radius:4px; font-size:10px;">OPEN</span> menjadi <span style="background:#eff6ff; color:#1d4ed8; padding:0 4px; border-radius:4px; font-size:10px;">APPROVED</span> jika stok tersedia.
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li style="display:flex; gap:15px; margin-bottom:20px;">
-                                        <div style="width:30px; height:30px; background:#f0fdf4; color:#16a34a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">3</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Pengambilan Barang</div>
-                                            <div style="font-size:13px; color:#64748b;">
-                                                Jika admin menginfokan barang siap (Issued), silakan datang ke Gudang/GA untuk mengambil fisik barang.
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li style="display:flex; gap:15px;">
-                                        <div style="width:30px; height:30px; background:#f1f5f9; color:#475569; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">4</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Tanda Terima</div>
-                                            <div style="font-size:13px; color:#64748b;">
-                                                Tanda tangani BON/Bukti Serah Terima yang diberikan Admin. Proses selesai.
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-
-                        {{-- === TAMPILAN KHUSUS ADMIN (LEBIH TEKNIS) === --}}
-                        @else
-                            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; margin-top:15px;">
-                                <ul style="list-style:none; padding:0; position:relative;">
-                                    <li style="display:flex; gap:15px; margin-bottom:20px;">
-                                        <div style="width:30px; height:30px; background:#eff6ff; color:#2563eb; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">1</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">User Membuat Request</div>
-                                            <div style="font-size:13px; color:#64748b;">User mengisi form permintaan bulanan (Tgl 1-7).</div>
-                                        </div>
-                                    </li>
-                                    <li style="display:flex; gap:15px; margin-bottom:20px;">
-                                        <div style="width:30px; height:30px; background:#fff7ed; color:#ea580c; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">2</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Persiapan PR (Purchase Requisition)</div>
-                                            <div style="font-size:13px; color:#64748b;">Admin merekap data permintaan user untuk pengajuan pembelian ke Purchasing.</div>
-                                        </div>
-                                    </li>
-                                    <li style="display:flex; gap:15px; margin-bottom:20px;">
-                                        <div style="width:30px; height:30px; background:#f0fdf4; color:#16a34a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">3</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Barang Tiba (LPB)</div>
-                                            <div style="font-size:13px; color:#64748b;">Barang dari supplier datang, Admin input LPB (Stok Bertambah).</div>
-                                        </div>
-                                    </li>
-                                    <li style="display:flex; gap:15px;">
-                                        <div style="width:30px; height:30px; background:#f1f5f9; color:#475569; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">4</div>
-                                        <div>
-                                            <div style="font-weight:bold; color:#1e293b;">Pengambilan Barang (BON)</div>
-                                            <div style="font-size:13px; color:#64748b;">User mengambil barang, admin menerbitkan BON di sistem (Stok Berkurang).</div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- TAB 3: CONTACT --}}
-                    <div id="help-tab-contact" class="help-section">
-                        <h4 class="help-h"><i class="fa fa-address-book text-primary"></i> Kontak Person</h4>
-                        <p class="help-p">Hubungi admin berikut jika mengalami kendala sistem atau stok:</p>
-                        
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                            <div style="border:1px solid #e2e8f0; padding:15px; border-radius:10px;">
-                                <div style="font-weight:bold; font-size:14px;">Bu Ani (Admin General)</div>
-                                <div style="color:#64748b; font-size:12px; margin-top:4px;">Ext: 731 | anisah@ottopharm.com</div>
-                                <div style="margin-top:8px; font-size:11px; background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; display:inline-block;">ATK & Kebersihan</div>
-                            </div>
-                            <div style="border:1px solid #e2e8f0; padding:15px; border-radius:10px;">
-                                <div style="font-weight:bold; font-size:14px;">Bu Shinta (Admin Apparel)</div>
-                                <div style="color:#64748b; font-size:12px; margin-top:4px;">Ext: 731 | shinta@ottopharm.com</div>
-                                <div style="margin-top:8px; font-size:11px; background:#fff7ed; color:#9a3412; padding:2px 8px; border-radius:4px; display:inline-block;">Seragam & Sepatu</div>
-                            </div>
-                            <div style="border:1px solid #e2e8f0; padding:15px; border-radius:10px; grid-column: span 2;">
-                                <div style="font-weight:bold; font-size:14px;">Support (Hanny)</div>
-                                <div style="color:#64748b; font-size:12px; margin-top:4px;">Ext: 144 | hanny@ottopharm.com</div>
-                                <div style="margin-top:8px; font-size:11px; background:#eff6ff; color:#1e40af; padding:2px 8px; border-radius:4px; display:inline-block;">Technical Issue</div>
-                            </div>
+                    @hasSection('help-content')
+                        {{-- Jika View Anak punya section 'help-content', tampilkan disini --}}
+                        @yield('help-content')
+                    @else
+                        {{-- Fallback jika tidak ada panduan khusus --}}
+                        <div style="text-align:center; padding:40px 0;">
+                            <img src="https://img.icons8.com/color/96/000000/info--v1.png" style="margin-bottom:15px; opacity:0.8;">
+                            <h4 class="help-h" style="justify-content:center;">Selamat Datang di Inventory HR</h4>
+                            <p class="help-p">
+                                Silakan gunakan menu di samping kiri untuk navigasi.<br>
+                                Jika Anda bingung, hubungi Admin HR untuk bantuan lebih lanjut.
+                            </p>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -659,22 +527,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // LOGIC PINDAH TAB BANTUAN
-        function switchHelpTab(tabName) {
-            // Reset active class
-            $('.help-tab-link').removeClass('active');
-            $('.help-section').removeClass('active');
-            
-            // Set active class click
-            $('.help-tab-link').each(function() {
-                if($(this).attr('onclick').includes(tabName)) {
-                    $(this).addClass('active');
-                }
-            });
-            
-            // Show content
-            $('#help-tab-' + tabName).addClass('active');
-        }
+
 
         $(document).ready(function() {
             $("#menu-toggle").click(function(e) {
