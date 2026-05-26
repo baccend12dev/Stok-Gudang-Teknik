@@ -149,7 +149,7 @@
         }
 
         /* === TOP NAVIGATION (ATAS) === */
-        #page-content-wrapper { width: 100%; position: relative; transition: all 0.3s ease; }
+        #page-content-wrapper { width: 100%; min-width: 0; position: relative; transition: all 0.3s ease; }
         
         .top-navbar {
             background: #fff;
@@ -331,6 +331,20 @@
                             <span>Atur Plafon Dept.</span>
                         </a>
                     </li>
+
+                    <li class="{{ Request::is('departments*') ? 'active' : '' }}">
+                        <a href="{{ route('departments.index') }}">
+                            <i class="fa fa-building-o"></i>
+                            <span>Master Departemen</span>
+                        </a>
+                    </li>
+
+                    <li class="{{ Request::is('category*') ? 'active' : '' }}">
+                        <a href="{{ route('category.index') }}">
+                            <i class="fa fa-tags"></i>
+                            <span>Master Kategori</span>
+                        </a>
+                    </li>
                     
                     <li class="sidebar-header">INVENTORY CONTROL</li>
                     <li class="{{ Request::is('lpbs*') ? 'active' : '' }}">
@@ -344,7 +358,8 @@
                         </a>
                     </li>
                     
-                    <li class="{{ Request::is('requests*') ? 'active' : '' }}">
+                    <!-- di nonaktifkan untuk teknik karena langsung masuk ke bon permintaan -->
+                    <!-- <li class="{{ Request::is('requests*') ? 'active' : '' }}">
                         <a href="{{ route('requests.index') }}" style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="display: flex; align-items: center;">
                                 <i class="fa fa-inbox"></i> <span>Permintaan Barang</span>
@@ -356,7 +371,7 @@
                                 </span>
                             @endif
                         </a>
-                    </li>
+                    </li> -->
 
                     <li class="{{ Request::is('stock-opnames*') ? 'active' : '' }}">
                         <a href="{{ route('stock-opnames.index') }}">
@@ -367,6 +382,12 @@
                     <li class="{{ Request::is('buffer-alerts*') ? 'active' : '' }}">
                         <a href="{{ route('buffer-alerts.index') }}">
                             <i class="fa fa-bell"></i> <span>Monitor Stok</span>
+                        </a>
+                    </li>
+
+                    <li class="{{ Request::is('purchase-orders*') ? 'active' : '' }}">
+                        <a href="{{ route('purchase-orders.index') }}">
+                            <i class="fa fa-shopping-bag"></i> <span>Purchase Order</span>
                         </a>
                     </li>
 

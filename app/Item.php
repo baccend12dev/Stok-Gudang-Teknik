@@ -49,4 +49,37 @@ class Item extends Model
 
         return $label;
     }
+
+    public function purchaseOrderDetails()
+    {
+        return $this->hasMany('App\PurchaseOrderDetail', 'item_id', 'id');
+    }
+
+    public function getOrderedQtyAttribute()
+    {
+        $activePoDetails = \App\PurchaseOrderDetail::where('item_id', $this->id)
+            ->whereHas('purchaseOrder', function ($q) {
+                $q->whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+            })
+            ->get();
+
+        $totalOrderedRemaining = 0.0;
+
+        foreach ($activePoDetails as $poDetail) {
+            $poId = $poDetail->purchase_order_id;
+            
+            $receivedQty = (float) \App\LpbDetail::where('item_id', $this->id)
+                ->whereHas('header', function ($q) use ($poId) {
+                    $q->where('purchase_order_id', $poId);
+                })
+                ->sum('quantity');
+
+            $remaining = (float) $poDetail->quantity - $receivedQty;
+            if ($remaining > 0) {
+                $totalOrderedRemaining += $remaining;
+            }
+        }
+
+        return $totalOrderedRemaining;
+    }
 }

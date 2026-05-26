@@ -76,7 +76,7 @@ class LpbController extends Controller
         ));
     }
    
-    public function create()
+    public function create(Request $request)
     {
         $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
 
@@ -87,7 +87,61 @@ class LpbController extends Controller
 
         $items = $itemsQuery->get();
 
-        return view('lpbs.create', compact('items'));
+        $purchaseOrders = \App\PurchaseOrder::whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED'])
+            ->orderBy('po_number', 'asc')
+            ->get();
+
+        $selectedPo = null;
+        if ($request->has('po_id')) {
+            $selectedPo = \App\PurchaseOrder::with('details.item')->find($request->get('po_id'));
+            if ($selectedPo) {
+                foreach ($selectedPo->details as $detail) {
+                    $receivedQty = (float) \App\LpbDetail::where('item_id', $detail->item_id)
+                        ->whereHas('header', function ($q) use ($selectedPo) {
+                            $q->where('purchase_order_id', $selectedPo->id);
+                        })
+                        ->sum('quantity');
+                    $detail->remaining_qty = max(0.0, (float) $detail->quantity - $receivedQty);
+                }
+            }
+        }
+
+        return view('lpbs.create', compact('items', 'purchaseOrders', 'selectedPo'));
+    }
+
+    public function getPoRemainingItems($id)
+    {
+        $po = \App\PurchaseOrder::with('details.item')->find($id);
+        if (!$po) {
+            return response()->json(['error' => 'PO tidak ditemukan'], 404);
+        }
+
+        $items = [];
+        foreach ($po->details as $detail) {
+            $receivedQty = (float) \App\LpbDetail::where('item_id', $detail->item_id)
+                ->whereHas('header', function ($q) use ($po) {
+                    $q->where('purchase_order_id', $po->id);
+                })
+                ->sum('quantity');
+
+            $remaining = max(0.0, (float) $detail->quantity - $receivedQty);
+
+            if ($remaining > 0) {
+                $items[] = [
+                    'item_id' => $detail->item_id,
+                    'code'    => $detail->item->code,
+                    'name'    => $detail->item->name,
+                    'unit'    => $detail->item->unit,
+                    'remaining_qty' => $remaining
+                ];
+            }
+        }
+
+        return response()->json([
+            'po_id' => $po->id,
+            'supplier_name' => $po->supplier_name,
+            'items' => $items
+        ]);
     }
 
     public function store(Request $request)
@@ -103,18 +157,19 @@ class LpbController extends Controller
         try {
             DB::beginTransaction();
 
+            $poId = $request->get('purchase_order_id') ? (int) $request->get('purchase_order_id') : null;
+
             $hdr = LpbHeader::create(array(
-                'lpb_number' => $request->get('lpb_number'),
-                'date'       => $request->get('date'),
-                'notes'      => $request->get('notes')
+                'lpb_number'        => $request->get('lpb_number'),
+                'date'              => $request->get('date'),
+                'notes'             => $request->get('notes'),
+                'purchase_order_id' => $poId
             ));
 
             $items = $request->get('items');
             if (is_array($items)) {
                 foreach ($items as $row) {
                     $itemId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
-                    
-                    // FIX: GANTI (int) JADI (float) AGAR SUPPORT DECIMAL
                     $qty    = isset($row['quantity']) ? (float) $row['quantity'] : 0;
                     $price  = isset($row['price']) ? (float) $row['price'] : 0;
 
@@ -137,6 +192,10 @@ class LpbController extends Controller
                         );
                     }
                 }
+            }
+
+            if ($poId) {
+                \App\PurchaseOrder::updateStatus($poId);
             }
 
             DB::commit();
@@ -163,7 +222,6 @@ class LpbController extends Controller
                     ));
             }
             
-            // FIX: TAMPILKAN PESAN ERROR DATABASE YANG JELAS
             return back()
                 ->withInput()
                 ->with('error', 'Gagal Database: ' . $msg); 
@@ -194,10 +252,16 @@ class LpbController extends Controller
 
         $items = $itemsQuery->get();
 
+        $purchaseOrders = \App\PurchaseOrder::whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED'])
+            ->orWhere('id', $hdr->purchase_order_id)
+            ->orderBy('po_number', 'asc')
+            ->get();
+
         return view('lpbs.edit', array(
-            'header' => $hdr,
-            'hdr'    => $hdr, 
-            'items'  => $items,
+            'header'         => $hdr,
+            'hdr'            => $hdr, 
+            'items'          => $items,
+            'purchaseOrders' => $purchaseOrders,
         ));
     }
 
@@ -211,11 +275,14 @@ class LpbController extends Controller
         DB::beginTransaction();
         try {
             $hdr = LpbHeader::findOrFail($id);
+            $oldPoId = $hdr->purchase_order_id;
+            $newPoId = $request->get('purchase_order_id') ? (int) $request->get('purchase_order_id') : null;
             
             InventoryHelper::deleteMovement('LPB', $hdr->id);
 
-            $hdr->date  = $request->get('date');
-            $hdr->notes = $request->get('notes');
+            $hdr->date              = $request->get('date');
+            $hdr->notes             = $request->get('notes');
+            $hdr->purchase_order_id = $newPoId;
             $hdr->save();
 
             LpbDetail::where('lpb_header_id', $hdr->id)->delete();
@@ -224,8 +291,6 @@ class LpbController extends Controller
             if (is_array($items)) {
                 foreach ($items as $row) {
                     $itemId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
-                    
-                    // FIX: GANTI (int) JADI (float) AGAR SUPPORT DECIMAL
                     $qty    = isset($row['quantity']) ? (float) $row['quantity'] : 0;
                     $price  = isset($row['price']) ? (float) $row['price'] : 0;
 
@@ -250,6 +315,13 @@ class LpbController extends Controller
                 }
             }
 
+            if ($oldPoId) {
+                \App\PurchaseOrder::updateStatus($oldPoId);
+            }
+            if ($newPoId && $newPoId !== $oldPoId) {
+                \App\PurchaseOrder::updateStatus($newPoId);
+            }
+
             DB::commit();
 
             return redirect()
@@ -269,11 +341,16 @@ class LpbController extends Controller
         DB::beginTransaction();
         try {
             $hdr = LpbHeader::findOrFail($id);
+            $poId = $hdr->purchase_order_id;
             
             InventoryHelper::deleteMovement('LPB', $hdr->id);
 
             LpbDetail::where('lpb_header_id', $hdr->id)->delete();
             $hdr->delete();
+
+            if ($poId) {
+                \App\PurchaseOrder::updateStatus($poId);
+            }
 
             DB::commit();
 

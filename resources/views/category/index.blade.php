@@ -1,26 +1,26 @@
 @extends('layouts.app')
-@section('title', 'Master Departemen')
+@section('title', 'Master Kategori')
 
-{{-- === PANDUAN KONTEKSTUAL DEPARTEMEN === --}}
+{{-- === PANDUAN KONTEKSTUAL KATEGORI === --}}
 @section('help-content')
     <div class="help-alert" style="background:#eff6ff; border-left-color:#2563eb; color:#1e40af;">
-        <i class="fa fa-building-o"></i>
-        <strong>MASTER DEPARTEMEN:</strong> Halaman ini mengelola unit/departemen kerja di perusahaan yang berhak mengajukan barang (Request) atau menerima alokasi barang (BON).
+        <i class="fa fa-tags"></i>
+        <strong>MASTER KATEGORI:</strong> Halaman ini mengelola pengelompokan barang (kategori), seperti ATK, Seragam, SBN, atau Kebutuhan Teknis lainnya.
     </div>
 
     <h4 class="help-h"><i class="fa fa-info-circle text-primary"></i> Hubungan & Alur Data</h4>
     <ul class="help-list">
         <li>
-            <strong>Kode Unik</strong>: Kode departemen bersifat unik dan digunakan sebagai referensi pengelompokan barang dan pelaporan anggaran.
+            <strong>Kode Unik</strong>: Kode kategori digunakan dalam sistem penomoran dan pengelompokan barang. Contoh: <code>ATK</code>, <code>AK</code> (Alat Kerja), <code>PK</code>.
         </li>
         <li>
-            <strong>Otorisasi Pengguna</strong>: Setiap pengguna dengan role <em>User Dept</em> harus dikaitkan ke salah satu departemen agar dapat mengajukan Bon/Request barang.
+            <strong>Inventory Scope</strong>: Kategori dikelompokkan ke dalam scope wewenang admin (General vs Apparel) untuk mempermudah operasional staff gudang.
         </li>
     </ul>
 
     <h4 class="help-h"><i class="fa fa-warning text-danger"></i> Aturan Penghapusan</h4>
     <p class="help-p">
-        Departemen <strong>tidak dapat dihapus</strong> jika masih terikat dengan transaksi item (LPB, BON, atau buffer stock). Ini demi menjaga integritas data riwayat gudang.
+        Kategori <strong>tidak dapat dihapus</strong> jika masih memiliki produk/barang di dalamnya. Silakan pindahkan atau hapus barang terkait terlebih dahulu.
     </p>
 @endsection
 
@@ -95,7 +95,6 @@
     tr:hover td { background-color: #f8fafc; }
     
     .code-tag { background: #f1f5f9; color: #334155; font-family: monospace; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; }
-    .desc-text { color: #64748b; font-size: 13px; max-width: 300px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     /* Action Buttons */
     .act-btn { width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; color: #64748b; background: #fff; margin-right: 4px; transition: .15s; cursor: pointer; text-decoration: none !important; }
@@ -120,14 +119,14 @@
     {{-- Header Topbar --}}
     <div class="topbar">
         <div class="tleft">
-            <div class="iconbox"><i class="fa fa-building-o"></i></div>
+            <div class="iconbox"><i class="fa fa-tags"></i></div>
             <div class="ttl">
-                <h1>Master Departemen</h1>
-                <span>Kelola daftar departemen kerja di lingkungan perusahaan.</span>
+                <h1>Master Kategori</h1>
+                <span>Kelola kategori barang untuk membagi scope barang inventori.</span>
             </div>
         </div>
         @if($has)
-            <a href="{{ route('departments.create') }}" class="btnx btn-add"><i class="fa fa-plus"></i> Tambah Departemen</a>
+            <a href="{{ route('category.create') }}" class="btnx btn-add"><i class="fa fa-plus"></i> Tambah Kategori</a>
         @endif
     </div>
 
@@ -149,10 +148,10 @@
     @if($has)
         <div class="toolbar-card">
             <form method="get" class="search-form">
-                <input type="text" name="q" class="search-input" value="{{ $q }}" placeholder="Cari kode atau nama departemen...">
+                <input type="text" name="q" class="search-input" value="{{ $q }}" placeholder="Cari kode atau nama kategori...">
                 <button type="submit" class="btnx btn-submit"><i class="fa fa-search"></i> Cari</button>
                 @if($q !== '')
-                    <a class="btnx btn-reset" href="{{ route('departments.index') }}"><i class="fa fa-refresh"></i> Reset</a>
+                    <a class="btnx btn-reset" href="{{ route('category.index') }}"><i class="fa fa-refresh"></i> Reset</a>
                 @endif
             </form>
         </div>
@@ -163,12 +162,19 @@
             <div class="icon-box-modal danger" style="margin-bottom:20px;"><i class="fa fa-database"></i></div>
             <h3 class="m-title" style="font-size:22px;">Tabel Database Belum Tersedia</h3>
             <p class="m-desc" style="font-size:15px; max-width:500px; margin: 0 auto 20px;">
-                Tabel <code>departments</code> tidak ditemukan pada database. Silakan jalankan migrasi, seeder, atau eksekusi perintah SQL di bawah ini:
+                Tabel <code>categories</code> tidak ditemukan pada database. Silakan jalankan migrasi, seeder, atau eksekusi perintah SQL di bawah ini:
             </p>
-            <pre style="background:#0f172a; color:#f8fafc; padding:20px; border-radius:10px; font-family:monospace; text-align:left; max-width:600px; margin:0 auto; overflow-x:auto;"></pre>
+            <pre style="background:#0f172a; color:#f8fafc; padding:20px; border-radius:10px; font-family:monospace; text-align:left; max-width:600px; margin:0 auto; overflow-x:auto;">
+CREATE TABLE categories (
+    id serial PRIMARY KEY,
+    code varchar(10) UNIQUE NOT NULL,
+    name varchar(255) NOT NULL,
+    created_at timestamp DEFAULT now(),
+    updated_at timestamp DEFAULT now()
+);</pre>
         </div>
     @else
-        {{-- Card Tabel Departemen --}}
+        {{-- Card Tabel Kategori --}}
         <div class="cardx">
             <div style="overflow-x:auto;">
                 <table>
@@ -176,8 +182,7 @@
                         <tr>
                             <th style="width:60px; text-align:center;">No</th>
                             <th style="width:150px;">Kode</th>
-                            <th>Nama Departemen</th>
-                            <th>Deskripsi / Keterangan</th>
+                            <th>Nama Kategori</th>
                             <th style="width:120px; text-align:center;">Aksi</th>
                         </tr>
                     </thead>
@@ -187,23 +192,18 @@
                             <td style="text-align:center; color:#64748b; font-weight:600;">{{ $rows->firstItem() + $idx }}</td>
                             <td><span class="code-tag">{{ $r->code }}</span></td>
                             <td style="font-weight:700; color:#0f172a;">{{ $r->name }}</td>
-                            <td>
-                                <div class="desc-text" title="{{ $r->description ?: 'Tidak ada keterangan.' }}">
-                                    {{ $r->description ?: '-' }}
-                                </div>
-                            </td>
                             <td style="text-align:center;">
-                                <a href="{{ route('departments.edit', $r->id) }}" class="act-btn" title="Edit Departemen"><i class="fa fa-pencil"></i></a>
-                                <button type="button" class="act-btn del" title="Hapus Departemen" onclick="openDeleteModal('{{ $r->id }}', '{{ $r->code }} - {{ $r->name }}')">
+                                <a href="{{ route('category.edit', $r->id) }}" class="act-btn" title="Edit Kategori"><i class="fa fa-pencil"></i></a>
+                                <button type="button" class="act-btn del" title="Hapus Kategori" onclick="openDeleteModal('{{ $r->id }}', '{{ $r->code }} - {{ $r->name }}')">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="muted" style="text-align:center; padding:40px; color:#64748b;">
+                            <td colspan="4" class="muted" style="text-align:center; padding:40px; color:#64748b;">
                                 <div style="font-size:32px; margin-bottom:10px; color:#cbd5e1;"><i class="fa fa-folder-open-o"></i></div>
-                                Belum ada data departemen.
+                                Belum ada data kategori.
                             </td>
                         </tr>
                         @endforelse
@@ -223,8 +223,8 @@
         <div class="modal-content">
             <div class="modal-body-clean">
                 <div class="icon-box-modal danger"><i class="fa fa-trash"></i></div>
-                <h3 class="m-title">Hapus Departemen?</h3>
-                <p class="m-desc">Departemen <strong id="del-name">...</strong> akan dihapus permanen. Tindakan ini tidak bisa dibatalkan jika sudah terikat data lain.</p>
+                <h3 class="m-title">Hapus Kategori?</h3>
+                <p class="m-desc">Kategori <strong id="del-name">...</strong> akan dihapus permanen. Tindakan ini tidak bisa dibatalkan jika sudah terikat dengan produk lain.</p>
             </div>
             <div class="m-foot">
                 <button type="button" class="btn-m" data-dismiss="modal">Batal</button>
@@ -241,7 +241,7 @@
 <script>
     function openDeleteModal(id, name) {
         $('#del-name').text(name);
-        $('#form-delete').attr('action', '/departments/' + id);
+        $('#form-delete').attr('action', '/category/' + id);
         $('#modalDelete').modal('show');
     }
 </script>

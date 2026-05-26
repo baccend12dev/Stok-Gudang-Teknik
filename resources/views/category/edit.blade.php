@@ -1,20 +1,17 @@
 @extends('layouts.app')
-@section('title', 'Edit Departemen')
+@section('title', 'Edit Kategori')
 
-{{-- === PANDUAN KONTEKSTUAL EDIT DEPARTEMEN === --}}
+{{-- === PANDUAN KONTEKSTUAL EDIT KATEGORI === --}}
 @section('help-content')
     <div class="help-alert" style="background:#eff6ff; border-left-color:#2563eb; color:#1e40af;">
         <i class="fa fa-info-circle"></i>
-        <strong>BACA SAJA (READ-ONLY):</strong> Kode departemen bersifat permanen dan tidak dapat diubah setelah dibuat untuk menjaga keterkaitan data dengan barang dan pelaporan anggaran.
+        <strong>BACA SAJA (READ-ONLY):</strong> Kode kategori bersifat permanen dan tidak dapat diubah setelah dibuat untuk menjaga keterkaitan data dengan barang inventori yang sudah terdaftar.
     </div>
 
     <h4 class="help-h"><i class="fa fa-pencil text-primary"></i> Data Yang Dapat Diubah</h4>
     <ul class="help-list">
         <li>
-            <strong>Nama Departemen</strong>: Anda dapat mengubah nama departemen agar lebih deskriptif atau sesuai dengan nama divisi terbaru.
-        </li>
-        <li>
-            <strong>Deskripsi</strong>: Silakan tambahkan atau ubah keterangan mengenai fungsi atau detail departemen kerja ini.
+            <strong>Nama Kategori</strong>: Anda dapat mengubah nama kategori agar lebih tepat menggambarkan kelompok barang yang berada di bawahnya.
         </li>
     </ul>
 @endsection
@@ -36,8 +33,6 @@
     
     .form-control[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; border-color: #cbd5e1; }
     
-    textarea.form-control { height: auto; min-height: 100px; resize: vertical; }
-    
     .text-muted { font-size: 12px; color: #94a3b8; margin-top: 4px; display: block; }
     
     /* Button Styling */
@@ -51,7 +46,7 @@
 <div class="wrap-form">
     <div class="cardx">
         <div class="cardx-head">
-            <h2><i class="fa fa-pencil" style="color:#2563eb;"></i> Edit Departemen</h2>
+            <h2><i class="fa fa-pencil" style="color:#2563eb;"></i> Edit Kategori</h2>
         </div>
         
         <div class="cardx-body">
@@ -68,30 +63,25 @@
                 </div>
             @endif
 
-            <form action="{{ route('departments.update', $department->id) }}" method="POST" autocomplete="off">
+            <form action="{{ route('category.update', $category->id) }}" method="POST" autocomplete="off">
                 {{ csrf_field() }}
                 {{ method_field('PUT') }}
                 
                 <div class="form-group">
-                    <label>Kode Departemen (Tidak Dapat Diubah)</label>
-                    <input type="text" name="code" class="form-control" value="{{ old('code', $department->code) }}" readonly>
-                    <span class="text-muted"><i class="fa fa-lock"></i> Kode departemen dikunci demi integritas data relasi.</span>
+                    <label>Kode Kategori (Tidak Dapat Diubah)</label>
+                    <input type="text" name="code" class="form-control" value="{{ old('code', $category->code) }}" readonly>
+                    <span class="text-muted"><i class="fa fa-lock"></i> Kode kategori dikunci demi integritas data relasi barang.</span>
                 </div>
                 
                 <div class="form-group">
-                    <label>Nama Departemen</label>
-                    <input type="text" name="name" class="form-control" required placeholder="Contoh: Produksi, Teknik, Logistik" value="{{ old('name', $department->name) }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Deskripsi / Keterangan</label>
-                    <textarea name="description" class="form-control" placeholder="Keterangan opsional mengenai departemen ini...">{{ old('description', $department->description) }}</textarea>
+                    <label>Nama Kategori</label>
+                    <input type="text" name="name" class="form-control" required placeholder="Contoh: Alat Tulis Kantor, Kebutuhan Kebersihan" value="{{ old('name', $category->name) }}">
                 </div>
 
                 <hr style="margin:25px 0; border-top:1px solid #f1f5f9;">
                 
-                <button type="submit" class="btnx btn-save"><i class="fa fa-save"></i> Perbarui Departemen</button>
-                <a href="{{ route('departments.index') }}" class="btnx btn-cancel">Batal</a>
+                <button type="submit" class="btnx btn-save"><i class="fa fa-save"></i> Perbarui Kategori</button>
+                <a href="{{ route('category.index') }}" class="btnx btn-cancel">Batal</a>
             </form>
         </div>
     </div>

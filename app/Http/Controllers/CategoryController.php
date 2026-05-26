@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Department;
+use App\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class DepartmentController extends Controller
+class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $has = \Schema::hasTable('departments');
+        $has = \Schema::hasTable('categories');
         $q = $request->get('q', '');
 
         if ($has) {
-            $query = Department::query();
+            $query = Category::query();
             if ($q !== '') {
                 $like = '%' . $q . '%';
                 $op = (\DB::getDriverName() === 'pgsql') ? 'ILIKE' : 'like';
@@ -29,7 +29,7 @@ class DepartmentController extends Controller
             $rows = new \Illuminate\Pagination\LengthAwarePaginator(array(), 0, 20);
         }
 
-        return view('departments.index', array(
+        return view('category.index', array(
             'has'  => $has,
             'q'    => $q,
             'rows' => $rows
@@ -38,19 +38,23 @@ class DepartmentController extends Controller
     
     public function create()
     {
-        return view('departments.create');
+        return view('category.create');
     }
     
     public function store(Request $request)
-    {     
+    {
+        $this->validate($request, [
+            'code' => 'required|unique:categories',
+            'name' => 'required',
+        ]);
+        
         try {
-            Department::create([
+            Category::create([
                 'code' => $request->code,
-                'name' => $request->name,
-                'description' => $request->description
+                'name' => $request->name
             ]);
             
-            return redirect()->route('departments.index')->with('success', 'Departemen berhasil ditambahkan');
+            return redirect()->route('category.index')->with('success', 'Kategori berhasil ditambahkan');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
@@ -58,22 +62,26 @@ class DepartmentController extends Controller
     
     public function edit($id)
     {
-        $department = Department::findOrFail($id);
-        return view('departments.edit', compact('department'));
+        $category = Category::findOrFail($id);
+        return view('category.edit', compact('category'));
     }
     
     public function update(Request $request, $id)
     {
-        $department = Department::findOrFail($id);
-    
+        $category = Category::findOrFail($id);
+        
+        $this->validate($request, [
+            'code' => 'required|unique:categories,code,'.$id,
+            'name' => 'required',
+        ]);
+        
         try {
-            $department->update([
+            $category->update([
                 'code' => $request->code,
-                'name' => $request->name,
-                'description' => $request->description
+                'name' => $request->name
             ]);
             
-            return redirect()->route('departments.index')->with('success', 'Departemen berhasil diperbarui');
+            return redirect()->route('category.index')->with('success', 'Kategori berhasil diperbarui');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
@@ -81,20 +89,18 @@ class DepartmentController extends Controller
     
     public function destroy($id)
     {
-        $department = Department::findOrFail($id);
+        $category = Category::findOrFail($id);
         
         try {
             // Cek apakah masih ada item yang terkait
-            $hasItems = DB::table('item_department_buffers')
-                ->where('department_id', $id)
-                ->exists();
+            $hasItems = $category->items()->exists();
                 
             if ($hasItems) {
-                return back()->with('error', 'Departemen tidak bisa dihapus karena masih terkait dengan beberapa item');
+                return back()->with('error', 'Kategori tidak bisa dihapus karena masih terkait dengan beberapa item');
             }
             
-            $department->delete();
-            return redirect()->route('departments.index')->with('success', 'Departemen berhasil dihapus');
+            $category->delete();
+            return redirect()->route('category.index')->with('success', 'Kategori berhasil dihapus');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }

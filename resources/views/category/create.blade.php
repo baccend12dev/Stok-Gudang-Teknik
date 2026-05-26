@@ -1,20 +1,20 @@
 @extends('layouts.app')
-@section('title', 'Edit Departemen')
+@section('title', 'Tambah Kategori')
 
-{{-- === PANDUAN KONTEKSTUAL EDIT DEPARTEMEN === --}}
+{{-- === PANDUAN KONTEKSTUAL TAMBAH KATEGORI === --}}
 @section('help-content')
     <div class="help-alert" style="background:#eff6ff; border-left-color:#2563eb; color:#1e40af;">
         <i class="fa fa-info-circle"></i>
-        <strong>BACA SAJA (READ-ONLY):</strong> Kode departemen bersifat permanen dan tidak dapat diubah setelah dibuat untuk menjaga keterkaitan data dengan barang dan pelaporan anggaran.
+        <strong>KODE & NAMA:</strong> Kode kategori diisi singkat (2-5 karakter) dan unik untuk mempermudah identifikasi serta pengelompokan jenis barang gudang.
     </div>
 
-    <h4 class="help-h"><i class="fa fa-pencil text-primary"></i> Data Yang Dapat Diubah</h4>
+    <h4 class="help-h"><i class="fa fa-lightbulb-o text-warning"></i> Tips Penulisan</h4>
     <ul class="help-list">
         <li>
-            <strong>Nama Departemen</strong>: Anda dapat mengubah nama departemen agar lebih deskriptif atau sesuai dengan nama divisi terbaru.
+            <strong>Kode</strong>: Gunakan singkatan huruf besar, contoh: <code>ATK</code> untuk Alat Tulis Kantor, <code>SBN</code> untuk Sabun/Kebersihan, atau <code>AK</code> untuk Alat Kerja.
         </li>
         <li>
-            <strong>Deskripsi</strong>: Silakan tambahkan atau ubah keterangan mengenai fungsi atau detail departemen kerja ini.
+            <strong>Nama Kategori</strong>: Tulis nama lengkap kategori dengan jelas agar mempermudah staff admin ketika melakukan filter barang masuk atau keluar.
         </li>
     </ul>
 @endsection
@@ -34,10 +34,6 @@
     }
     .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); outline: none; }
     
-    .form-control[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; border-color: #cbd5e1; }
-    
-    textarea.form-control { height: auto; min-height: 100px; resize: vertical; }
-    
     .text-muted { font-size: 12px; color: #94a3b8; margin-top: 4px; display: block; }
     
     /* Button Styling */
@@ -51,7 +47,7 @@
 <div class="wrap-form">
     <div class="cardx">
         <div class="cardx-head">
-            <h2><i class="fa fa-pencil" style="color:#2563eb;"></i> Edit Departemen</h2>
+            <h2><i class="fa fa-tags" style="color:#2563eb;"></i> Tambah Kategori</h2>
         </div>
         
         <div class="cardx-body">
@@ -68,30 +64,24 @@
                 </div>
             @endif
 
-            <form action="{{ route('departments.update', $department->id) }}" method="POST" autocomplete="off">
+            <form action="{{ route('category.store') }}" method="POST" autocomplete="off">
                 {{ csrf_field() }}
-                {{ method_field('PUT') }}
                 
                 <div class="form-group">
-                    <label>Kode Departemen (Tidak Dapat Diubah)</label>
-                    <input type="text" name="code" class="form-control" value="{{ old('code', $department->code) }}" readonly>
-                    <span class="text-muted"><i class="fa fa-lock"></i> Kode departemen dikunci demi integritas data relasi.</span>
+                    <label>Kode Kategori</label>
+                    <input type="text" name="code" class="form-control" maxlength="10" required placeholder="Contoh: ATK, SBN, AK, PK" value="{{ old('code') }}">
+                    <span class="text-muted"><i class="fa fa-info-circle"></i> Maksimal 10 karakter, harus unik.</span>
                 </div>
                 
                 <div class="form-group">
-                    <label>Nama Departemen</label>
-                    <input type="text" name="name" class="form-control" required placeholder="Contoh: Produksi, Teknik, Logistik" value="{{ old('name', $department->name) }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Deskripsi / Keterangan</label>
-                    <textarea name="description" class="form-control" placeholder="Keterangan opsional mengenai departemen ini...">{{ old('description', $department->description) }}</textarea>
+                    <label>Nama Kategori</label>
+                    <input type="text" name="name" class="form-control" required placeholder="Contoh: Alat Tulis Kantor, Kebutuhan Kebersihan" value="{{ old('name') }}">
                 </div>
 
                 <hr style="margin:25px 0; border-top:1px solid #f1f5f9;">
                 
-                <button type="submit" class="btnx btn-save"><i class="fa fa-save"></i> Perbarui Departemen</button>
-                <a href="{{ route('departments.index') }}" class="btnx btn-cancel">Batal</a>
+                <button type="submit" class="btnx btn-save"><i class="fa fa-save"></i> Simpan Kategori</button>
+                <a href="{{ route('category.index') }}" class="btnx btn-cancel">Batal</a>
             </form>
         </div>
     </div>

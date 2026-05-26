@@ -266,8 +266,11 @@
         background: #fff;
         border: 1px solid #CBD5E1;
         border-radius: 6px;
-        padding: 8px 10px;
+        padding: 10px 14px;
         width: 100%;
+        max-width: 150px;
+        min-width: 110px;
+        display: inline-block;
         text-align: center; /* Center Text inside input */
         font-weight: 700;
         font-size: 14px;
@@ -574,20 +577,17 @@
                 <table class="app-table">
                     <thead>
                         <tr>
-                            <th style="width:35%;">Item & Kode</th>
+                            <th style="width:30%;">Item & Kode</th>
                             <th class="text-center" style="width:12%;">Stok</th>
-                            <th style="width:33%;">Analisa Plafon (Bulanan)</th>
+                            <th style="width:28%;">Analisa Plafon (Bulanan)</th>
                             <th class="text-center" style="width:10%;">Minta</th>
-                            <th class="text-center" style="width:10%;">Setuju</th>
+                            <th class="text-center" style="width:20%;">Setuju</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($bon->details as $d)
+                            @continue($bon->status != 'PENDING' && (float)$d->approved_quantity <= 0)
                             <?php 
-                                if ($bon->status != 'PENDING' && (float)$d->approved_quantity <= 0) {
-                                    continue;
-                                }
-
                                 $item = $d->item;
                                 $stock = $item ? (float)$item->current_stock : 0; // FIX: Cast ke float
                                 
@@ -680,13 +680,13 @@
 
                                 <td class="text-center">
                                     @if($bon->status == 'PENDING')
-                                        {{-- FIX: step="0.01" --}}
+                                        {{-- FIX: step="1" --}}
                                         <input type="number" 
                                                name="details[{{ $d->id }}][approved_quantity]" 
                                                value="{{ $valApproved }}" 
                                                class="input-modern js-calc approved-qty-input {{ $isLowStock ? 'error' : '' }}"
                                                min="0"
-                                               step="0.01"
+                                               step="1"
                                                data-item-name="{{ $item ? $item->name : 'Item' }}"
                                                data-max-stock="{{ $stock }}"
                                                data-max-req="{{ $d->quantity }}"

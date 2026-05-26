@@ -240,6 +240,7 @@ select.form-control {
             <th class="col-loc">Lokasi</th>
             <th class="col-buf">Buffer</th>
             <th class="col-stok">Stok</th>
+            <th style="width: 100px; text-align: center; background:#eff6ff; color:#2563eb; border-bottom:2px solid #3b82f6;">PO</th>
             <th class="col-stat">Status</th>
             <th class="col-act">Aksi</th>
           </tr>
@@ -273,6 +274,13 @@ select.form-control {
                <span style="font-weight:600; color:#059669;">{{ $currStock }}</span>
              @endif
           </td>
+          <td class="t-center" style="background:rgba(239, 246, 255, 0.3); font-weight:700;">
+             @if($it->ordered_qty > 0)
+               <span class="badge badge-ordered" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">{{ (float)$it->ordered_qty }}</span>
+             @else
+               <span class="text-muted" style="font-size:11px;">-</span>
+             @endif
+          </td>
           <td class="t-center">
             @if($levelLow)
               <span class="badge badge-low">LOW</span>
@@ -301,7 +309,7 @@ select.form-control {
         </tr>
       @empty
         <tr>
-            <td colspan="8" class="t-center" style="padding:40px;color:#94a3b8;">
+            <td colspan="9" class="t-center" style="padding:40px;color:#94a3b8;">
                 <i class="fa fa-folder-open-o" style="font-size:36px;margin-bottom:12px;opacity:0.5;"></i><br>
                 <span style="font-size:15px;font-weight:500;">Tidak ada data barang ditemukan.</span>
             </td>

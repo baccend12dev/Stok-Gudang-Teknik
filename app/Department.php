@@ -8,7 +8,7 @@ class Department extends Model
 {
     protected $table = 'departments';
 
-    protected $fillable = ['group_id', 'code', 'name', 'is_active'];
+    protected $fillable = ['group_id', 'code', 'name', 'is_active', 'description'];
 
     public function group()
     {

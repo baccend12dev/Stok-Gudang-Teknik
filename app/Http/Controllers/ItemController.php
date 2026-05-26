@@ -58,7 +58,21 @@ class ItemController extends Controller
                 DB::raw("COALESCE(i.location, '-') as location"),
                 DB::raw("COALESCE(i.current_stock, 0) as current_stock"),
                 DB::raw("COALESCE(i.buffer_min, 0) as buffer_min"),
-                DB::raw("COALESCE(i.current_status, '') as current_status")
+                DB::raw("COALESCE(i.current_status, '') as current_status"),
+                DB::raw("COALESCE((
+                    SELECT SUM(
+                        GREATEST(0, pod.quantity - COALESCE(
+                            (SELECT SUM(lpd.quantity)
+                             FROM lpb_details lpd
+                             JOIN lpb_headers lph ON lph.id = lpd.lpb_header_id
+                             WHERE lph.purchase_order_id = po.id AND lpd.item_id = pod.item_id
+                            ), 0
+                        ))
+                    )
+                    FROM purchase_order_details pod
+                    JOIN purchase_orders po ON po.id = pod.purchase_order_id
+                    WHERE po.status IN ('ORDERED', 'PARTIALLY_RECEIVED') AND pod.item_id = v.id
+                ), 0) as ordered_qty")
             );
 
         if (is_array($allowedItemIds)) {

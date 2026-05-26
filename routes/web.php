@@ -54,10 +54,17 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('/lpbs/{id}', 'LpbController@update')->name('lpbs.update');
     Route::delete('/lpbs/{id}', 'LpbController@destroy')->name('lpbs.destroy');
 
+    /** PURCHASE ORDER (PO) */
+    Route::post('purchase-orders/create-from-alerts', 'PurchaseOrderController@createFromAlerts')->name('purchase-orders.create-from-alerts');
+    Route::post('purchase-orders/{id}/ordered', 'PurchaseOrderController@markAsOrdered')->name('purchase-orders.ordered');
+    Route::post('purchase-orders/{id}/cancel', 'PurchaseOrderController@cancel')->name('purchase-orders.cancel');
+    Route::resource('purchase-orders', 'PurchaseOrderController');
+
     /** STOCK OPNAME */
     // 1. API & Helper Routes (Ditaruh paling atas agar tidak dianggap sebagai ID oleh Laravel)
     Route::get('api/so/items-by-category', 'StockOpnameController@getItemsByCategory')->name('api.so.items_by_category');
     Route::get('stock-opnames/get-all-items', 'StockOpnameController@getAllItems')->name('stock-opnames.get_all_items');
+    Route::get('api/purchase-orders/{id}/remaining-items', 'LpbController@getPoRemainingItems')->name('api.purchase-orders.remaining-items');
 
     // 2. Custom Actions (Process Adjustment & Export Excel)
     Route::post('stock-opnames/{id}/process', 'StockOpnameController@process')->name('stock-opnames.process');
@@ -102,7 +109,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('bons', 'BonController');
 
     /** Departments */
-    Route::get('/departments', 'DepartmentController@index')->name('departments.index');
+    Route::resource('departments', 'DepartmentController');
+
+    /** Category */
+    Route::resource('category','CategoryController');
 
     /** Reports */
     Route::get('/reports',                 'ReportController@index')->name('reports.index');
