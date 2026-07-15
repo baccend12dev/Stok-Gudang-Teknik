@@ -17,8 +17,6 @@
 
 {{-- Load Select2 CSS --}}
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-{{-- Load Chart.js --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
     body { background-color: #f5f5f5 !important; }
@@ -292,10 +290,11 @@
             </table>
         </div>
     </div>
-
 </div>
+@endsection
 
-<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
@@ -348,5 +347,4 @@
         });
     });
 </script>
-
 @endsection

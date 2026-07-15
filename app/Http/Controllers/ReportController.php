@@ -966,20 +966,31 @@ class ReportController extends Controller
 
         // Prepare chart datasets
         $chartDatasets = [];
-        $chartDatasets[] = [
-            'label' => 'Total Pemakaian (Semua)',
-            'data' => array_values($monthlyTotals),
-            'borderColor' => '#6366f1',
-            'backgroundColor' => 'rgba(99, 102, 241, 0.05)',
-            'borderWidth' => 3,
-            'fill' => true,
-            'tension' => 0.3
-        ];
+        if ($itemId && count($trendData) > 0) {
+            $first = reset($trendData);
+            $chartDatasets[] = [
+                'label' => '[' . $first['code'] . '] ' . $first['name'],
+                'data' => array_values($monthlyTotals),
+                'borderColor' => '#6366f1',
+                'backgroundColor' => 'rgba(99, 102, 241, 0.05)',
+                'borderWidth' => 3,
+                'fill' => true,
+                'tension' => 0.3
+            ];
+        } else {
+            $chartDatasets[] = [
+                'label' => 'Total Pemakaian (Semua)',
+                'data' => array_values($monthlyTotals),
+                'borderColor' => '#6366f1',
+                'backgroundColor' => 'rgba(99, 102, 241, 0.05)',
+                'borderWidth' => 3,
+                'fill' => true,
+                'tension' => 0.3
+            ];
 
-        if (!$itemId) {
-            $colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+            $colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#3b82f6', '#14b8a6', '#f43f5e', '#84cc16'];
             $colorIdx = 0;
-            $topItems = array_slice($trendData, 0, 5, true);
+            $topItems = array_slice($trendData, 0, 10, true);
             foreach ($topItems as $itemData) {
                 $chartDatasets[] = [
                     'label' => '[' . $itemData['code'] . '] ' . $itemData['name'],
