@@ -114,6 +114,11 @@
     .theme-green .action-arrow { color: #16a34a; }
     .theme-green:hover { border-top: 4px solid #16a34a; }
 
+    /* 4. Movement Report (Orange) */
+    .theme-orange .icon-wrapper { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+    .theme-orange .action-arrow { color: #ea580c; }
+    .theme-orange:hover { border-top: 4px solid #ea580c; }
+
 </style>
 
 <div class="page-container">
@@ -150,6 +155,16 @@
             <div class="report-title">Laporan Bulanan (All)</div>
             <div class="report-desc">
                 Rekapitulasi total stok Awal, Masuk, Keluar, dan Akhir seluruh barang dalam satu periode. Mendukung export Excel format khusus (Valuasi Rp) untuk Accounting.
+            </div>
+            <div class="action-arrow">Buka Laporan <i class="fa fa-arrow-right"></i></div>
+        </a>
+
+        {{-- 4. LAPORAN PERGERAKAN BARANG (FAST/SLOW) --}}
+        <a href="{{ route('reports.movement') }}" class="report-card theme-orange">
+            <div class="icon-wrapper"><i class="fa fa-sliders"></i></div>
+            <div class="report-title">Laporan Pergerakan Barang</div>
+            <div class="report-desc">
+                Analisa klasifikasi perputaran barang (Fast, Slow, atau Normal Moving) berdasarkan volume pengeluaran barang dan batas threshold per barang.
             </div>
             <div class="action-arrow">Buka Laporan <i class="fa fa-arrow-right"></i></div>
         </a>

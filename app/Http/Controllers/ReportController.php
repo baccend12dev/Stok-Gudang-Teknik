@@ -64,6 +64,7 @@ class ReportController extends Controller
         $items = Item::select('id', 'code', 'name', 'unit', 'current_stock')
                       ->orderBy('name', 'asc')
                       ->get();
+        // dd($items);
         
         $selectedItem = null;
         $transactions = [];
@@ -123,11 +124,22 @@ class ReportController extends Controller
 
                 } elseif ($t->type == 'OPNAME') {
                     $docType = 'SO';
-                    $routeDetail = route('stock-opnames.show', $t->reference_id);
-                    $deptName = 'Adjustment System';
+                    // Jika ini adalah saldo awal dari input barang baru atau edit manual, jangan beri link detail
+                    if (strpos($t->reference_number, 'SALDO-AWAL-') !== false || strpos($t->reference_number, 'ADJ-EDIT-') !== false) {
+                        $routeDetail = '#';
+                        $deptName = 'System';
+                    } else {
+                        $routeDetail = route('stock-opnames.show', $t->reference_id);
+                        $deptName = 'Adjustment System';
+                    }
                 }
 
                 $desc = isset($t->description) ? $t->description : '-';
+                if (strpos($t->reference_number, 'SALDO-AWAL-') !== false) {
+                    $desc = 'Input Barang Baru (Stok Awal)';
+                } elseif (strpos($t->reference_number, 'ADJ-EDIT-') !== false) {
+                    $desc = 'Penyesuaian Stok (Edit Manual)';
+                }
 
                 $transactions[] = (object) [
                     'date' => $t->date,
@@ -709,6 +721,128 @@ class ReportController extends Controller
                         $row->notes
                     ]);
                     $rowNum++;
+                    $no++;
+                }
+                $sheet->setAutoSize(true);
+            });
+        })->download('xlsx');
+    }
+
+    public function itemMovement(Request $request)
+    {
+        $start = $request->get('start_date', date('Y-m-01'));
+        $end   = $request->get('end_date', date('Y-m-t'));
+        $selectedClass = $request->get('classification', 'ALL');
+
+        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
+
+        $query = Item::with('category')->where('current_status', 'ACTIVE');
+        if (is_array($allowedItemIds)) {
+            $query->whereIn('id', $allowedItemIds);
+        }
+        $items = $query->orderBy('name', 'asc')->get();
+
+        $movements = DB::table('item_movements')
+            ->whereBetween('date', [$start, $end])
+            ->where('quantity', '<', 0)
+            ->groupBy('item_id')
+            ->select('item_id', DB::raw('SUM(ABS(quantity)) as total_out'))
+            ->pluck('total_out', 'item_id')
+            ->all();
+
+        $filteredItems = collect([]);
+        foreach ($items as $item) {
+            $totalOut = isset($movements[$item->id]) ? (float)$movements[$item->id] : 0.0;
+            $item->total_out = $totalOut;
+
+            $fast = (float)$item->batas_fast_moving;
+            $slow = (float)$item->batas_slow_moving;
+
+            if ($fast > 0 && $totalOut >= $fast) {
+                $class = 'FAST';
+            } elseif ($slow > 0 && $totalOut <= $slow) {
+                $class = 'SLOW';
+            } else {
+                $class = 'NORMAL';
+            }
+            $item->classification = $class;
+
+            if ($selectedClass === 'ALL' || $class === $selectedClass) {
+                $filteredItems->push($item);
+            }
+        }
+
+        return view('reports.movement', compact('filteredItems', 'start', 'end', 'selectedClass'));
+    }
+
+    public function exportItemMovement(Request $request)
+    {
+        $start = $request->get('start_date', date('Y-m-01'));
+        $end   = $request->get('end_date', date('Y-m-t'));
+        $selectedClass = $request->get('classification', 'ALL');
+
+        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
+
+        $query = Item::with('category')->where('current_status', 'ACTIVE');
+        if (is_array($allowedItemIds)) {
+            $query->whereIn('id', $allowedItemIds);
+        }
+        $items = $query->orderBy('name', 'asc')->get();
+
+        $movements = DB::table('item_movements')
+            ->whereBetween('date', [$start, $end])
+            ->where('quantity', '<', 0)
+            ->groupBy('item_id')
+            ->select('item_id', DB::raw('SUM(ABS(quantity)) as total_out'))
+            ->pluck('total_out', 'item_id')
+            ->all();
+
+        $filteredItems = collect([]);
+        foreach ($items as $item) {
+            $totalOut = isset($movements[$item->id]) ? (float)$movements[$item->id] : 0.0;
+            $item->total_out = $totalOut;
+
+            $fast = (float)$item->batas_fast_moving;
+            $slow = (float)$item->batas_slow_moving;
+
+            if ($fast > 0 && $totalOut >= $fast) {
+                $class = 'FAST';
+            } elseif ($slow > 0 && $totalOut <= $slow) {
+                $class = 'SLOW';
+            } else {
+                $class = 'NORMAL';
+            }
+            $item->classification = $class;
+
+            if ($selectedClass === 'ALL' || $class === $selectedClass) {
+                $filteredItems->push($item);
+            }
+        }
+
+        return Excel::create('Laporan_Pergerakan_Barang_' . $start . '_sd_' . $end, function($excel) use ($filteredItems, $start, $end, $selectedClass) {
+            $excel->sheet('Pergerakan Barang', function($sheet) use ($filteredItems, $start, $end, $selectedClass) {
+                $sheet->mergeCells('A1:H1');
+                $sheet->row(1, ['LAPORAN PERGERAKAN BARANG (' . $selectedClass . ')']);
+                $sheet->row(2, ['Periode: ' . $start . ' s/d ' . $end]);
+                $sheet->row(3, []);
+
+                $sheet->row(4, ['No', 'Kode Barang', 'Nama Barang', 'Kategori', 'Batas Fast', 'Batas Slow', 'Total Keluar', 'Status']);
+                $sheet->row(4, function($r){ $r->setFontWeight('bold')->setBackground('#CCCCCC'); });
+
+                $rowIdx = 5;
+                $no = 1;
+                foreach ($filteredItems as $item) {
+                    $sheet->row($rowIdx, [
+                        $no,
+                        $item->code,
+                        $item->name,
+                        $item->category ? $item->category->name : '-',
+                        (float)$item->batas_fast_moving,
+                        (float)$item->batas_slow_moving,
+                        (float)$item->total_out,
+                        $item->classification
+                    ]);
+                    $rowIdx++;
                     $no++;
                 }
                 $sheet->setAutoSize(true);

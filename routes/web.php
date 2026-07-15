@@ -120,6 +120,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/reports/stock-card',      'ReportController@stockCard')->name('reports.stock-card');
     Route::get('/reports/department-usage','ReportController@departmentUsage')->name('reports.department-usage');
     Route::get('/reports/saldo',           'ReportController@saldo')->name('reports.saldo');
+    Route::get('/reports/movement',        'ReportController@itemMovement')->name('reports.movement');
+    Route::get('/reports/movement/export', 'ReportController@exportItemMovement')->name('reports.movement.export');
+
 
     // Laporan BON
     Route::get('/reports/bon-items',        'BonController@reportPerItem')->name('reports.bon-items');
@@ -193,6 +196,10 @@ Route::group(['middleware' => 'auth'], function () {
     // MASTER DATA: DEPARTMENT BUDGETS (PLAFON)
     Route::get('/budgets', 'DepartmentBudgetController@index')->name('budgets.index');
     Route::post('/budgets', 'DepartmentBudgetController@store')->name('budgets.store');
+
+    // MASTER DATA: ITEM THRESHOLDS (FAST/SLOW MOVING)
+    Route::get('/thresholds', 'ItemThresholdController@index')->name('thresholds.index');
+    Route::post('/thresholds', 'ItemThresholdController@store')->name('thresholds.store');
 });
 
 Route::get('/logout', 'AuthController@logout')->name('logout');

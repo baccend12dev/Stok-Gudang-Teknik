@@ -204,8 +204,8 @@ class ItemController extends Controller
         $item->name = $request->name;
         $item->unit = $request->unit;
         
-        // FIX: Simpan sebagai float/decimal
-        $item->current_stock = $request->input('current_stock', 0);
+        // Simpan stok awal sementara sebagai 0, karena akan ditambahkan lewat InventoryHelper
+        $item->current_stock = 0;
         $item->buffer_min    = $request->input('buffer_min', 0);
         
         $item->book          = $request->input('book', 'ATK'); 
@@ -215,6 +215,19 @@ class ItemController extends Controller
         $item->category_id   = $request->category_id;
         
         $item->save();
+
+        // Catat stok awal menggunakan InventoryHelper agar balance_after otomatis terisi
+        $initialStock = (float) $request->input('current_stock', 0);
+        if ($initialStock > 0) {
+            \App\Helpers\InventoryHelper::recordMovement(
+                $item->id,
+                date('Y-m-d'),
+                'OPNAME',
+                $item->id,
+                'SALDO-AWAL-' . $item->code,
+                $initialStock
+            );
+        }
 
         return redirect()->route('items.index')
             ->with('success', 'Berhasil menyimpan ' . $item->name);
@@ -285,9 +298,7 @@ class ItemController extends Controller
         }
         $item->category_id = $request->category_id;
 
-        if ($request->has('current_stock')) {
-            $item->current_stock = $request->current_stock;
-        }
+        $oldStock = (float) $item->current_stock;
 
         if ($request->has('book')) {
             $item->book = $request->book;
@@ -298,6 +309,23 @@ class ItemController extends Controller
         }
 
         $item->save();
+
+        // Jika ada perubahan current_stock di input form
+        if ($request->has('current_stock')) {
+            $newStock = (float) $request->current_stock;
+            $diff = $newStock - $oldStock;
+
+            if ($diff != 0) {
+                \App\Helpers\InventoryHelper::recordMovement(
+                    $item->id,
+                    date('Y-m-d'),
+                    'OPNAME',
+                    $item->id,
+                    'ADJ-EDIT-' . $item->code,
+                    $diff
+                );
+            }
+        }
 
         return redirect()->route('items.index')
             ->with('success', 'Berhasil memperbarui ' . $item->name);

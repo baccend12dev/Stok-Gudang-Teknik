@@ -113,35 +113,37 @@
     .table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; table-layout: fixed; }
     
     .table thead th { 
-        background: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; 
-        padding: 16px 16px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; 
+        background: #f8fafc; color: #475569; font-size: 11px; font-weight: 700; 
+        padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; 
         white-space: nowrap; vertical-align: middle; position: sticky; top: 0; z-index: 10; letter-spacing: 0.5px;
     }
     .table tbody td { 
-        padding: 14px 16px; font-size: 14px; color: #1e293b; 
+        padding: 8px 8px; font-size: 13px; color: #1e293b; 
         border-bottom: 1px solid #f1f5f9; vertical-align: middle; 
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .table tbody tr:hover { background: #f8fafc; }
     .table tbody tr:last-child td { border-bottom: none; }
     
-    .col-cb { width: 50px; text-align: center; }
-    .col-code { width: 110px; text-align: center; }
-    .col-name { width: auto; white-space: normal !important; line-height: 1.4; }
-    .col-loc  { width: 140px; }
-    .col-unit { width: 100px; text-align: center; }
-    .col-buf  { width: 110px; text-align: center; }
-    .col-stok { width: 110px; text-align: center; }
-    .col-ordered { width: 140px; text-align: center; }
-    .col-stat { width: 120px; text-align: center; }
-    .col-saran{ width: 120px; text-align: center; }
+    .col-cb { width: 40px; text-align: center; }
+    .col-code { width: 90px; text-align: center; }
+    .col-name { width: auto; white-space: normal !important; line-height: 1.3; }
+    .col-loc  { width: 110px; }
+    .col-unit { width: 80px; text-align: center; }
+    .col-buf  { width: 90px; text-align: center; }
+    .col-stok { width: 90px; text-align: center; }
+    .col-ordered { width: 110px; text-align: center; }
+    .col-movement { width: 110px; text-align: center; }
+    .col-stat { width: 100px; text-align: center; }
+    .col-saran{ width: 100px; text-align: center; }
 
-    .badge { padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; }
+    .badge { padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; }
     .badge-dark-soft { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; } 
     .badge-danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
     .badge-warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
     .badge-success { background: #ecfdf5; color: #15803d; border: 1px solid #86efac; }
     .badge-ordered { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .badge-primary { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
     
     .suggestion-box { background: #f0fdf4; color: #15803d; font-weight: 700; padding: 4px 12px; border-radius: 99px; display: inline-block; border: 1px solid #bbf7d0; font-size: 12px; }
     .row-critical { background-color: #fff1f2; } 
@@ -263,6 +265,7 @@
                         <th class="col-buf">Buffer Min</th>
                         <th class="col-stok">Stok Fisik</th>
                         <th class="col-ordered" style="background:#eff6ff; color:#2563eb; border-bottom:2px solid #3b82f6;">Sedang Dipesan</th>
+                        <th class="col-movement">Pergerakan</th>
                         <th class="col-stat">Status</th>
                         <th class="col-saran" style="background:#f0fdf4; color:#15803d; border-bottom:2px solid #16a34a;">Saran Order</th>
                     </tr>
@@ -292,6 +295,16 @@
                         </td>
 
                         <td style="text-align:center;">
+                            @if($it->classification == 'FAST')
+                                <span class="badge badge-success" title="Keluar 30 hari: {{ $it->total_out_30 }}">FAST</span>
+                            @elseif($it->classification == 'SLOW')
+                                <span class="badge badge-danger" title="Keluar 30 hari: {{ $it->total_out_30 }}">SLOW</span>
+                            @else
+                                <span class="badge badge-primary" title="Keluar 30 hari: {{ $it->total_out_30 }}">NORMAL</span>
+                            @endif
+                        </td>
+
+                        <td style="text-align:center;">
                             <span class="badge {{ $it->status_class }}">{{ $it->status_label }}</span>
                         </td>
 
@@ -305,7 +318,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" style="text-align:center; padding:40px; color:#6b7280;">
+                        <td colspan="11" style="text-align:center; padding:40px; color:#6b7280;">
                             <i class="fa fa-inbox" style="font-size:32px; color:#cbd5e1; margin-bottom:10px; display:block;"></i>
                             <div><b>Data Tidak Ditemukan</b></div>
                             <div style="font-size:12px;">Tidak ada item yang sesuai dengan kriteria filter ini.</div>

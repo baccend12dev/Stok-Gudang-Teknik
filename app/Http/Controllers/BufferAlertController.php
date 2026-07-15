@@ -105,7 +105,20 @@ class BufferAlertController extends Controller
                    ->appends($request->query());
 
         // --- 3. LOGIC STATUS & SARAN ORDER ---
-        $items->getCollection()->transform(function ($item) {
+        $paginatedItemIds = $items->pluck('id')->toArray();
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+        $endDate = date('Y-m-d');
+
+        $movements = \DB::table('item_movements')
+            ->whereIn('item_id', $paginatedItemIds)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('quantity', '<', 0)
+            ->groupBy('item_id')
+            ->select('item_id', \DB::raw('SUM(ABS(quantity)) as total_out'))
+            ->pluck('total_out', 'item_id')
+            ->all();
+
+        $items->getCollection()->transform(function ($item) use ($movements) {
             // FIX: Cast ke float
             $stok = (float) $item->current_stock;
             $buff = (float) $item->buffer_min;
@@ -130,6 +143,23 @@ class BufferAlertController extends Controller
             }
 
             $item->suggested_qty = (float) $saran; // Pastikan float
+
+            // Rolling 30 Days Movement classification
+            $totalOut = isset($movements[$item->id]) ? (float)$movements[$item->id] : 0.0;
+            $item->total_out_30 = $totalOut;
+
+            $fast = (float)$item->batas_fast_moving;
+            $slow = (float)$item->batas_slow_moving;
+
+            if ($fast > 0 && $totalOut >= $fast) {
+                $class = 'FAST';
+            } elseif ($slow > 0 && $totalOut <= $slow) {
+                $class = 'SLOW';
+            } else {
+                $class = 'NORMAL';
+            }
+            $item->classification = $class;
+
             return $item;
         });
 
@@ -172,9 +202,22 @@ class BufferAlertController extends Controller
 
         $items = $itemsQuery->orderBy('current_stock', 'asc')->get();
 
-        return Excel::create('Rencana_Pembelian_' . date('d-m-Y'), function ($excel) use ($items) {
-            $excel->sheet('Plan', function ($sheet) use ($items) {
-                $sheet->row(1, ['KODE', 'NAMA BARANG', 'LOKASI', 'SATUAN', 'STOK SAAT INI', 'BUFFER MIN', 'STATUS', 'SARAN ORDER (QTY)']);
+        $itemIds = $items->pluck('id')->toArray();
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+        $endDate = date('Y-m-d');
+
+        $movements = \DB::table('item_movements')
+            ->whereIn('item_id', $itemIds)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('quantity', '<', 0)
+            ->groupBy('item_id')
+            ->select('item_id', \DB::raw('SUM(ABS(quantity)) as total_out'))
+            ->pluck('total_out', 'item_id')
+            ->all();
+
+        return Excel::create('Rencana_Pembelian_' . date('d-m-Y'), function ($excel) use ($items, $movements) {
+            $excel->sheet('Plan', function ($sheet) use ($items, $movements) {
+                $sheet->row(1, ['KODE', 'NAMA BARANG', 'LOKASI', 'SATUAN', 'STOK SAAT INI', 'BUFFER MIN', 'STATUS', 'PERGERAKAN (30 HARI)', 'SARAN ORDER (QTY)']);
                 $sheet->row(1, function ($row) {
                     $row->setBackground('#FFEDB8')->setFontWeight('bold')->setAlignment('center');
                 });
@@ -198,6 +241,19 @@ class BufferAlertController extends Controller
                         $saran = 0;
                     }
 
+                    // Classification
+                    $totalOut = isset($movements[$item->id]) ? (float)$movements[$item->id] : 0.0;
+                    $fast = (float)$item->batas_fast_moving;
+                    $slow = (float)$item->batas_slow_moving;
+
+                    if ($fast > 0 && $totalOut >= $fast) {
+                        $class = 'FAST';
+                    } elseif ($slow > 0 && $totalOut <= $slow) {
+                        $class = 'SLOW';
+                    } else {
+                        $class = 'NORMAL';
+                    }
+
                     $sheet->row($row, [
                         $item->code,
                         $item->name,
@@ -206,6 +262,7 @@ class BufferAlertController extends Controller
                         (float) $stok,
                         (float) $buff,
                         $status,
+                        $class,
                         (float) $saran
                     ]);
                     $row++;

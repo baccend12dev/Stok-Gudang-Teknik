@@ -317,10 +317,16 @@
                         </a>
                     </li>
 
-                    <li class="{{ Request::is('budgets*') ? 'active' : '' }}">
+                    <!-- <li class="{{ Request::is('budgets*') ? 'active' : '' }}">
                         <a href="{{ route('budgets.index') }}">
                             <i class="fa fa-sliders"></i> 
                             <span>Atur Plafon Dept.</span>
+                        </a>
+                    </li> -->
+                    <li class="{{ Request::is('thresholds*') ? 'active' : '' }}">
+                        <a href="{{ route('thresholds.index') }}">
+                            <i class="fa fa-sliders"></i> 
+                            <span>Atur TrashHold.</span>
                         </a>
                     </li>
 
