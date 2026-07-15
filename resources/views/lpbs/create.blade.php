@@ -661,8 +661,7 @@
             $element.select2({
                 placeholder: "-- Cari Barang --",
                 allowClear: true,
-                width: '100%',
-                theme: "default"
+                width: '100%'
             });
         }
 
@@ -692,8 +691,7 @@
                         <select name="items[${index}][item_id]" class="form-control item-select">
                             <option value="">-- Cari Barang --</option>
                             @foreach($items as $item)
-                                <option value="{{ $item->id }}" data-unit="{{ $item->unit }}"
-                                    ${selectedItemId == $item->id ? 'selected' : ''}>
+                                <option value="{{ $item->id }}" data-unit="{{ $item->unit }}">
                                     [{{ $item->code }}] {{ $item->name }}
                                 </option>
                             @endforeach
@@ -713,6 +711,9 @@
                 </tr>
             `;
             let $newRowObj = $(newRow);
+            if (selectedItemId) {
+                $newRowObj.find('.item-select').val(selectedItemId);
+            }
             tbody.append($newRowObj);
             initSelect2($newRowObj.find('.item-select'));
         }

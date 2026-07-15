@@ -14,6 +14,7 @@ use App\LpbHeader;
 use App\LpbDetail;
 use App\StockOpnameHeader;
 use App\StockOpnameDetail;
+use App\Category;
 
 class ReportController extends Controller
 {   
@@ -110,7 +111,7 @@ class ReportController extends Controller
                 if ($t->type == 'LPB') {
                     $docType = 'LPB';
                     $routeDetail = route('lpbs.edit', $t->reference_id); 
-                    $deptName = 'Logistik / Gudang';
+                    $deptName = 'Teknik';
                 } elseif ($t->type == 'BON') {
                     $docType = 'BON';
                     $routeDetail = route('bons.show', $t->reference_id);
@@ -874,5 +875,253 @@ class ReportController extends Controller
         }
 
         return $ids;
+    }
+
+    public function usageTrend(Request $request)
+    {
+        $year        = $request->get('year', date('Y'));
+        $itemId      = $request->get('item_id');
+        $categoryId  = $request->get('category_id');
+        $deptId      = $request->get('department_id');
+
+        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
+
+        // Get filter dropdown datasets
+        $itemsQuery = Item::orderBy('name');
+        if (is_array($allowedItemIds)) {
+            $itemsQuery->whereIn('id', $allowedItemIds);
+        }
+        $items = $itemsQuery->get();
+
+        $categories = Category::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+
+        // Build main query to fetch usage trend
+        $query = DB::table('item_movements')
+            ->join('items', 'item_movements.item_id', '=', 'items.id')
+            ->leftJoin('bon_headers', function($join) {
+                $join->on('item_movements.reference_id', '=', 'bon_headers.id')
+                     ->where('item_movements.type', '=', 'BON');
+            })
+            ->whereYear('item_movements.date', $year)
+            ->where('item_movements.quantity', '<', 0); // outflow
+
+        if (is_array($allowedItemIds)) {
+            $query->whereIn('item_movements.item_id', $allowedItemIds);
+        }
+        if ($itemId) {
+            $query->where('item_movements.item_id', $itemId);
+        }
+        if ($categoryId) {
+            $query->where('items.category_id', $categoryId);
+        }
+        if ($deptId) {
+            $query->where('bon_headers.department_id', $deptId);
+        }
+
+        $movements = $query->select(
+            'item_movements.item_id',
+            'items.code',
+            'items.name',
+            'items.unit',
+            DB::raw('EXTRACT(month FROM item_movements.date) as month'),
+            DB::raw('SUM(ABS(item_movements.quantity)) as total_qty')
+        )
+        ->groupBy('item_movements.item_id', 'items.code', 'items.name', 'items.unit', DB::raw('EXTRACT(month FROM item_movements.date)'))
+        ->get();
+
+        // Group into matrix: item_id => [months => [1=>0, 2=>0, ...], total => X]
+        $trendData = [];
+        foreach ($movements as $m) {
+            if (!isset($trendData[$m->item_id])) {
+                $trendData[$m->item_id] = [
+                    'item_id' => $m->item_id,
+                    'code'    => $m->code,
+                    'name'    => $m->name,
+                    'unit'    => $m->unit,
+                    'months'  => array_fill(1, 12, 0.0),
+                    'total'   => 0.0
+                ];
+            }
+            $trendData[$m->item_id]['months'][(int)$m->month] = (float)$m->total_qty;
+            $trendData[$m->item_id]['total'] += (float)$m->total_qty;
+        }
+
+        // Sort items by total usage descending (PHP 5.6 ke atas / semua versi)
+        uasort($trendData, function ($a, $b) {
+            if ($a['total'] == $b['total']) {
+                return 0;
+            }
+            // Karena ingin descending (terbesar ke terkecil), kita cek jika $b lebih besar
+            return ($b['total'] > $a['total']) ? 1 : -1;
+        });
+
+        // Overall Monthly Total
+        $monthlyTotals = array_fill(1, 12, 0.0);
+        foreach ($trendData as $tData) {
+            foreach ($tData['months'] as $mIdx => $qty) {
+                $monthlyTotals[$mIdx] += $qty;
+            }
+        }
+
+        // Prepare chart datasets
+        $chartDatasets = [];
+        $chartDatasets[] = [
+            'label' => 'Total Pemakaian (Semua)',
+            'data' => array_values($monthlyTotals),
+            'borderColor' => '#6366f1',
+            'backgroundColor' => 'rgba(99, 102, 241, 0.05)',
+            'borderWidth' => 3,
+            'fill' => true,
+            'tension' => 0.3
+        ];
+
+        if (!$itemId) {
+            $colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+            $colorIdx = 0;
+            $topItems = array_slice($trendData, 0, 5, true);
+            foreach ($topItems as $itemData) {
+                $chartDatasets[] = [
+                    'label' => '[' . $itemData['code'] . '] ' . $itemData['name'],
+                    'data' => array_values($itemData['months']),
+                    'borderColor' => $colors[$colorIdx % count($colors)],
+                    'backgroundColor' => 'transparent',
+                    'borderWidth' => 1.5,
+                    'tension' => 0.3
+                ];
+                $colorIdx++;
+            }
+        }
+
+        $totalAnnualQty = array_sum($monthlyTotals);
+        $topItemName = '-';
+        if (count($trendData) > 0) {
+            $first = reset($trendData);
+            $topItemName = '[' . $first['code'] . '] ' . $first['name'] . ' (' . number_format($first['total'], 2) . ' ' . $first['unit'] . ')';
+        }
+
+        $highestMonthVal = 0;
+        $highestMonthIdx = 1;
+        foreach ($monthlyTotals as $mIdx => $qty) {
+            if ($qty > $highestMonthVal) {
+                $highestMonthVal = $qty;
+                $highestMonthIdx = $mIdx;
+            }
+        }
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $peakMonth = $monthNames[$highestMonthIdx] . ' (' . number_format($highestMonthVal, 2) . ')';
+
+        return view('reports.usage_trend', compact(
+            'items', 'categories', 'departments', 'year', 'itemId', 'categoryId', 'deptId',
+            'trendData', 'chartDatasets', 'totalAnnualQty', 'topItemName', 'peakMonth'
+        ));
+    }
+
+    public function exportUsageTrend(Request $request)
+    {
+        $year        = $request->get('year', date('Y'));
+        $itemId      = $request->get('item_id');
+        $categoryId  = $request->get('category_id');
+        $deptId      = $request->get('department_id');
+
+        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
+
+        $query = DB::table('item_movements')
+            ->join('items', 'item_movements.item_id', '=', 'items.id')
+            ->leftJoin('bon_headers', function($join) {
+                $join->on('item_movements.reference_id', '=', 'bon_headers.id')
+                     ->where('item_movements.type', '=', 'BON');
+            })
+            ->whereYear('item_movements.date', $year)
+            ->where('item_movements.quantity', '<', 0);
+
+        if (is_array($allowedItemIds)) {
+            $query->whereIn('item_movements.item_id', $allowedItemIds);
+        }
+        if ($itemId) {
+            $query->where('item_movements.item_id', $itemId);
+        }
+        if ($categoryId) {
+            $query->where('items.category_id', $categoryId);
+        }
+        if ($deptId) {
+            $query->where('bon_headers.department_id', $deptId);
+        }
+
+        $movements = $query->select(
+            'item_movements.item_id',
+            'items.code',
+            'items.name',
+            'items.unit',
+            DB::raw('EXTRACT(month FROM item_movements.date) as month'),
+            DB::raw('SUM(ABS(item_movements.quantity)) as total_qty')
+        )
+        ->groupBy('item_movements.item_id', 'items.code', 'items.name', 'items.unit', DB::raw('EXTRACT(month FROM item_movements.date)'))
+        ->get();
+
+        $trendData = [];
+        foreach ($movements as $m) {
+            if (!isset($trendData[$m->item_id])) {
+                $trendData[$m->item_id] = [
+                    'code'    => $m->code,
+                    'name'    => $m->name,
+                    'unit'    => $m->unit,
+                    'months'  => array_fill(1, 12, 0.0),
+                    'total'   => 0.0
+                ];
+            }
+            $trendData[$m->item_id]['months'][(int)$m->month] = (float)$m->total_qty;
+            $trendData[$m->item_id]['total'] += (float)$m->total_qty;
+        }
+
+        // Sort items by total usage descending (Kompatibel dengan PHP 5.6)
+        uasort($trendData, function ($a, $b) {
+            if ($a['total'] == $b['total']) {
+                return 0;
+            }
+            // Mengembalikan 1 jika $b lebih besar dari $a agar urutannya menurun (descending)
+            return ($b['total'] > $a['total']) ? 1 : -1;
+        });
+
+        $fileName = 'Trend_Pemakaian_' . $year;
+
+        return \Excel::create($fileName, function($excel) use ($trendData, $year) {
+            $excel->sheet('Trend Pemakaian', function($sheet) use ($trendData, $year) {
+                $sheet->mergeCells('A1:Q1');
+                $sheet->row(1, ['LAPORAN TREN PEMAKAIAN BARANG - TAHUN ' . $year]);
+                $sheet->row(1, function($r){ $r->setFontSize(14)->setFontWeight('bold')->setAlignment('center'); });
+
+                $sheet->row(3, ['Kode Barang', 'Nama Barang', 'Satuan', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des', 'Total', 'Rata-rata/Bulan']);
+                $sheet->row(3, function($r){ $r->setFontWeight('bold')->setBackground('#CCCCCC'); });
+
+                $rowIdx = 4;
+                foreach ($trendData as $row) {
+                    $sheet->row($rowIdx, [
+                        $row['code'],
+                        $row['name'],
+                        $row['unit'],
+                        (float)$row['months'][1],
+                        (float)$row['months'][2],
+                        (float)$row['months'][3],
+                        (float)$row['months'][4],
+                        (float)$row['months'][5],
+                        (float)$row['months'][6],
+                        (float)$row['months'][7],
+                        (float)$row['months'][8],
+                        (float)$row['months'][9],
+                        (float)$row['months'][10],
+                        (float)$row['months'][11],
+                        (float)$row['months'][12],
+                        (float)$row['total'],
+                        (float)($row['total'] / 12.0)
+                    ]);
+                    $rowIdx++;
+                }
+                $sheet->setAutoSize(true);
+            });
+        })->download('xlsx');
     }
 }

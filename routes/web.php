@@ -122,6 +122,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/reports/saldo',           'ReportController@saldo')->name('reports.saldo');
     Route::get('/reports/movement',        'ReportController@itemMovement')->name('reports.movement');
     Route::get('/reports/movement/export', 'ReportController@exportItemMovement')->name('reports.movement.export');
+    Route::get('/reports/usage-trend',      'ReportController@usageTrend')->name('reports.usage-trend');
+    Route::get('/reports/usage-trend/export', 'ReportController@exportUsageTrend')->name('reports.usage-trend.export');
 
 
     // Laporan BON

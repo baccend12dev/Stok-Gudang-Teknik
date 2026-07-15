@@ -119,6 +119,11 @@
     .theme-orange .action-arrow { color: #ea580c; }
     .theme-orange:hover { border-top: 4px solid #ea580c; }
 
+    /* 5. Trend Report (Indigo) */
+    .theme-indigo .icon-wrapper { background: #eef2ff; color: #4f46e5; border: 1px solid #e0e7ff; }
+    .theme-indigo .action-arrow { color: #4f46e5; }
+    .theme-indigo:hover { border-top: 4px solid #4f46e5; }
+
 </style>
 
 <div class="page-container">
@@ -165,6 +170,16 @@
             <div class="report-title">Laporan Pergerakan Barang</div>
             <div class="report-desc">
                 Analisa klasifikasi perputaran barang (Fast, Slow, atau Normal Moving) berdasarkan volume pengeluaran barang dan batas threshold per barang.
+            </div>
+            <div class="action-arrow">Buka Laporan <i class="fa fa-arrow-right"></i></div>
+        </a>
+
+        {{-- 5. LAPORAN TREND PEMAKAIAN --}}
+        <a href="{{ route('reports.usage-trend') }}" class="report-card theme-indigo">
+            <div class="icon-wrapper"><i class="fa fa-line-chart"></i></div>
+            <div class="report-title">Laporan Trend Pemakaian</div>
+            <div class="report-desc">
+                Analisa grafik tren pemakaian barang dari bulan ke bulan. Berguna untuk memantau fluktuasi konsumsi bulanan dan perencanaan kebutuhan stok (Procurement).
             </div>
             <div class="action-arrow">Buka Laporan <i class="fa fa-arrow-right"></i></div>
         </a>
