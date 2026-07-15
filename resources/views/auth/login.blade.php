@@ -233,10 +233,9 @@
                 <circle cx="11" cy="5" r="2"></circle>
                 <path d="M6 7L8 9"></path>
             </svg>
-            <span class="brand">LOGISCAN INDUSTRIAL</span>
+            <span class="brand">GUDANG TEKNIK</span>
         </div>
         
-        <h1>Terminal A-1</h1>
         <p class="subtitle">Silakan masuk untuk mengelola inventaris gudang.</p>
         
         <form method="POST" action="{{ route('login.post') }}">
@@ -260,7 +259,6 @@
             <div class="form-group">
                 <div class="label-row">
                     <label for="password">KATA SANDI</label>
-                    <a href="#" class="forgot-link">Lupa Password?</a>
                 </div>
                 <div class="input-wrapper">
                     <i class="fa-solid fa-lock input-icon" style="font-size: 13px;"></i>
@@ -283,19 +281,19 @@
         
         <div class="status-row">
             <div class="status-dot"></div>
-            SISTEM TERKONEKSI: CLOUD SERVER TERMINAL A-1
+            SISTEM MONITORING STOK PADA GUDANG TEKNIK
         </div>
         
         <div class="alert-box">
             <i class="fa-solid fa-shield-halved"></i>
             <div class="alert-text">
-                <b>Peringatan:</b> Akses hanya untuk personel resmi. Seluruh aktivitas pemantauan dicatat secara otomatis dalam log sistem audit.
+                <b>Peringatan:</b> Akses hanya untuk personel resmi. 
             </div>
         </div>
         
         <div class="footer-text">
-            VERSI 4.2.0-INDUSTRIAL-PRO | BUILD 2023.11.24<br>
-            &copy; 2024 LOGISCAN INDUSTRIAL. ALL RIGHTS RESERVED.
+            VERSI 4.2.0-INDUSTRIAL- | BUILD 2026.07.16<br>
+            &copy; 2026 TEKNIK OTOPHARMA. ALL RIGHTS RESERVED.
         </div>
     </div>
 </div>
