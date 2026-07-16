@@ -226,12 +226,9 @@
         <div class="logo-header">
             <!-- Custom Robotic Arm SVG mimicking the design -->
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 21V19C4 17.8954 4.89543 17 6 17H18C19.1046 17 20 17.8954 20 19V21"></path>
-                <path d="M12 17V13"></path>
-                <path d="M12 13L8 9"></path>
-                <path d="M8 9L11 5"></path>
-                <circle cx="11" cy="5" r="2"></circle>
-                <path d="M6 7L8 9"></path>
+                <path d="M3 21h18"></path>
+                <path d="M5 21V8l7-4 7 4v13"></path>
+                <path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path>
             </svg>
             <span class="brand">INVENTARIS TEKNIK</span>
         </div>
