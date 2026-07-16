@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Login Terminal A-1 - Logiscan Industrial</title>
+    <title>Login INV - TEKNIK</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -233,7 +233,7 @@
                 <circle cx="11" cy="5" r="2"></circle>
                 <path d="M6 7L8 9"></path>
             </svg>
-            <span class="brand">GUDANG TEKNIK</span>
+            <span class="brand">INVENTARIS TEKNIK</span>
         </div>
         
         <p class="subtitle">Silakan masuk untuk mengelola inventaris gudang.</p>
