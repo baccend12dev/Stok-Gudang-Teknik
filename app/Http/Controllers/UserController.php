@@ -49,7 +49,7 @@ class UserController extends Controller
         $this->validate($request, [
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email',
-            'role'          => 'required|in:SUPER_ADMIN,ADMIN,USER',
+            'role'          => 'required|in:SUPER_ADMIN,ADMIN,USER,APPROVAL',
             'department_id' => 'nullable|exists:departments,id', // Nullable jika Super Admin
             'password'      => 'required|min:6',
         ]);
@@ -80,7 +80,7 @@ class UserController extends Controller
         $this->validate($request, [
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email,'.$id,
-            'role'          => 'required|in:SUPER_ADMIN,ADMIN,USER',
+            'role'          => 'required|in:SUPER_ADMIN,ADMIN,USER,APPROVAL',
             'department_id' => 'nullable|exists:departments,id',
         ]);
 

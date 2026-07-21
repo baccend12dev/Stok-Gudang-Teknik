@@ -12,13 +12,16 @@ class RequestHeader extends Model
         'request_number',
         'date',
         'department_id',
+        'division_name',
         'user_id',
         'notes',
         'status',
         'bon_header_id',
+        'approver_id',
+        'approved_by_approver_at',
     );
 
-    protected $dates = array('date', 'created_at', 'updated_at');
+    protected $dates = array('date', 'approved_by_approver_at', 'created_at', 'updated_at');
 
     public function details()
     {
@@ -38,5 +41,10 @@ class RequestHeader extends Model
     public function bon()
     {
         return $this->belongsTo('App\BonHeader', 'bon_header_id');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo('App\User', 'approver_id');
     }
 }

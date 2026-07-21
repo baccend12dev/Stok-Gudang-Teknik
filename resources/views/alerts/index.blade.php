@@ -29,9 +29,9 @@
         </li>
     </ul>
 
-    <h4 class="help-h"><i class="fa fa-shopping-bag text-primary"></i> Pembuatan Purchase Order (PO)</h4>
+    <h4 class="help-h"><i class="fa fa-shopping-bag text-primary"></i> Pembuatan Purchase Order (PR)</h4>
     <p class="help-p">
-        Anda dapat mencentang checkbox di sebelah kiri barang (terutama barang yang Kosong, Kritis, atau Menipis), lalu klik tombol <strong>"Buat PO Terpilih"</strong> untuk langsung membuat Draft PO / List Rencana Pembelian.
+        Anda dapat mencentang checkbox di sebelah kiri barang (terutama barang yang Kosong, Kritis, atau Menipis), lalu klik tombol <strong>"Buat PR Terpilih"</strong> untuk langsung membuat Draft PO / List Rencana Pembelian.
     </p>
 @endsection
 
@@ -169,7 +169,7 @@
         <div style="display:flex; gap:8px;">
             @if($items->count() > 0)
                 <button type="button" class="btn btn-primary" id="btn-create-po-bulk">
-                    <i class="fa fa-shopping-bag"></i> Buat PO Terpilih
+                    <i class="fa fa-shopping-bag"></i> Buat PR Terpilih
                 </button>
                 @php
                     $btnText = 'Export Rencana Pembelian';
@@ -250,7 +250,7 @@
         </div>
     </div>
 
-    {{-- Table Form for Bulk PO --}}
+    {{-- Table Form for Bulk PR --}}
     <form id="bulk-po-form" method="POST" action="{{ route('purchase-orders.create-from-alerts') }}">
         {{ csrf_field() }}
         <div class="table-wrapper">
@@ -296,11 +296,11 @@
 
                         <td style="text-align:center;">
                             @if($it->classification == 'FAST')
-                                <span class="badge badge-success" title="Keluar 30 hari: {{ $it->total_out_30 }}">FAST</span>
+                                <span class="badge badge-success" title="Keluar 90 hari: {{ $it->total_out_90 }}">FAST</span>
                             @elseif($it->classification == 'SLOW')
-                                <span class="badge badge-danger" title="Keluar 30 hari: {{ $it->total_out_30 }}">SLOW</span>
+                                <span class="badge badge-danger" title="Keluar 90 hari: {{ $it->total_out_90 }}">SLOW</span>
                             @else
-                                <span class="badge badge-primary" title="Keluar 30 hari: {{ $it->total_out_30 }}">NORMAL</span>
+                                <span class="badge badge-primary" title="Keluar 90 hari: {{ $it->total_out_90 }}">NORMAL</span>
                             @endif
                         </td>
 
@@ -359,7 +359,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Pilih Barang',
-                    text: 'Silakan pilih minimal satu barang untuk dibuatkan PO.'
+                    text: 'Silakan pilih minimal satu barang untuk dibuatkan PR.'
                 });
                 return;
             }

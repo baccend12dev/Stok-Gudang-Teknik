@@ -70,6 +70,7 @@
                     <label>Role</label>
                     <select name="role" id="roleSelect" class="form-control" required onchange="toggleScope()">
                         <option value="USER" {{ $user->role == 'USER' ? 'selected' : '' }}>USER (Dept)</option>
+                        <option value="APPROVAL" {{ in_array(strtoupper($user->role), ['APPROVAL', 'Approval']) ? 'selected' : '' }}>APPROVAL</option>
                         <option value="ADMIN" {{ $user->role == 'ADMIN' ? 'selected' : '' }}>ADMIN (Inventory)</option>
                         <option value="SUPER_ADMIN" {{ $user->role == 'SUPER_ADMIN' ? 'selected' : '' }}>SUPER ADMIN</option>
                     </select>

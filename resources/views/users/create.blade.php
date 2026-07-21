@@ -80,6 +80,7 @@
                     <label>Role / Peran</label>
                     <select name="role" id="roleSelect" class="form-control" required onchange="toggleScope()">
                         <option value="USER">USER (Staff Department)</option>
+                        <option value="APPROVAL">APPROVAL</option>
                         <option value="ADMIN">ADMIN (Inventory Staff)</option>
                         <option value="SUPER_ADMIN">SUPER ADMIN (Manager)</option>
                     </select>

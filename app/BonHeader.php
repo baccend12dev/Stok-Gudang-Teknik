@@ -43,7 +43,7 @@ class BonHeader extends Model
      */
     public function requestReference()
     {
-        return $this->hasOne('App\RequestHeader', 'bon_header_id');
+        return $this->belongsTo('App\RequestHeader', 'request_id');
     }
 
     public function user()

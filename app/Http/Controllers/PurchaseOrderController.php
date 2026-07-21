@@ -124,7 +124,7 @@ class PurchaseOrderController extends Controller
         $today = Carbon::today();
         // Hitung total PO yang dibuat hari ini untuk increment
         $todayCount = PurchaseOrder::whereDate('created_at', $today)->count();
-        $autoPoNumber = 'PO-' . date('Ymd') . '-' . str_pad($todayCount + 1, 4, '0', STR_PAD_LEFT);
+        $autoPoNumber = 'PR-' . date('Ymd') . '-' . str_pad($todayCount + 1, 4, '0', STR_PAD_LEFT);
 
         return view('purchase_orders.create', compact('selectedItems', 'allItems', 'autoPoNumber'));
     }

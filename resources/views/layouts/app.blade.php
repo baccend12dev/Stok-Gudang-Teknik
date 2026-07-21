@@ -298,11 +298,32 @@
             <ul class="sidebar-nav">
                 
                 @php
-                    $authUser = Auth::user();
-                    $isUser   = ($authUser && $authUser->role === 'USER');
+                    $authUser   = Auth::user();
+                    $isUser     = ($authUser && $authUser->role === 'USER');
+                    $isApproval = ($authUser && strtoupper($authUser->role) === 'APPROVAL');
                 @endphp
 
-                @if(!$isUser)
+                @if($isApproval)
+                    <li class="sidebar-header">MENU UTAMA</li>
+                    <li class="{{ Request::is('requests*') ? 'active' : '' }}">
+                        <a href="{{ route('requests.index') }}" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fa fa-inbox"></i> <span>Permintaan Barang</span>
+                            </div>
+                            
+                            @if(isset($globalPendingRequestCount) && $globalPendingRequestCount > 0)
+                                <span style="background: #ef4444; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; box-shadow: 0 2px 4px rgba(239,68,68,0.3); line-height: 1.2;">
+                                    {{ $globalPendingRequestCount }}
+                                </span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="{{ Request::is('catalog*') ? 'active' : '' }}">
+                        <a href="{{ route('catalog.index') }}">
+                            <i class="fa fa-book"></i> <span>Katalog Barang</span>
+                        </a>
+                    </li>
+                @elseif(!$isUser)
                     <li class="sidebar-header">UTAMA</li>
                     <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
                         <a href="{{ route('dashboard') }}">
@@ -356,8 +377,7 @@
                         </a>
                     </li>
                     
-                    <!-- di nonaktifkan untuk teknik karena langsung masuk ke bon permintaan -->
-                    <!-- <li class="{{ Request::is('requests*') ? 'active' : '' }}">
+                    <li class="{{ Request::is('requests*') ? 'active' : '' }}">
                         <a href="{{ route('requests.index') }}" style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="display: flex; align-items: center;">
                                 <i class="fa fa-inbox"></i> <span>Permintaan Barang</span>
@@ -369,7 +389,7 @@
                                 </span>
                             @endif
                         </a>
-                    </li> -->
+                    </li>
 
                     <li class="{{ Request::is('stock-opnames*') ? 'active' : '' }}">
                         <a href="{{ route('stock-opnames.index') }}">
@@ -385,7 +405,7 @@
 
                     <li class="{{ Request::is('purchase-orders*') ? 'active' : '' }}">
                         <a href="{{ route('purchase-orders.index') }}">
-                            <i class="fa fa-shopping-bag"></i> <span>Purchase Order</span>
+                            <i class="fa fa-shopping-bag"></i> <span>Purchase Requisition (PR)</span>
                         </a>
                     </li>
 
@@ -395,9 +415,7 @@
                             <i class="fa fa-file-text-o"></i> <span>Pusat Laporan</span>
                         </a>
                     </li>
-                @endif
-
-                @if($isUser)
+                @else
                     <li class="sidebar-header">MENU UTAMA</li>
                     <li class="{{ Request::is('requests*') ? 'active' : '' }}">
                         <a href="{{ route('requests.index') }}">

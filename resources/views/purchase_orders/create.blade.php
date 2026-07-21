@@ -422,8 +422,8 @@
                 <i class="fa fa-shopping-bag"></i>
             </div>
             <div class="header-content">
-                <h1>Tambah Purchase Order (PO)</h1>
-                <p>Buat list rencana pembelian barang atau PO baru ke supplier.</p>
+                <h1>Tambah Purchase Requisition (PR)</h1>
+                <p>Buat list rencana pembelian barang atau PR baru.</p>
             </div>
         </div>
         <div>
@@ -450,12 +450,12 @@
         <div class="card-section">
             <div class="card-header">
                 <div class="header-icon-wrapper-small"><i class="fa fa-file-text-o"></i></div>
-                <h3 class="card-title">Informasi Header PO</h3>
+                <h3 class="card-title">Informasi Header PR</h3>
             </div>
             <div class="card-body">
                 <div class="grid-2">
                     <div class="form-group">
-                        <label class="form-label">Nomor PO <span style="color: var(--danger)">*</span></label>
+                        <label class="form-label">Nomor PR <span style="color: var(--danger)">*</span></label>
                         <input type="text" name="po_number" class="form-control"
                                value="{{ old('po_number') ? old('po_number') : $autoPoNumber }}" required readonly>
                     </div>

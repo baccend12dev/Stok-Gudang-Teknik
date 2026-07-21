@@ -106,7 +106,7 @@ class BufferAlertController extends Controller
 
         // --- 3. LOGIC STATUS & SARAN ORDER ---
         $paginatedItemIds = $items->pluck('id')->toArray();
-        $startDate = date('Y-m-d', strtotime('-30 days'));
+        $startDate = date('Y-m-d', strtotime('-90 days'));
         $endDate = date('Y-m-d');
 
         $movements = \DB::table('item_movements')
@@ -144,9 +144,9 @@ class BufferAlertController extends Controller
 
             $item->suggested_qty = (float) $saran; // Pastikan float
 
-            // Rolling 30 Days Movement classification
+            // Rolling 90 Days Movement classification
             $totalOut = isset($movements[$item->id]) ? (float)$movements[$item->id] : 0.0;
-            $item->total_out_30 = $totalOut;
+            $item->total_out_90 = $totalOut;
 
             $fast = (float)$item->batas_fast_moving;
             $slow = (float)$item->batas_slow_moving;
@@ -203,7 +203,7 @@ class BufferAlertController extends Controller
         $items = $itemsQuery->orderBy('current_stock', 'asc')->get();
 
         $itemIds = $items->pluck('id')->toArray();
-        $startDate = date('Y-m-d', strtotime('-30 days'));
+        $startDate = date('Y-m-d', strtotime('-90 days'));
         $endDate = date('Y-m-d');
 
         $movements = \DB::table('item_movements')
@@ -217,7 +217,7 @@ class BufferAlertController extends Controller
 
         return Excel::create('Rencana_Pembelian_' . date('d-m-Y'), function ($excel) use ($items, $movements) {
             $excel->sheet('Plan', function ($sheet) use ($items, $movements) {
-                $sheet->row(1, ['KODE', 'NAMA BARANG', 'LOKASI', 'SATUAN', 'STOK SAAT INI', 'BUFFER MIN', 'STATUS', 'PERGERAKAN (30 HARI)', 'SARAN ORDER (QTY)']);
+                $sheet->row(1, ['KODE', 'NAMA BARANG', 'LOKASI', 'SATUAN', 'STOK SAAT INI', 'BUFFER MIN', 'STATUS', 'PERGERAKAN (90 HARI)', 'SARAN ORDER (QTY)']);
                 $sheet->row(1, function ($row) {
                     $row->setBackground('#FFEDB8')->setFontWeight('bold')->setAlignment('center');
                 });

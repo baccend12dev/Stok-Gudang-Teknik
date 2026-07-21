@@ -234,7 +234,7 @@
     .row-warn-forgot { background-color: #FFF7ED !important; border-left: 3px solid #F59E0B !important; } /* Stock > 0, Input 0 - Possibly Forgot */
 
     /* Item Styling */
-    .item-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: normal; word-break: break-word; }
     .item-sub { font-size: 11px; color: var(--secondary); background: #F1F5F9; padding: 2px 6px; border-radius: 4px; display: inline-block; }
     
     /* 🔥 NEW: Real-time Over Limit Badge */
@@ -550,6 +550,10 @@
                     <span class="info-val">{{ $bon->division_name ?: '-' }}</span>
                 </div>
                 <div class="info-group">
+                    <span class="info-label">Approval Oleh (Atasan)</span>
+                    <span class="info-val">{{ $bon->requestReference && $bon->requestReference->approver ? $bon->requestReference->approver->name : '-' }}</span>
+                </div>
+                <div class="info-group">
                     <span class="info-label">Catatan User</span>
                     <div class="note-box">"{{ $bon->notes ?: 'Tidak ada catatan.' }}"</div>
                 </div>
@@ -579,7 +583,7 @@
                         <tr>
                             <th style="width:30%;">Item & Kode</th>
                             <th class="text-center" style="width:12%;">Stok</th>
-                            <th style="width:28%;">Analisa Plafon (Bulanan)</th>
+                            <th style="width:28%;">Catatan / Keterangan</th>
                             <th class="text-center" style="width:10%;">Minta</th>
                             <th class="text-center" style="width:20%;">Setuju</th>
                         </tr>
@@ -624,6 +628,15 @@
 
                                 // Tambahkan ke Grand Total (Server Side Calc)
                                 $grandTotalApprovedInitial += (float)$valApproved;
+
+                                // Ambil Catatan/Keterangan dari RequestDetail
+                                $reqDetail = null;
+                                if ($bon->requestReference) {
+                                    $reqDetail = $bon->requestReference->details
+                                        ->where('item_id', $d->item_id)
+                                        ->first();
+                                }
+                                $remarks = $reqDetail ? $reqDetail->remarks : '-';
                             ?>
                             <tr class="{{ $isLowStock ? 'row-danger' : ($isOverQuota ? 'row-warning' : '') }} item-row detail-row" 
                                 data-detail-id="{{ $d->id }}"
@@ -655,23 +668,9 @@
                                 </td>
 
                                 <td>
-                                    @if($qTotal > 0)
-                                        <div class="quota-wrap">
-                                            <div class="quota-meta">
-                                                <span>Terpakai: <strong class="quota-used-display">{{ (float)$qUsed }}</strong></span>
-                                                <span>Limit: <strong class="quota-limit-display">{{ (float)$qTotal }}</strong></span>
-                                            </div>
-                                            <div class="bar-bg">
-                                                <div class="bar-used quota-bar-used" style="width: {{ $pctUsed }}%;"></div>
-                                                <div class="bar-req quota-bar-req {{ $isOverQuota ? 'danger' : '' }}" style="width: {{ $pctReq }}%;"></div>
-                                            </div>
-                                            <div class="quota-res">
-                                                <span class="sisa-akhir-display">Sisa: <strong>{{ (float)$qSisaAkhir }}</strong></span>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <span style="font-size:11px; color:#94A3B8; font-style:italic;">Tidak ada limit.</span>
-                                    @endif
+                                    <div style="font-size:12px; font-weight:700; color:#334155; white-space:normal; line-height:1.4;">
+                                        {{ $remarks }}
+                                    </div>
                                 </td>
 
                                 <td class="text-center">

@@ -75,7 +75,7 @@
         <div class="header-title-wrapper">
             <div class="header-visual-icon"><i class="fa fa-shopping-bag"></i></div>
             <div class="header-content">
-                <h1>Detail Purchase Order (PO)</h1>
+                <h1>Detail Purchase Order (PR)</h1>
                 <p>Informasi status pemesanan barang dan penerimaan parsial.</p>
             </div>
         </div>
@@ -91,7 +91,7 @@
         <div class="card-header" style="justify-content: space-between;">
             <div style="display:flex; align-items:center; gap:12px;">
                 <div class="header-icon-wrapper-small"><i class="fa fa-file-text-o"></i></div>
-                <h3 class="card-title">PO #{{ $po->po_number }}</h3>
+                <h3 class="card-title">PR #{{ $po->po_number }}</h3>
             </div>
             <div>
                 @if($po->status === 'DRAFT')
@@ -136,7 +136,7 @@
                         {{ csrf_field() }}
                         <button type="submit" class="btn btn-action-primary"><i class="fa fa-send"></i> Pesan ke Supplier</button>
                     </form>
-                    <a href="{{ route('purchase-orders.edit', $po->id) }}" class="btn btn-action-light"><i class="fa fa-pencil"></i> Edit PO</a>
+                    <a href="{{ route('purchase-orders.edit', $po->id) }}" class="btn btn-action-light"><i class="fa fa-pencil"></i> Edit PR</a>
                     <form action="{{ route('purchase-orders.destroy', $po->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus rencana pembelian ini?')">
                         {{ csrf_field() }} {{ method_field('DELETE') }}
                         <button type="submit" class="btn btn-action-danger"><i class="fa fa-trash"></i> Hapus Rencana</button>
@@ -144,8 +144,8 @@
                 @endif
 
                 @if(in_array($po->status, ['ORDERED', 'PARTIALLY_RECEIVED']))
-                    <a href="{{ route('lpbs.create', ['po_id' => $po->id]) }}" class="btn btn-action-success"><i class="fa fa-download"></i> Terima Barang (Buat LPB)</a>
-                    <a href="{{ route('purchase-orders.edit', $po->id) }}" class="btn btn-action-light"><i class="fa fa-pencil"></i> Edit PO</a>
+                    <!-- <a href="{{ route('lpbs.create', ['po_id' => $po->id]) }}" class="btn btn-action-success"><i class="fa fa-download"></i> Terima Barang (Buat LPB)</a> -->
+                    <a href="{{ route('purchase-orders.edit', $po->id) }}" class="btn btn-action-light"><i class="fa fa-pencil"></i> Edit PR</a>
                     <form action="{{ route('purchase-orders.cancel', $po->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Batalkan pemesanan PO ini?')">
                         {{ csrf_field() }}
                         <button type="submit" class="btn btn-action-danger"><i class="fa fa-ban"></i> Batalkan Pemesanan</button>

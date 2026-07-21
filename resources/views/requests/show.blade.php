@@ -59,7 +59,9 @@
     // Status Logic
     $status = ($hdr && isset($hdr->status)) ? strtoupper($hdr->status) : 'OPEN';
     $statusClass = 'st-open';
-    if ($status === 'APPROVED') $statusClass = 'st-approved';
+    if ($status === 'PENDING_APPROVAL') $statusClass = 'st-pending-approval';
+    elseif ($status === 'PENDING') $statusClass = 'st-pending';
+    elseif ($status === 'APPROVED') $statusClass = 'st-approved';
     elseif ($status === 'PARTIAL') $statusClass = 'st-partial';
     elseif ($status === 'REJECTED') $statusClass = 'st-rejected';
     elseif ($status === 'CANCELED') $statusClass = 'st-canceled';
@@ -82,8 +84,19 @@
     $showProcessMyItemBtn = false;
     $showCreateBonStandard = false;
 
+    // --- APPROVER (ATASAN) BUTTON LOGIC ---
+    $showApproverApproveBtn = false;
+    $isDesignatedApprover = ($hdr && $hdr->approver_id && $user->id == $hdr->approver_id);
+    if ($status === 'PENDING_APPROVAL' && ($isDesignatedApprover || $isSuperAdmin)) {
+        $showApproverApproveBtn = true;
+    }
+
+    // Catatan: Tombol manual Admin dinonaktifkan karena BON dibuat otomatis setelah persetujuan Atasan.
+    /*
     // Jika saya Admin & Bukan Pembuat Request
-    if ($isProcessor && !$isOwner) {
+    $isAllowedApprover = (!$hdr->approver_id || $user->id == $hdr->approver_id || $isSuperAdmin);
+
+    if ($isProcessor && !$isOwner && $isAllowedApprover) {
         
         // KONDISI 1: STATUS OPEN
         if ($status === 'OPEN') {
@@ -111,6 +124,7 @@
             }
         }
     }
+    */
 
     // Totals untuk Ringkasan
     $totalItems = 0;
@@ -160,12 +174,18 @@
     
     .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #0f172a; padding: 7px 10px; border-radius: 999px; background: #ffffff; border: 1px solid var(--line); box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03); white-space: nowrap; }
     .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; display: inline-block; }
+    .st-pending-approval .dot { background: #f97316; animation: pulse-dot 1.5s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .st-open .dot { background: var(--warning); }
     .st-approved .dot { background: var(--success); }
     .st-partial .dot { background: #0ea5e9; }
     .st-rejected .dot { background: var(--danger); }
     .st-canceled .dot { background: #94a3b8; }
     .st-closed .dot { background: #334155; }
+
+    /* Approver Button Style */
+    .btnx-approve-atasan { background: #f97316; color: #fff; border-color: #ea580c; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25); }
+    .btnx-approve-atasan:hover { background: #ea580c; transform: translateY(-1px); }
 
     .rq-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
     .btnx { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; border: 1px solid transparent; cursor: pointer; text-decoration: none; user-select: none; transition: all .18s ease; white-space: nowrap; }
@@ -402,7 +422,7 @@
                         <span class="dot"></span> <span>Tanggal: {{ $reqDate }}</span>
                     </div>
                     <div class="pill {{ $statusClass }}">
-                        <span class="dot"></span> <span>Status: {{ $status }}</span>
+                        <span class="dot"></span> <span>Status: {{ $status === 'PENDING' ? 'PENDING GUDANG' : $status }}</span>
                     </div>
                 </div>
             </div>
@@ -412,6 +432,16 @@
             <a href="{{ route('requests.index') }}" class="btnx btnx-ghost">
                 <i class="fa fa-arrow-left"></i> Kembali
             </a>
+
+            {{-- 0. APPROVER (ATASAN) APPROVE/REJECT - hanya saat PENDING_APPROVAL --}}
+            @if ($hdr && $showApproverApproveBtn)
+                <button type="button" class="btnx btnx-approve-atasan" onclick="openModal('modalApproverApprove')">
+                    <i class="fa fa-check-circle"></i> Setujui (Atasan)
+                </button>
+                <button type="button" class="btnx btnx-danger" onclick="openModal('modalApproverReject')">
+                    <i class="fa fa-times-circle"></i> Tolak (Atasan)
+                </button>
+            @endif
 
             {{-- 1. LOGIC APPROVE HEADER (Hanya jika MURNI milik saya / SuperAdmin) --}}
             @if ($hdr && $showApproveBtn)
@@ -523,7 +553,8 @@
                 <span>Ringkasan</span>
             </div>
             <div class="rq-note">
-                @if($status === 'OPEN') Request belum disetujui.
+                @if($status === 'PENDING_APPROVAL') <span style="color:#f97316; font-weight:900;"><i class="fa fa-clock-o"></i> Menunggu persetujuan atasan</span>
+                @elseif($status === 'OPEN') Request belum disetujui.
                 @elseif(in_array($status, array('APPROVED','PARTIAL')) && $totalRemainFinal > 0) Masih ada sisa item.
                 @elseif($status === 'CLOSED') Selesai - Semua item sudah diproses.
                 @endif
@@ -531,15 +562,32 @@
         </div>
 
         <div class="rq-cardbody">
-            <div class="rq-grid">
+            <div class="rq-grid" style="grid-template-columns: repeat(4, 1fr);">
                 <div class="rq-box">
                     <div class="lbl">Departemen</div>
                     <div class="val">{{ $deptName }}</div>
                 </div>
                 <div class="rq-box">
-                    <div class="lbl">Catatan</div>
-                    <div class="val">{{ $notes }}</div>
+                    <div class="lbl">Divisi / Bagian</div>
+                    <div class="val">{{ $hdr->division_name ?: '-' }}</div>
                 </div>
+                <div class="rq-box">
+                    <div class="lbl">Approval Oleh</div>
+                    <div class="val">{{ $hdr->approver ? $hdr->approver->name : '-' }}</div>
+                </div>
+                <div class="rq-box">
+                    <div class="lbl">Status Approval Atasan</div>
+                    <div class="val">
+                        @if($hdr->approved_by_approver_at)
+                            <span style="color:#16a34a; font-weight:900;"><i class="fa fa-check-circle"></i> Disetujui ({{ $hdr->approved_by_approver_at->format('d/m/Y H:i') }})</span>
+                        @elseif($status === 'REJECTED')
+                            <span style="color:#ef4444; font-weight:900;"><i class="fa fa-times-circle"></i> Ditolak / Reject</span>
+                        @else
+                            <span style="color:#f97316; font-weight:900;"><i class="fa fa-clock-o"></i> Menunggu</span>
+                        @endif
+                    </div>
+                </div>
+                
             </div>
             <div class="rq-kpis">
                 <div class="kpi">
@@ -728,6 +776,8 @@
     <form id="form-reject" action="{{ route('requests.reject', $hdr->id) }}" method="POST" style="display:none;">{{ csrf_field() }}</form>
     <form id="form-create-bon" action="{{ route('requests.createBon', $hdr->id) }}" method="POST" style="display:none;">{{ csrf_field() }}</form>
     <form id="form-unapprove" action="{{ route('requests.unapprove', $hdr->id) }}" method="POST" style="display:none;">{{ csrf_field() }}</form>
+    <form id="form-approver-approve" action="{{ route('requests.approverApprove', $hdr->id) }}" method="POST" style="display:none;">{{ csrf_field() }}</form>
+    <form id="form-approver-reject" action="{{ route('requests.approverReject', $hdr->id) }}" method="POST" style="display:none;">{{ csrf_field() }}</form>
 @endif
 
 <div class="modal fade" id="modalGeneric" tabindex="-1" role="dialog" style="z-index: 10000;">
@@ -804,6 +854,20 @@
             desc = 'Status akan kembali menjadi OPEN. Pastikan tidak ada BON aktif yang terhubung.';
             btnClass = 'btn-modal confirm warning';
             submitId = '#form-unapprove';
+        } else if (type === 'modalApproverApprove') {
+            iconClass = 'success';
+            iconContent = '<i class="fa fa-check-circle text-success" style="font-size:24px;"></i>';
+            title = 'Setujui Request Ini?';
+            desc = 'Anda menyetujui permintaan ini sebagai atasan. Request akan diteruskan ke Admin untuk diproses.';
+            btnClass = 'btn-modal confirm success';
+            submitId = '#form-approver-approve';
+        } else if (type === 'modalApproverReject') {
+            iconClass = 'danger';
+            iconContent = '<i class="fa fa-times-circle text-danger" style="font-size:24px;"></i>';
+            title = 'Tolak Request Ini?';
+            desc = 'Anda menolak permintaan ini sebagai atasan. Status request akan berubah menjadi REJECTED.';
+            btnClass = 'btn-modal confirm danger';
+            submitId = '#form-approver-reject';
         }
 
         $('#gen-icon-wrapper').html('<div class="modal-icon-box ' + iconClass + '">' + iconContent + '</div>');

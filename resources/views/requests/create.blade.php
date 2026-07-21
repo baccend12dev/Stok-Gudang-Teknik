@@ -38,9 +38,7 @@
         </div>
 
         <h4 class="help-h"><i class="fa fa-clock-o text-primary"></i> Estimasi Kedatangan</h4>
-        <p class="help-p">
-            Barang yang Anda request saat ini akan masuk dalam proses pengadaan (PR) dan dijadwalkan tersedia pada <strong>Bulan Depan</strong>.
-        </p>
+       
 
         <h4 class="help-h"><i class="fa fa-search text-primary"></i> Tips Mencari Barang</h4>
         <ul class="help-list">
@@ -161,8 +159,8 @@
 
     .col-no{ width:56px; text-align:center; }
     .col-unit{ width:120px; text-align:center; }
-    .col-qty{ width:160px; }
-    .col-remarks{ width:280px; }
+    .col-qty{ width:95px; }
+    .col-remarks{ width:345px; }
     .col-act{ width:86px; text-align:center; }
 
     .item-title{ font-weight:900; font-size:13px; line-height:1.2; display:flex; align-items:center; gap:8px; }
@@ -312,18 +310,36 @@
                 </div>
                 @endif
 
-                <div class="grid1" style="margin-top:14px;">
+                <div class="grid2" style="margin-top:14px;">
                     <div class="fg">
-                        {{-- SMART INFO BOX ESTIMASI --}}
-                        <label>Estimasi & Informasi (Smart Info)</label>
-                        <div id="smartInfoBox" class="alert-info-box">
-                            <i class="fa fa-info-circle"></i>
-                            <div id="estInfoContent">
-                                Belum ada item yang dipilih. Silakan tambah item.
-                            </div>
-                        </div>
+                        <label>Divisi / Bagian</label>
+                        <select name="division_name" id="divisionSelect" class="ctl select2-simple" required>
+                            <option value="">-- Pilih Departemen Terlebih Dahulu --</option>
+                        </select>
+                        <div class="help">Pilih divisi yang mengajukan request.</div>
+                    </div>
+
+                    <!--//form approval permintaan pada devisi masing masing-->
+                    <div class="fg">
+                        <label>Approval Permintaan</label>
+                        <select name="approval" id="approvalSelect" class="ctl select2-simple" required>
+                            <option value="">-- Pilih Approval --</option>
+                            @foreach($approvals as $approval)
+                                <option value="{{ $approval->id }}">{{ $approval->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="help">Pilih approval untuk permintaan ini.</div>
                     </div>
                 </div>
+
+                <div class="grid1" style="margin-top:14px;">
+                    <div class="fg">
+                        <label>Catatan / Keperluan (Notes)</label>
+                        <textarea name="notes" class="ctl" rows="3" placeholder="Masukkan catatan atau keperluan request... (Opsional)">{{ old('notes') }}</textarea>
+                        <div class="help">Masukkan catatan tambahan jika ada.</div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -350,10 +366,6 @@
                             </option>
                         @endforeach
                     </select>
-                    <div class="help">
-                        <span style="display:inline-block; width:8px; height:8px; background:#16a34a; border-radius:50%; margin-right:4px;"></span>General (ATK) &nbsp; 
-                        <span style="display:inline-block; width:8px; height:8px; background:#d97706; border-radius:50%; margin-right:4px;"></span>Apparel (Seragam/Sepatu)
-                    </div>
                 </div>
 
                 <div class="tablebox">
@@ -392,11 +404,11 @@
                                         <td class="col-qty">
                                             {{-- FIX: step="0.01" --}}
                                             <input type="number" name="items[{{ $idx }}][quantity]" class="qty"
-                                                   value="{{ $oldQty }}" min="0.01" step="0.01" required>
+                                                   value="{{ $oldQty }}" min="0.01" step="1" required>
                                         </td>
                                         <td class="col-remarks">
                                             <input type="text" name="items[{{ $idx }}][remarks]" class="ctl" style="height:40px;"
-                                                   value="{{ $oldRem }}" placeholder="Opsional">
+                                                   value="{{ $oldRem }}" placeholder="Wajib diisi (Keperluan)" required>
                                         </td>
                                         <td class="col-act">
                                             <button type="button" class="rm js-remove" title="Hapus">
@@ -547,6 +559,47 @@
         theme: 'bootstrap', width: '100%'
     });
 
+    // Division cascading dropdown logic
+    var $divSelect = $('#divisionSelect');
+    var currentDeptId = "{{ !$isSuperAdmin && isset($department) ? $department->id : '' }}";
+    var oldDivision = "{{ old('division_name') }}";
+
+    function loadDivisions(deptId, selectedVal) {
+        $divSelect.empty().append('<option value="">Memuat...</option>').prop('disabled', true);
+        
+        if (!deptId) {
+            $divSelect.empty().append('<option value="">-- Pilih Departemen Terlebih Dahulu --</option>');
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route("api.divisions") }}',
+            type: 'GET',
+            data: { department_id: deptId },
+            success: function(data) {
+                $divSelect.empty().append('<option value="">-- Pilih Divisi / Bagian --</option>');
+                if (data.length > 0) {
+                    $.each(data, function(i, div) {
+                        var isSel = (selectedVal && selectedVal == div.name) ? 'selected' : '';
+                        $divSelect.append('<option value="'+div.name+'" '+isSel+'>'+div.name+'</option>');
+                    });
+                    $divSelect.prop('disabled', false);
+                } else {
+                    $divSelect.append('<option value="">-- Tidak ada divisi --</option>');
+                    $divSelect.prop('disabled', false);
+                }
+            },
+            error: function() {
+                $divSelect.empty().append('<option value="">Gagal memuat data</option>');
+            }
+        });
+    }
+
+    // Initialize for normal user
+    if (currentDeptId) {
+        loadDivisions(currentDeptId, oldDivision);
+    }
+
     // FIX: AUTO SELECT DEPT WHEN USER CHANGED
     $('#userSelect').on('select2:select', function(e){
         var selectedOption = $(this).find(':selected');
@@ -555,6 +608,9 @@
         
         $('#deptNameDisplay').val(deptName);
         $('#deptIdInput').val(deptId);
+        
+        // Load divisions for selected user's department
+        loadDivisions(deptId, oldDivision);
     });
 
     // SELECT2 ITEM PICKER
@@ -662,7 +718,7 @@
                 '<input type="number" name="items['+rowIdx+'][quantity]" class="qty" value="1" min="0.01" step="0.01" required>' +
             '</td>' +
             '<td class="col-remarks">' +
-                '<input type="text" name="items['+rowIdx+'][remarks]" class="ctl" style="height:40px;" placeholder="Opsional">' +
+                '<input type="text" name="items['+rowIdx+'][remarks]" class="ctl" style="height:40px;" placeholder="Wajib diisi (Keperluan)" required>' +
             '</td>' +
             '<td class="col-act">' +
                 '<button type="button" class="rm js-remove" title="Hapus"><i class="fa fa-trash"></i></button>' +

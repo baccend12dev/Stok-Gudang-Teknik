@@ -173,6 +173,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/requests/{id}/reject', 'RequestController@reject')->name('requests.reject');
     Route::post('/requests/{id}/cancel', 'RequestController@cancel')->name('requests.cancel');
 
+    // Approver (Atasan) actions - PENDING_APPROVAL workflow
+    Route::post('/requests/{id}/approver-approve', 'RequestController@approverApprove')->name('requests.approverApprove');
+    Route::post('/requests/{id}/approver-reject', 'RequestController@approverReject')->name('requests.approverReject');
+
     // Create BON from Request (MY SCOPE)
     Route::post('/requests/{id}/create-bon', 'RequestController@createBonFromRequest')->name('requests.createBon');
 

@@ -144,14 +144,14 @@ select.form-control {
 
 <div class="section">
     <div class="section-hd">
-        <i class="fa fa-shopping-bag"></i> <strong>Sistem Pemesanan (Purchase Order)</strong>
+        <i class="fa fa-shopping-bag"></i> <strong>Sistem Purchase Requisition (PR)</strong>
     </div>
     <div class="section-bd">
         <form method="GET" action="{{ route('purchase-orders.index') }}">
             <div class="filters">
                 <div class="form-group" style="flex:1; min-width:220px;">
-                    <label class="form-label">Cari PO</label>
-                    <input type="text" name="q" class="form-control" value="{{ $q }}" placeholder="Ketik nomor PO, supplier, atau catatan...">
+                    <label class="form-label">Cari Code</label>
+                    <input type="text" name="q" class="form-control" value="{{ $q }}" placeholder="Ketik nomor PR, supplier, atau catatan...">
                 </div>
                 <div class="form-group" style="width:180px;">
                     <label class="form-label">Filter Status</label>
@@ -179,7 +179,7 @@ select.form-control {
                 </div>
                 <div class="form-actions" style="margin-left:auto; display:flex; gap:8px;">
                     <a href="{{ route('buffer-alerts.index') }}" class="btn btn-light"><i class="fa fa-bell text-warning"></i> Monitor Stok</a>
-                    <a href="{{ route('purchase-orders.create') }}" class="btn btn-success"><i class="fa fa-plus"></i> Tambah PO Baru</a>
+                    <a href="{{ route('purchase-orders.create') }}" class="btn btn-success"><i class="fa fa-plus"></i> Tambah PR Baru</a>
                 </div>
             </div>
         </form>
@@ -189,7 +189,7 @@ select.form-control {
                 <thead>
                     <tr>
                         <th class="col-expand"></th>
-                        <th class="col-no">No. PO</th>
+                        <th class="col-no">No. PR</th>
                         <th class="col-date">Tanggal</th>
                         <th class="col-supplier">Pemasok / Supplier</th>
                         <th class="col-items">Total Barang</th>

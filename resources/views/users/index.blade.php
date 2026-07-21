@@ -146,6 +146,7 @@
                         <td>
                             @if($u->role == 'SUPER_ADMIN') <span class="badge b-super">Super Admin</span>
                             @elseif($u->role == 'ADMIN') <span class="badge b-admin">Admin</span>
+                            @elseif(strtoupper($u->role) == 'APPROVAL') <span class="badge b-approval" style="background:#e0e7ff; color:#3730a3;">Approval</span>
                             @else <span class="badge b-user">User Dept</span>
                             @endif
                         </td>

@@ -20,12 +20,13 @@ class BonController extends Controller
     {
         $this->middleware('auth');
 
-        // === SECURITY LAYER: PERFEKSIONIS ===
-        // Memblokir User Dept (USER) agar tidak bisa akses Controller Admin ini.
-        // Jika nekat akses URL manual, tendang balik ke halaman Request.
         $this->middleware(function ($request, $next) {
             $user = \Auth::user();
             if ($user && $user->role === 'USER') {
+                // Kecualikan route API divisions agar user biasa bisa memilih divisi mereka
+                if ($request->is('*api/divisions*')) {
+                    return $next($request);
+                }
                 return redirect()->route('requests.index')->with('error', 'Akses Ditolak! Anda tidak memiliki izin ke halaman tersebut.');
             }
             return $next($request);
@@ -286,8 +287,9 @@ class BonController extends Controller
             $query->where('status', $status);
         }
 
-        // Urutan tampilan
-        $query->orderBy('date', 'asc')
+        // Urutan tampilan: PENDING dulu, baru berdasarkan tanggal dan ID
+        $query->orderByRaw("CASE WHEN status = 'PENDING' THEN 0 ELSE 1 END")
+              ->orderBy('date', 'asc')
               ->orderBy('id', 'desc');
 
         $bons = $query->paginate($perPage)->appends($request->except('page'));
@@ -400,7 +402,7 @@ class BonController extends Controller
     public function show($id)
     {
         // 1. Ambil Data Utama
-        $bon = BonHeader::with(['details.item', 'department', 'user'])->findOrFail($id);
+        $bon = BonHeader::with(['details.item', 'department', 'user', 'requestReference.approver', 'requestReference.details'])->findOrFail($id);
 
         // 2. LOGIC BARU: ANALISA JATAH (COMPREHENSIVE FIX!)
         $quotaAnalysis = [];
@@ -833,6 +835,12 @@ class BonController extends Controller
             $bon->status = 'APPROVED';
             $bon->save();
 
+            // Sync request status
+            $reqNo = $this->extractRequestNumberFromBonNotes($bon->notes);
+            if ($reqNo) {
+                $this->syncRequestProcessedQtyByRequestNumber($reqNo);
+            }
+
             DB::commit();
             
             // === SUCCESS MESSAGE (Clean & Informative) ===
@@ -936,6 +944,12 @@ class BonController extends Controller
 
         $bon->status = 'REJECTED';
         $bon->save();
+
+        // Sync request status
+        $reqNo = $this->extractRequestNumberFromBonNotes($bon->notes);
+        if ($reqNo) {
+            $this->syncRequestProcessedQtyByRequestNumber($reqNo);
+        }
 
         return redirect()->route('bons.show', $bon->id)
             ->with('success', 'BON telah direject.');
@@ -1131,12 +1145,25 @@ class BonController extends Controller
             if ($proc < $need) $allDone = false;
         }
 
-        // Update status header request
-        $newStatus = 'APPROVED'; // Default
-        if ($allDone) {
-            $newStatus = 'CLOSED';
-        } elseif ($anyProcessed) {
-            $newStatus = 'PARTIAL';
+        // Update status header request berdasarkan status BON terakhir
+        $bon = DB::table('bon_headers')
+            ->where('request_id', (int) $hdr->id)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $newStatus = 'APPROVED'; // Default fallback
+        if ($bon) {
+            if ($bon->status === 'PENDING') {
+                $newStatus = 'PENDING';
+            } elseif ($bon->status === 'APPROVED') {
+                $newStatus = 'APPROVED';
+            } elseif ($bon->status === 'ISSUED') {
+                $newStatus = 'CLOSED'; // Selesai
+            } elseif ($bon->status === 'REJECTED') {
+                $newStatus = 'REJECTED';
+            } elseif ($bon->status === 'CANCELLED') {
+                $newStatus = 'CANCELLED';
+            }
         }
 
         DB::table('request_headers')

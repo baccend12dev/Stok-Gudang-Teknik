@@ -32,12 +32,32 @@ class RequestController extends Controller
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc');
 
-        // --- 1. SCOPE FILTER (User vs Admin) ---
-        if ($user->role === 'USER') {
-            // User biasa hanya lihat request sendiri
-            $query->where('user_id', $user->id);
+        // --- 1. SCOPE FILTER (User vs Approver vs Admin vs Super Admin) ---
+        if (strtoupper($user->role) === 'APPROVAL') {
+            // Role APPROVAL: HANYA lihat request yang mana dia adalah approver-nya (approver_id = user->id)
+            $query->where('approver_id', $user->id);
+        } elseif ($user->role === 'USER') {
+            // User biasa: lihat request sendiri + request yang dia jadi approver (PENDING_APPROVAL)
+            $query->where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere(function($q2) use ($user) {
+                      $q2->where('approver_id', $user->id)
+                         ->where('status', 'PENDING_APPROVAL');
+                  });
+            });
+        } elseif ($user->role === 'SUPER_ADMIN') {
+            // Super Admin: lihat semua tanpa filter
         } else {
-            // Admin: Filter berdasarkan Scope Kategori (General/Apparel)
+            // Admin biasa: TIDAK lihat PENDING_APPROVAL (kecuali yang ditujukan padanya sebagai approver)
+            $query->where(function($q) use ($user) {
+                $q->where('status', '!=', 'PENDING_APPROVAL')
+                  ->orWhere(function($q2) use ($user) {
+                      $q2->where('approver_id', $user->id)
+                         ->where('status', 'PENDING_APPROVAL');
+                  });
+            });
+
+            // Filter berdasarkan Scope Kategori (General/Apparel)
             $codes = null;
             if (method_exists($user, 'categoryCodesForScope')) {
                 $codes = $user->categoryCodesForScope();
@@ -121,11 +141,14 @@ class RequestController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
+        $approvals = \App\User::whereIn('role', ['APPROVAL', 'Approval', 'approval'])->orderBy('name')->get();
+
         // View Data (SIMPLE & CLEAN)
         $data = [
             'items'         => $items,
             'isSuperAdmin'  => $isSuperAdmin,
-            'allUsers'      => $allUsers
+            'allUsers'      => $allUsers,
+            'approvals'     => $approvals
         ];
 
         if (!$isSuperAdmin) {
@@ -155,7 +178,11 @@ class RequestController extends Controller
         // 2. VALIDASI INPUT
         $rules = [
             'date' => 'required|date',
-            'items' => 'required|array|min:1'
+            'division_name' => 'required|string|max:100',
+            'approval' => 'required|exists:users,id',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'required|array|min:1',
+            'items.*.remarks' => 'required|string|max:255'
         ];
         
         // Super Admin wajib pilih User & Dept
@@ -169,24 +196,6 @@ class RequestController extends Controller
         DB::beginTransaction();
         try {
             
-            // --- LOGIC ESTIMASI KEDATANGAN (SMART EMERGENCY) ---
-            $reqDate = Carbon::parse($request->date);
-            
-            // Logic: Jika tanggal 1-7 (Normal) => Bulan Depan.
-            // Jika tanggal > 7 (Emergency/Telat) => 2 Bulan Kedepan.
-            if ($reqDate->day <= 7) {
-                $estDate = $reqDate->copy()->addMonth(); 
-            } else {
-                $estDate = $reqDate->copy()->addMonths(2);
-            }
-            
-            $months = [
-                1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni',
-                7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'
-            ];
-            $monthName = $months[$estDate->month];
-            $estimasiString = "Estimasi Kedatangan: " . $monthName . " " . $estDate->year;
-
             // Tentukan Target User & Dept
             $targetUserId = $isSuperAdmin ? $request->user_id : $user->id;
             $targetDeptId = $isSuperAdmin ? $request->department_id : $user->department_id;
@@ -196,9 +205,11 @@ class RequestController extends Controller
             $hdr->request_number = $this->generateRequestNumber();
             $hdr->date = $request->date;
             $hdr->department_id = $targetDeptId;
+            $hdr->division_name = $request->division_name;
+            $hdr->approver_id = $request->approval;
             $hdr->user_id = $targetUserId;
-            $hdr->notes = $estimasiString; 
-            $hdr->status = 'OPEN';
+            $hdr->notes = $request->notes; 
+            $hdr->status = 'PENDING_APPROVAL';
             $hdr->save();
 
             // Simpan Details
@@ -216,7 +227,7 @@ class RequestController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('requests.index')->with('success', 'Request berhasil dibuat. ' . $estimasiString);
+            return redirect()->route('requests.index')->with('success', 'Request berhasil dibuat.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -238,9 +249,9 @@ class RequestController extends Controller
         }
 
         // Validasi Status
-        if ($hdr->status !== 'OPEN') {
+        if ($hdr->status !== 'OPEN' && $hdr->status !== 'PENDING_APPROVAL') {
             return redirect()->route('requests.index')
-                ->with('error', 'Request hanya bisa diedit jika status masih OPEN.');
+                ->with('error', 'Request hanya bisa diedit jika status masih OPEN atau PENDING APPROVAL.');
         }
 
         $department = Department::find($hdr->department_id);
@@ -250,10 +261,13 @@ class RequestController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
+        $approvals = \App\User::whereIn('role', ['APPROVAL', 'Approval', 'approval'])->orderBy('name')->get();
+
         return view('requests.edit', [
             'hdr'           => $hdr,
             'items'         => $items,
-            'department'    => $department
+            'department'    => $department,
+            'approvals'     => $approvals
         ]);
     }
 
@@ -264,36 +278,25 @@ class RequestController extends Controller
     {
         $this->validate($request, [
             'date' => 'required|date',
-            'items' => 'required|array|min:1'
+            'division_name' => 'required|string|max:100',
+            'approval' => 'required|exists:users,id',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'required|array|min:1',
+            'items.*.remarks' => 'required|string|max:255'
         ]);
 
         DB::beginTransaction();
         try {
             $hdr = RequestHeader::findOrFail($id);
             
-            if($hdr->status !== 'OPEN') {
-                return back()->with('error', 'Gagal update. Status bukan OPEN.');
+            if($hdr->status !== 'OPEN' && $hdr->status !== 'PENDING_APPROVAL') {
+                return back()->with('error', 'Gagal update. Status bukan OPEN atau PENDING APPROVAL.');
             }
-
-            // --- RE-CALCULATE ESTIMASI (SMART EMERGENCY) ---
-            $reqDate = Carbon::parse($request->date);
-            
-            // Logic: Jika tanggal 1-7 => Bulan Depan. Jika > 7 => 2 Bulan Kedepan.
-            if ($reqDate->day <= 7) {
-                $estDate = $reqDate->copy()->addMonth(); 
-            } else {
-                $estDate = $reqDate->copy()->addMonths(2);
-            }
-            
-            $months = [
-                1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni',
-                7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'
-            ];
-            $monthName = $months[$estDate->month];
-            $estimasiString = "Estimasi Kedatangan: " . $monthName . " " . $estDate->year;
 
             $hdr->date = $request->date;
-            $hdr->notes = $estimasiString; // Update estimasi di database
+            $hdr->division_name = $request->division_name;
+            $hdr->approver_id = $request->approval;
+            $hdr->notes = $request->notes; // Update catatan dari input
             $hdr->save();
 
             // Reset Details
@@ -508,8 +511,8 @@ class RequestController extends Controller
             abort(403);
         }
 
-        if ($hdr->status !== 'OPEN') {
-            return back()->with('error', 'Hanya request berstatus OPEN yang boleh dihapus.');
+        if ($hdr->status !== 'OPEN' && $hdr->status !== 'PENDING_APPROVAL') {
+            return back()->with('error', 'Hanya request berstatus OPEN atau PENDING APPROVAL yang boleh dihapus.');
         }
 
         DB::beginTransaction();
@@ -540,6 +543,14 @@ class RequestController extends Controller
         $user = Auth::user();
         if ($user->role === 'USER' && $hdr->user_id !== $user->id) {
             abort(403, 'Anda tidak punya akses ke request ini.');
+        }
+
+        // Tampilan khusus Role APPROVAL (Hanya fokus pada keperluan & persetujuan, tanpa stok gudang)
+        if (strtoupper($user->role) === 'APPROVAL') {
+            return view('approvals.show', [
+                'hdr'  => $hdr,
+                'user' => $user
+            ]);
         }
 
         $allowedItemIds = $this->getAllowedItemIdsForCurrentUser(); 
@@ -612,7 +623,96 @@ class RequestController extends Controller
     }
 
     // ============================================================
-    // 5) APPROVE / REJECT / CANCEL
+    // 5a) APPROVER (ATASAN) APPROVE / REJECT
+    //     PENDING_APPROVAL → OPEN (approve) atau REJECTED (reject)
+    // ============================================================
+    public function approverApprove(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $hdr = RequestHeader::with('details')->findOrFail($id);
+            $user = Auth::user();
+
+            // Validasi: hanya approver yang ditunjuk atau Super Admin
+            if ($user->id != $hdr->approver_id && $user->role !== 'SUPER_ADMIN') {
+                return back()->with('error', 'Anda bukan atasan yang ditunjuk untuk menyetujui request ini.');
+            }
+
+            // Validasi status
+            if ($hdr->status !== 'PENDING_APPROVAL') {
+                return back()->with('error', 'Request ini tidak dalam status Menunggu Persetujuan.');
+            }
+
+            // 1. Update status request
+            $hdr->status = 'PENDING';
+            $hdr->approved_by_approver_at = Carbon::now();
+            $hdr->save();
+
+            // 2. Buat BonHeader otomatis (Single BON untuk seluruh item)
+            $bon = new BonHeader();
+            $bon->bon_number    = $this->generateBonNumber(Carbon::now());
+            $bon->date          = Carbon::now()->format('Y-m-d');
+            $bon->department_id = $hdr->department_id;
+            $bon->division_name = $hdr->division_name;
+            $bon->request_id    = $hdr->id;
+            $bon->notes         = 'From Req: ' . $hdr->request_number;
+            $bon->status        = 'PENDING';
+            $bon->save();
+
+            // 3. Salin semua detail ke BonDetail (processed_qty di-sync saat Admin Gudang memproses/mengeluarkan BON)
+            foreach ($hdr->details as $d) {
+                $bd = new BonDetail();
+                $bd->bon_header_id     = $bon->id;
+                $bd->item_id           = (int) $d->item_id;
+                $bd->quantity          = (float) $d->quantity;
+                $bd->approved_quantity = 0; // Baru diisi oleh Admin Gudang
+                $bd->issued_quantity   = 0;
+                $bd->save();
+            }
+
+            DB::commit();
+            return redirect()->route('requests.show', $hdr->id)
+                ->with('success', 'Request berhasil disetujui! BON ' . $bon->bon_number . ' telah dibuat otomatis untuk diproses Admin Gudang.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyetujui request: ' . $e->getMessage());
+        }
+    }
+
+    public function approverReject(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $hdr = RequestHeader::findOrFail($id);
+            $user = Auth::user();
+
+            // Validasi: hanya approver yang ditunjuk atau Super Admin
+            if ($user->id != $hdr->approver_id && $user->role !== 'SUPER_ADMIN') {
+                return back()->with('error', 'Anda bukan atasan yang ditunjuk untuk menolak request ini.');
+            }
+
+            // Validasi status
+            if ($hdr->status !== 'PENDING_APPROVAL') {
+                return back()->with('error', 'Request ini tidak dalam status Menunggu Persetujuan.');
+            }
+
+            $hdr->status = 'REJECTED';
+            $hdr->notes = ($hdr->notes ? $hdr->notes . ' | ' : '') . 'Ditolak oleh atasan: ' . $user->name;
+            $hdr->save();
+
+            DB::commit();
+            return redirect()->route('requests.show', $hdr->id)
+                ->with('success', 'Request telah ditolak.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menolak request: ' . $e->getMessage());
+        }
+    }
+
+    // ============================================================
+    // 5b) ADMIN APPROVE / REJECT / CANCEL
     // ============================================================
     public function approve(Request $request, $id)
     {
@@ -625,9 +725,12 @@ class RequestController extends Controller
             
             $user = Auth::user();
             
-            // 1. VALIDASI ROLE (Hanya Admin)
+            // 1. VALIDASI ROLE (Hanya Admin dan jika ada approver_id harus sesuai atau Super Admin)
             if (!$this->isAdmin($user)) {
                 return back()->with('error', 'Hanya admin yang boleh approve request.');
+            }
+            if ($hdr->approver_id && $user->id != $hdr->approver_id && $user->role !== 'SUPER_ADMIN') {
+                return back()->with('error', 'Anda bukan atasan yang ditunjuk untuk menyetujui request ini.');
             }
             
             // 2. VALIDASI STATUS (Hanya OPEN yang bisa diapprove)
@@ -801,9 +904,10 @@ class RequestController extends Controller
             $allowedItemIds = $this->getAllowedItemIdsForCurrentUser(); 
             $reservedMap    = $this->getReservedPendingQtyMap($hdr->request_number);
 
-            if ($user->role !== 'SUPER_ADMIN' && !is_array($allowedItemIds)) {
-                return back()->with('error', 'Scope kategori Anda belum diset.');
-            }
+            // Disabled scope validation check because admin is single and can process all requests.
+            // if ($user->role !== 'SUPER_ADMIN' && !is_array($allowedItemIds)) {
+            //     return back()->with('error', 'Scope kategori Anda belum diset.');
+            // }
 
             // ========================================================
             // CASE A: SUPER_ADMIN => AUTO SPLIT (SMART STOCK CHECK)
@@ -1325,6 +1429,8 @@ class RequestController extends Controller
         $bon->bon_number    = $this->generateBonNumber(Carbon::now());
         $bon->date          = Carbon::now()->format('Y-m-d');
         $bon->department_id = $hdr->department_id;
+        $bon->division_name = $hdr->division_name;
+        $bon->request_id    = $hdr->id;
         $bon->notes         = $notes;
         $bon->status        = 'PENDING';
         $bon->save();

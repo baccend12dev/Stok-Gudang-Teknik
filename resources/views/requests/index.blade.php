@@ -170,6 +170,9 @@
         border:1px solid transparent;
     }
     .b-open{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
+    .b-pending-approval{ background:#fff7ed; color:#c2410c; border-color:#fed7aa; animation: pulse-badge 2s ease-in-out infinite; }
+    .b-pending{ background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
+    @keyframes pulse-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     .b-approved{ background:#ecfdf5; color:#047857; border-color:#d1fae5; }
     .b-partial{ background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
     .b-closed{ background:#f1f5f9; color:#0f172a; border-color:#e2e8f0; }
@@ -311,6 +314,8 @@
                         <select name="status" class="ctl">
                             @php $st = strtoupper(request('status','ALL')); @endphp
                             <option value="ALL" {{ $st=='ALL'?'selected':'' }}>ALL</option>
+                            <option value="PENDING_APPROVAL" {{ $st=='PENDING_APPROVAL'?'selected':'' }}>PENDING APPROVAL</option>
+                            <option value="PENDING" {{ $st=='PENDING'?'selected':'' }}>PENDING GUDANG</option>
                             <option value="OPEN" {{ $st=='OPEN'?'selected':'' }}>OPEN</option>
                             <option value="APPROVED" {{ $st=='APPROVED'?'selected':'' }}>APPROVED</option>
                             <option value="PARTIAL" {{ $st=='PARTIAL'?'selected':'' }}>PARTIAL</option>
@@ -367,7 +372,9 @@
                         @php
                             $badge = 'b-closed';
                             $icon  = 'fa-circle';
-                            if($r->status == 'OPEN'){ $badge='b-open'; $icon='fa-clock-o'; }
+                            if($r->status == 'PENDING_APPROVAL'){ $badge='b-pending-approval'; $icon='fa-hourglass-half'; }
+                            elseif($r->status == 'PENDING'){ $badge='b-pending'; $icon='fa-clock-o'; }
+                            elseif($r->status == 'OPEN'){ $badge='b-open'; $icon='fa-clock-o'; }
                             elseif($r->status == 'APPROVED'){ $badge='b-approved'; $icon='fa-check'; }
                             elseif($r->status == 'PARTIAL'){ $badge='b-partial'; $icon='fa-adjust'; }
                             elseif($r->status == 'CLOSED'){ $badge='b-closed'; $icon='fa-lock'; }
@@ -414,7 +421,14 @@
                                 @endif
                             </td>
                             <td class="text-center">{{ $r->date ? date('d/m/Y', strtotime($r->date)) : '-' }}</td>
-                            <td class="text-center">{{ $r->department ? $r->department->name : '-' }}</td>
+                            <td class="text-center">
+                                 {{ $r->department ? $r->department->name : '-' }}
+                                 @if($r->division_name)
+                                     <div style="font-size:10px; color:#64748b; margin-top:2px;">
+                                         <i class="fa fa-users" style="font-size:9px; margin-right:2px;"></i> {{ $r->division_name }}
+                                     </div>
+                                 @endif
+                            </td>
                             <td>
                                 <div style="font-weight:900; color:#0f172a;">{{ $r->user ? $r->user->name : '-' }}</div>
                                 <span class="user-email">{{ $r->user ? $r->user->email : '' }}</span>
@@ -424,7 +438,14 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge {{ $badge }}">
-                                    <i class="fa {{ $icon }}"></i> {{ $r->status }}
+                                    <i class="fa {{ $icon }}"></i> 
+                                    @if($r->status == 'PENDING_APPROVAL')
+                                        PENDING APPROVAL
+                                    @elseif($r->status == 'PENDING')
+                                        PENDING GUDANG
+                                    @else
+                                        {{ $r->status }}
+                                    @endif
                                 </span>
                             </td>
                             <td class="text-center" style="font-weight:900;">{{ number_format($itemsCount) }}</td>
@@ -436,7 +457,7 @@
                                         <i class="fa fa-eye"></i>
                                     </a>
                                     
-                                    @if($r->status === 'OPEN')
+                                    @if($r->status === 'OPEN' || $r->status === 'PENDING_APPROVAL')
                                         @if(auth()->user()->role !== 'USER' || auth()->user()->id === $r->user_id)
                                             <a href="{{ route('requests.edit', $r->id) }}" class="a-btn edit" title="Edit Request">
                                                 <i class="fa fa-pencil"></i>
@@ -460,9 +481,12 @@
                         <tr class="detail-row">
                             <td colspan="10" style="padding:0; border:none;">
                                 <div class="detail-box">
-                                    <h5 style="margin:0 0 10px; font-weight:700; color:#475569; font-size:12px; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
-                                        <i class="fa fa-list-ul"></i> Rincian Barang
-                                    </h5>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                        <h5 style="margin:0; font-weight:700; color:#475569; font-size:12px; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
+                                            <i class="fa fa-list-ul"></i> Rincian Barang
+                                        </h5>
+                                        
+                                    </div>
                                     <table class="detail-table">
                                         <thead>
                                             <tr>
@@ -581,18 +605,15 @@
                 $.each(details, function(i, d) {
                     var statusHtml = '';
 
-                    // LOGIC STATUS (FIXED)
-                    // 1. Jika Item sudah full processed = Selesai (Apapun status headernya)
+                    // LOGIC STATUS ITEM (DETAIL LEVEL)
                     if (d.processed >= d.qty) {
-                        statusHtml = '<span style="color:#16a34a; font-weight:700;">Selesai</span>';
+                        statusHtml = '<span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:3px 8px; border-radius:12px; font-weight:700;"><i class="fa fa-check-circle"></i> Selesai</span>';
                     }
-                    // 2. Jika Header CLOSED dan belum full = Closed (Hangus)
                     else if (parentStatus === 'CLOSED') {
-                        statusHtml = '<span style="color:#0f172a; font-weight:700; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:11px;">Closed</span>';
+                        statusHtml = '<span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; padding:3px 8px; border-radius:12px; font-weight:700;">Closed</span>';
                     }
-                    // 3. Jika belum full tapi sudah ada yang diambil = Partial
                     else if (d.processed > 0) {
-                        statusHtml = '<span style="color:#ca8a04; font-weight:700;">Partial</span>';
+                        statusHtml = '<span class="badge" style="background:#fef9c3; color:#a16207; font-size:11px; padding:3px 8px; border-radius:12px; font-weight:700;">Partial</span>';
                     }
                     // 4. Sisanya = Pending
                     else {

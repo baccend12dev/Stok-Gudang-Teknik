@@ -658,6 +658,11 @@ class ReportController extends Controller
             ->join('bon_headers as h', 'd.bon_header_id', '=', 'h.id')
             ->leftJoin('items as i', 'd.item_id', '=', 'i.id')
             ->leftJoin('departments as dept', 'h.department_id', '=', 'dept.id')
+            ->leftJoin('request_headers as rh', 'h.request_id', '=', 'rh.id')
+            ->leftJoin('request_details as rd', function($join) {
+                $join->on('rh.id', '=', 'rd.request_header_id')
+                     ->on('d.item_id', '=', 'rd.item_id');
+            })
             ->where('h.status', '=', 'ISSUED') // Hanya BON Issued
             ->select(
                 'h.date',
@@ -668,7 +673,8 @@ class ReportController extends Controller
                 'i.name',
                 'i.unit',
                 'd.issued_quantity',
-                'h.notes'
+                'h.notes',
+                'rd.remarks as item_remarks'
             )
             ->orderBy('h.date', 'desc')
             ->orderBy('h.id', 'desc');
@@ -706,7 +712,8 @@ class ReportController extends Controller
                         $seksi .= ' - ' . $row->division_name;
                     }
                     
-                    // Variable $price & $total dihapus karena tidak dipakai lagi
+                    // Gunakan remarks item jika ada, jika kosong gunakan notes BON
+                    $keterangan = !empty($row->item_remarks) ? $row->item_remarks : $row->notes;
 
                     $sheet->row($rowNum, [
                         $no,
@@ -718,8 +725,7 @@ class ReportController extends Controller
                         $row->unit,
                         // FIX: Float
                         (float)$row->issued_quantity,
-                        // Harga & Total dihapus dari sini
-                        $row->notes
+                        $keterangan
                     ]);
                     $rowNum++;
                     $no++;

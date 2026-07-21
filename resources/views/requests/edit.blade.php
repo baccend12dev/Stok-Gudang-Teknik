@@ -132,8 +132,8 @@
 
     .col-no{ width:56px; text-align:center; }
     .col-unit{ width:120px; text-align:center; }
-    .col-qty{ width:160px; }
-    .col-remarks{ width:280px; }
+    .col-qty{ width:95px; }
+    .col-remarks{ width:345px; }
     .col-act{ width:86px; text-align:center; }
 
     .item-title{ font-weight:900; font-size:13px; line-height:1.2; display:flex; align-items:center; gap:8px; }
@@ -236,19 +236,33 @@
                                    value="{{ $hdr->date->format('Y-m-d') }}">
                             <div class="help"><i class="fa fa-lock"></i> Tanggal terkunci.</div>
                         @endif
+                <div class="grid2" style="margin-top:14px;">
+                    <div class="fg">
+                        <label>Divisi / Bagian</label>
+                        <select name="division_name" id="divisionSelect" class="ctl select2-simple" required>
+                            <option value="">-- Pilih Departemen Terlebih Dahulu --</option>
+                        </select>
+                        <div class="help">Pilih divisi yang mengajukan request.</div>
+                    </div>
+
+                    <!--//form approval permintaan-->
+                    <div class="fg">
+                        <label>Approval Permintaan</label>
+                        <select name="approval" id="approvalSelect" class="ctl select2-simple" required>
+                            <option value="">-- Pilih Approval --</option>
+                            @foreach($approvals as $approval)
+                                <option value="{{ $approval->id }}" {{ old('approval', $hdr->approver_id) == $approval->id ? 'selected' : '' }}>{{ $approval->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="help">Pilih approval untuk permintaan ini.</div>
                     </div>
                 </div>
 
                 <div class="grid1" style="margin-top:14px;">
                     <div class="fg">
-                        {{-- SMART INFO BOX ESTIMASI --}}
-                        <label>Estimasi & Informasi (Smart Info)</label>
-                        <div id="smartInfoBox" class="alert-info-box">
-                            <i class="fa fa-info-circle"></i>
-                            <div id="estInfoContent">
-                                Menunggu data item...
-                            </div>
-                        </div>
+                        <label>Catatan / Keperluan (Notes)</label>
+                        <textarea name="notes" class="ctl" rows="3" placeholder="Masukkan catatan atau keperluan request... (Opsional)">{{ old('notes', $hdr->notes) }}</textarea>
+                        <div class="help">Masukkan catatan tambahan jika ada.</div>
                     </div>
                 </div>
             </div>
@@ -331,7 +345,7 @@
                                     </td>
                                     <td class="col-remarks">
                                         <input type="text" name="items[{{ $idx }}][remarks]" class="ctl" style="height:40px;"
-                                               value="{{ $rem }}" placeholder="Opsional">
+                                               value="{{ $rem }}" placeholder="Wajib diisi (Keperluan)" required>
                                     </td>
                                     <td class="col-act">
                                         <button type="button" class="rm js-remove" title="Hapus">
@@ -425,56 +439,53 @@
     }
 
     function updateSmartInfo() {
-        var hasGeneral = false;
-        var hasApparel = false;
-        var hasItems = false;
-
-        $('#itemsTable tbody tr').each(function(){
-            hasItems = true;
-            var hid = $(this).find('input[type="hidden"][name$="[item_id]"]');
-            if (hid.length > 0) {
-                var id = parseInt(hid.val(), 10);
-                var it = ITEMS[id];
-                if (it) {
-                    if (isApparel(it.cat_code)) {
-                        hasApparel = true;
-                    } else {
-                        hasGeneral = true;
-                    }
-                }
-            }
-        });
-
-        var $box = $('#smartInfoBox');
-        var $content = $('#estInfoContent');
-        var estText = getEstimationText();
-
-        $box.removeClass('mixed-mode');
-        
-        if (!hasItems) {
-            $content.html('Belum ada item yang dipilih. Silakan tambah item.');
-            return;
-        }
-
-        if (hasGeneral && !hasApparel) {
-            $content.html('<strong style="color:#15803d;">Item General (ATK/Umum):</strong><br>' + estText);
-        } 
-        else if (!hasGeneral && hasApparel) {
-            $content.html('<strong style="color:#b45309;">Item Apparel (Seragam/Sepatu):</strong><br>Tidak ada estimasi otomatis. Stok tergantung vendor/gudang. Mohon konfirmasi ke Admin Apparel (Bu Shinta).');
-        } 
-        else if (hasGeneral && hasApparel) {
-            var html = '<strong>Permintaan Campuran:</strong><ul style="margin:4px 0 0 0; padding:0; list-style:none;">';
-            html += '<li style="margin-bottom:4px;"><span style="color:#16a34a;">●</span> <span style="color:#16a34a; font-weight:700;">Item General:</span> ' + estText + '</li>';
-            html += '<li><span style="color:#d97706;">●</span> <span style="color:#d97706; font-weight:700;">Item Apparel:</span> Konfirmasi ketersediaan ke Admin Apparel (Bu Shinta).</li>';
-            html += '</ul>';
-            $content.html(html);
-        }
+        // Disabled
     }
 
     // SELECT2 SIMPLE (FOR DEPT/USER)
     $('.select2-simple').select2({
         theme: 'bootstrap', width: '100%'
     });
+
+    // Division cascading dropdown logic
+    var $divSelect = $('#divisionSelect');
+    var currentDeptId = "{{ $hdr->department_id }}";
+    var oldDivision = "{{ old('division_name', $hdr->division_name) }}";
+
+    function loadDivisions(deptId, selectedVal) {
+        $divSelect.empty().append('<option value="">Memuat...</option>').prop('disabled', true);
+        
+        if (!deptId) {
+            $divSelect.empty().append('<option value="">-- Pilih Departemen Terlebih Dahulu --</option>');
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route("api.divisions") }}',
+            type: 'GET',
+            data: { department_id: deptId },
+            success: function(data) {
+                $divSelect.empty().append('<option value="">-- Pilih Divisi / Bagian --</option>');
+                if (data.length > 0) {
+                    $.each(data, function(i, div) {
+                        var isSel = (selectedVal && selectedVal == div.name) ? 'selected' : '';
+                        $divSelect.append('<option value="'+div.name+'" '+isSel+'>'+div.name+'</option>');
+                    });
+                    $divSelect.prop('disabled', false);
+                } else {
+                    $divSelect.append('<option value="">-- Tidak ada divisi --</option>');
+                    $divSelect.prop('disabled', false);
+                }
+            },
+            error: function() {
+                $divSelect.empty().append('<option value="">Gagal memuat data</option>');
+            }
+        });
+    }
+
+    if (currentDeptId) {
+        loadDivisions(currentDeptId, oldDivision);
+    }
 
     // SELECT2 ITEM PICKER
     var $picker = $('#itemPicker');
@@ -581,7 +592,7 @@
                 '<input type="number" name="items['+rowIdx+'][quantity]" class="qty" value="1" min="0.01" step="0.01" required>' +
             '</td>' +
             '<td class="col-remarks">' +
-                '<input type="text" name="items['+rowIdx+'][remarks]" class="ctl" style="height:40px;" placeholder="Opsional">' +
+                '<input type="text" name="items['+rowIdx+'][remarks]" class="ctl" style="height:40px;" placeholder="Wajib diisi (Keperluan)" required>' +
             '</td>' +
             '<td class="col-act">' +
                 '<button type="button" class="rm js-remove" title="Hapus"><i class="fa fa-trash"></i></button>' +
