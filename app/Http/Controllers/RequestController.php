@@ -227,7 +227,27 @@ class RequestController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('requests.index')->with('success', 'Request berhasil dibuat.');
+
+            // Kirim Email Notifikasi ke Approval jika email terisi
+            try {
+                $approver = \App\User::find($hdr->approver_id);
+                if ($approver && !empty($approver->email)) {
+                    $hdr->load(['details.item', 'department', 'user']);
+                    \Illuminate\Support\Facades\Mail::send(
+                        'emails.approval_request',
+                        ['hdr' => $hdr, 'approverName' => $approver->name],
+                        function ($message) use ($approver, $hdr) {
+                            $message->to($approver->email, $approver->name)
+                                    ->subject('Pengajuan Permintaan Barang: ' . $hdr->request_number);
+                        }
+                    );
+                }
+            } catch (\Exception $mailEx) {
+                // Log error kirim email jika gagal agar request tetap sukses disimpan
+                \Illuminate\Support\Facades\Log::error('Gagal mengirim email approval: ' . $mailEx->getMessage());
+            }
+
+            return redirect()->route('requests.index')->with('success', 'Request berhasil dibuat dan email pemberitahuan telah dikirim.');
 
         } catch (\Exception $e) {
             DB::rollBack();

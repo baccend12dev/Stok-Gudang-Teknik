@@ -472,11 +472,9 @@
                             <div class="user-name">{{ $authUser->name }}</div>
                             <div class="user-scope">
                                 @if ($authUser->role === 'USER')
-                                    Department Staff
-                                @elseif ($authUser->inventory_scope === \App\User::SCOPE_GENERAL)
-                                    Admin General (ATK/Kebersihan)
-                                @elseif ($authUser->inventory_scope === \App\User::SCOPE_APPAREL)
-                                    Admin Apparel (Seragam/Sepatu)
+                                    Department Admin
+                                @elseif ($authUser->role === 'APPROVAL')
+                                    APPROVAL
                                 @else
                                     Super Admin
                                 @endif
