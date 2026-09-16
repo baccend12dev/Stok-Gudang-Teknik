@@ -41,6 +41,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/items/import', 'ItemController@import')->name('items.import');
 
     /** LPB (barang masuk) */
+    Route::get('/lpbs/check-foreign', 'LpbController@checkForeignLpb')->name('lpbs.check-foreign');
     Route::resource('lpbs', 'LpbController');
 
     Route::get('/lpbs', 'LpbController@index')->name('lpbs.index');

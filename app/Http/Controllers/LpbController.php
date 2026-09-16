@@ -87,26 +87,79 @@ class LpbController extends Controller
 
         $items = $itemsQuery->get();
 
-        $purchaseOrders = \App\PurchaseOrder::whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED'])
-            ->orderBy('po_number', 'asc')
-            ->get();
+        return view('lpbs.create', compact('items'));
+    }
 
-        $selectedPo = null;
-        if ($request->has('po_id')) {
-            $selectedPo = \App\PurchaseOrder::with('details.item')->find($request->get('po_id'));
-            if ($selectedPo) {
-                foreach ($selectedPo->details as $detail) {
-                    $receivedQty = (float) \App\LpbDetail::where('item_id', $detail->item_id)
-                        ->whereHas('header', function ($q) use ($selectedPo) {
-                            $q->where('purchase_order_id', $selectedPo->id);
-                        })
-                        ->sum('quantity');
-                    $detail->remaining_qty = max(0.0, (float) $detail->quantity - $receivedQty);
-                }
+    public function checkForeignLpb(Request $request)
+    {
+        $noLpb    = trim($request->get('no_lpb', ''));
+        $year     = trim($request->get('year', ''));
+        $itemType = trim($request->get('item_type', ''));
+
+        if ($noLpb === '') {
+            return response()->json(array(
+                'status'  => 'error',
+                'message' => 'Silakan masukkan No. LPB terlebih dahulu.'
+            ), 422);
+        }
+
+        $query = \App\OttoMasterLpb::where('no_lpb', $noLpb);
+
+        // Filter Jenis jika dipilih (bukan default/semua)
+        if ($itemType !== '') {
+            $query->where('item_type', $itemType);
+        }
+
+        // Filter Tahun jika dipilih (bukan semua)
+        if ($year !== '') {
+            $query->where('tgl_lpb', 'LIKE', '%' . $year . '%');
+        }
+
+        $items = $query->orderBy('tgl_lpb', 'desc')->get();
+
+        if ($items->isEmpty()) {
+            $keterangan = 'Data LPB "' . $noLpb . '" tidak ditemukan di Otto Master';
+            $detailFilter = array();
+            if ($year !== '') {
+                $detailFilter[] = 'Tahun ' . $year;
+            }
+            if ($itemType !== '') {
+                $detailFilter[] = 'Jenis ' . ($itemType === 'OPI_ENGINEERING' ? 'Teknik' : 'Expense');
+            }
+            if (!empty($detailFilter)) {
+                $keterangan .= ' untuk ' . implode(' & ', $detailFilter);
+            }
+            $keterangan .= '.';
+
+            return response()->json(array(
+                'status'  => 'error',
+                'message' => $keterangan
+            ), 404);
+        }
+
+        $first = $items->first();
+
+        // Format tanggal jika ada (misal: "01-AUG-2026" -> "2026-08-01")
+        $formattedDate = '';
+        if ($first->tgl_lpb) {
+            $time = strtotime($first->tgl_lpb);
+            if ($time) {
+                $formattedDate = date('Y-m-d', $time);
             }
         }
 
-        return view('lpbs.create', compact('items', 'purchaseOrders', 'selectedPo'));
+        return response()->json(array(
+            'status' => 'success',
+            'header' => array(
+                'no_lpb'         => $first->no_lpb,
+                'tgl_lpb'        => $first->tgl_lpb,
+                'formatted_date' => $formattedDate,
+                'no_po'          => $first->no_po,
+                'nama_supplier'  => $first->nama_supplier,
+                'item_type'      => $first->item_type,
+            ),
+            'items'  => $items
+        ));
     }
 
     public function getPoRemainingItems($id)

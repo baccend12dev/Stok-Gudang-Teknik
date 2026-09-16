@@ -490,47 +490,61 @@
 
         {{-- SECTION 1: HEADER --}}
         <div class="card-section">
-            <div class="card-header">
-                <div class="header-icon-wrapper-small">
-                    <i class="fa fa-file-text-o"></i>
+            <div class="card-header" style="justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="header-icon-wrapper-small">
+                        <i class="fa fa-file-text-o"></i>
+                    </div>
+                    <h3 class="card-title">Informasi Header LPB</h3>
                 </div>
-                <h3 class="card-title">Informasi Header LPB</h3>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size: 12px; font-weight: 600; color: var(--text-gray);"><i class="fa fa-calendar text-primary"></i> Tahun LPB:</span>
+                    <select name="search_year" id="search_year_select" class="form-control" style="height: 36px; width: 130px; font-size: 13px; padding: 4px 10px; border-radius: 6px; background-color: #fff;">
+                        @php $curYear = (int) date('Y'); @endphp
+                        @for ($y = $curYear; $y >= 2018; $y--)
+                            <option value="{{ $y }}" {{ $y == $curYear ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                        <option value="">Semua Tahun</option>
+                    </select>
+                </div>
             </div>
             <div class="card-body">
                 <div class="grid-2">
                     <div class="form-group">
                         <label class="form-label">Nomor LPB <span style="color: var(--danger)">*</span></label>
-                        <input type="text" name="lpb_number" class="form-control"
-                               placeholder="Contoh: LPB/2025/11/001"
-                               value="{{ old('lpb_number') }}" required>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" name="lpb_number" id="lpb_number_input" class="form-control"
+                                   placeholder="Contoh: 1150"
+                                   value="{{ old('lpb_number') }}" required autocomplete="off">
+                            <button type="button" class="btn" id="btn-check-lpb" style="height: 44px; padding: 0 22px; border-radius: var(--radius-md); background: var(--primary); color: white; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; transition: all 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">
+                                <i class="fa fa-search" id="icon-check-lpb"></i> <span id="text-check-lpb">Check</span>
+                            </button>
+                        </div>
+                        <small style="font-size: 11px; color: var(--text-gray); margin-top: 5px; display: block;">
+                            <i class="fa fa-info-circle text-primary"></i> Masukkan No. LPB lalu klik <strong>Check</strong> untuk menarik data dari Otto Master.
+                        </small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tanggal Penerimaan <span style="color: var(--danger)">*</span></label>
-                        {{-- FIX: Ganti type="date" ke type="text" & tambah class datepicker-flat --}}
-                        <input type="text" name="date" class="form-control datepicker-flat"
+                        <input type="text" name="date" id="date-input" class="form-control datepicker-flat"
                                value="{{ old('date') ? old('date') : date('Y-m-d') }}" 
                                placeholder="dd/mm/yyyy" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Pemasok / Referensi (Opsional)</label>
-                        <input type="text" name="vendor" id="vendor-input" class="form-control"
-                               placeholder="Nama Vendor atau No. Surat Jalan"
-                               value="{{ old('vendor') ? old('vendor') : (isset($selectedPo) && $selectedPo ? $selectedPo->supplier_name : '') }}">
+                        <label class="form-label">Nomor PO (Dari Otto Master)</label>
+                        <input type="text" name="no_po" id="po-number-input" class="form-control"
+                               placeholder="Nomor PO akan terisi otomatis"
+                               value="{{ old('no_po') }}" readonly style="background-color: #f8fafc; font-weight: 600; color: #1e293b;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Referensi PO (Opsional)</label>
-                        <select name="purchase_order_id" id="po-select" class="form-control">
-                            <option value="">-- Pilih PO (Jika Ada) --</option>
-                            @foreach($purchaseOrders as $po)
-                                <option value="{{ $po->id }}" data-supplier="{{ $po->supplier_name }}" {{ (old('purchase_order_id') ?: (isset($selectedPo) && $selectedPo ? $selectedPo->id : '')) == $po->id ? 'selected' : '' }}>
-                                    {{ $po->po_number }} ({{ $po->supplier_name ?: 'No Supplier' }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <label class="form-label">Pemasok / Vendor</label>
+                        <input type="text" name="vendor" id="vendor-input" class="form-control"
+                               placeholder="Nama Supplier"
+                               value="{{ old('vendor') }}">
                     </div>
                     <div class="form-group full-width" style="margin-bottom:0;">
                         <label class="form-label">Catatan Tambahan</label>
-                        <textarea name="notes" class="form-control"
+                        <textarea name="notes" id="notes-input" class="form-control"
                                   placeholder="Keterangan kondisi barang atau informasi penting lainnya...">{{ old('notes') }}</textarea>
                     </div>
                 </div>
@@ -557,78 +571,22 @@
                         <table class="table" id="items-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px; text-align: center;">No</th>
-                                    <th style="min-width: 350px;">Nama Barang</th>
-                                    <th style="width: 150px;">Satuan</th>
-                                    <th style="width: 200px;">Jumlah Diterima</th>
-                                    <th style="width: 80px; text-align: center;">Aksi</th>
+                                    <th style="width: 50px; text-align: center;">No</th>
+                                    <th style="width: 180px;">Kode Barang</th>
+                                    <th style="min-width: 320px;">Nama / Deskripsi Barang</th>
+                                    <th style="width: 110px;">Satuan</th>
+                                    <th style="width: 130px;">Jumlah</th>
+                                    <th style="width: 150px; text-align: right;">Nilai / Total</th>
+                                    <th style="width: 60px; text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @php
-                                    $oldItems = old('items');
-                                    if (!is_array($oldItems) || count($oldItems) == 0) {
-                                        if (isset($selectedPo) && $selectedPo) {
-                                            $oldItems = [];
-                                            foreach ($selectedPo->details as $detail) {
-                                                if ($detail->remaining_qty > 0) {
-                                                    $oldItems[] = [
-                                                        'item_id' => $detail->item_id,
-                                                        'unit' => $detail->item->unit,
-                                                        'quantity' => $detail->remaining_qty
-                                                    ];
-                                                }
-                                            }
-                                        }
-                                        if (empty($oldItems)) {
-                                            $oldItems = [[], [], []]; 
-                                        }
-                                    }
-                                @endphp
-
-                                @foreach($oldItems as $idx => $row)
-                                    @php
-                                        $oldItemId = isset($row['item_id']) ? $row['item_id'] : '';
-                                        $oldUnit   = isset($row['unit']) ? $row['unit'] : '';
-                                        $oldQty    = isset($row['quantity']) ? $row['quantity'] : '';
-                                    @endphp
-                                    <tr>
-                                        {{-- Wrapper div dalam td untuk centering --}}
-                                        <td style="text-align: center;">
-                                            <div class="row-number">{{ $idx + 1 }}</div>
-                                        </td>
-                                        <td>
-                                            {{-- HAPUS REQUIRED DI SINI --}}
-                                            <select name="items[{{ $idx }}][item_id]" class="form-control item-select">
-                                                <option value="">-- Cari Barang --</option>
-                                                @foreach($items as $item)
-                                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}"
-                                                        {{ $oldItemId == $item->id ? 'selected' : '' }}>
-                                                        [{{ $item->code }}] {{ $item->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="text" name="items[{{ $idx }}][unit]"
-                                                   class="form-control unit-input"
-                                                   value="{{ $oldUnit }}" readonly tabindex="-1"
-                                                   placeholder="Auto">
-                                        </td>
-                                        <td>
-                                            {{-- FIX: Tambah step="0.01" biar bisa input desimal --}}
-                                            <input type="number" name="items[{{ $idx }}][quantity]"
-                                                   class="form-control qty-input"
-                                                   min="0.01" step="0.01" placeholder="0"
-                                                   value="{{ $oldQty }}">
-                                        </td>
-                                        <td style="text-align: center;">
-                                            <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                <tr id="empty-hint-row">
+                                    <td colspan="7" style="text-align: center; color: #94a3b8; padding: 35px 20px;">
+                                        <i class="fa fa-search" style="font-size: 24px; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                                        Masukkan <strong>Nomor LPB</strong> di atas dan klik tombol <strong>Check</strong> untuk memuat daftar barang dari sistem Otto, atau klik <strong>+ Tambah Baris</strong> untuk input manual.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -656,20 +614,33 @@
     (function($) {
         'use strict';
 
-        // Initialize Select2
-        function initSelect2($element) {
-            $element.select2({
-                placeholder: "-- Cari Barang --",
-                allowClear: true,
-                width: '100%'
-            });
+        var fpDate = null;
+
+        // Format angka ke format Rupiah / Ribuan
+        function formatNumber(num) {
+            if (num === null || num === undefined || num === '') return '0';
+            return parseFloat(num).toLocaleString('id-ID');
         }
 
         // Renumber Rows
         function renumberRows() {
-            $('#items-table tbody tr').each(function(index) {
+            var rows = $('#items-table tbody tr:not(#empty-hint-row)');
+            if (rows.length === 0) {
+                if ($('#empty-hint-row').length === 0) {
+                    $('#items-table tbody').html(`
+                        <tr id="empty-hint-row">
+                            <td colspan="7" style="text-align: center; color: #94a3b8; padding: 35px 20px;">
+                                <i class="fa fa-search" style="font-size: 24px; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                                Masukkan <strong>Nomor LPB</strong> di atas dan klik tombol <strong>Check</strong> untuk memuat daftar barang, atau klik <strong>+ Tambah Baris</strong>.
+                            </td>
+                        </tr>
+                    `);
+                }
+                return;
+            }
+
+            rows.each(function(index) {
                 $(this).find('.row-number').text(index + 1);
-                
                 $(this).find('select, input').each(function() {
                     let name = $(this).attr('name');
                     if (name) {
@@ -680,7 +651,9 @@
             });
         }
 
-        function addRow(index, selectedItemId = '', selectedUnit = '', qtyVal = '') {
+        // Tambah Baris Manual
+        function addManualRow(index) {
+            $('#empty-hint-row').remove();
             let tbody = $('#items-table tbody');
             let newRow = `
                 <tr>
@@ -688,20 +661,20 @@
                         <div class="row-number">${index + 1}</div>
                     </td>
                     <td>
-                        <select name="items[${index}][item_id]" class="form-control item-select">
-                            <option value="">-- Cari Barang --</option>
-                            @foreach($items as $item)
-                                <option value="{{ $item->id }}" data-unit="{{ $item->unit }}">
-                                    [{{ $item->code }}] {{ $item->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="text" name="items[${index}][item_code]" class="form-control" placeholder="Kode Barang">
+                        <input type="hidden" name="items[${index}][foreign_item_id]" value="">
                     </td>
                     <td>
-                        <input type="text" name="items[${index}][unit]" class="form-control unit-input" value="${selectedUnit}" readonly tabindex="-1" placeholder="Auto">
+                        <input type="text" name="items[${index}][item_name]" class="form-control" placeholder="Nama / Deskripsi Barang">
                     </td>
                     <td>
-                        <input type="number" name="items[${index}][quantity]" class="form-control qty-input" min="0.01" step="0.01" value="${qtyVal}" placeholder="0">
+                        <input type="text" name="items[${index}][unit]" class="form-control unit-input" value="PCS" placeholder="Satuan">
+                    </td>
+                    <td>
+                        <input type="number" name="items[${index}][quantity]" class="form-control qty-input" min="0.01" step="0.01" value="1">
+                    </td>
+                    <td>
+                        <input type="text" name="items[${index}][price]" class="form-control price-input" value="0" style="text-align: right;">
                     </td>
                     <td style="text-align: center;">
                         <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
@@ -710,17 +683,73 @@
                     </td>
                 </tr>
             `;
-            let $newRowObj = $(newRow);
-            if (selectedItemId) {
-                $newRowObj.find('.item-select').val(selectedItemId);
+            tbody.append(newRow);
+        }
+
+        // Render List Items dari Otto Master Foreign Table
+        function renderForeignItems(items) {
+            let tbody = $('#items-table tbody');
+            tbody.empty();
+
+            if (!items || items.length === 0) {
+                tbody.html(`
+                    <tr id="empty-hint-row">
+                        <td colspan="7" style="text-align: center; color: #ef4444; padding: 25px;">
+                            <i class="fa fa-exclamation-circle"></i> Tidak ada rincian barang untuk No. LPB ini.
+                        </td>
+                    </tr>
+                `);
+                return;
             }
-            tbody.append($newRowObj);
-            initSelect2($newRowObj.find('.item-select'));
+
+            items.forEach(function(item, index) {
+                let qty = item.units ? item.units : (item.unitb ? item.unitb : 1);
+                let price = item.th_unitb ? parseFloat(item.th_unitb) : 0;
+                let formattedPrice = formatNumber(price);
+
+                let rowHtml = `
+                    <tr>
+                        <td style="text-align: center;">
+                            <div class="row-number">${index + 1}</div>
+                        </td>
+                        <td>
+                            <input type="text" name="items[${index}][item_code]" class="form-control" 
+                                   value="${item.item_code || ''}" readonly 
+                                   style="background: #f8fafc; font-weight: 600; color: #1e293b;">
+                            <input type="hidden" name="items[${index}][foreign_item_id]" value="${item.item_id || ''}">
+                        </td>
+                        <td>
+                            <input type="text" name="items[${index}][item_name]" class="form-control" 
+                                   value="${item.item_desc || ''}" readonly 
+                                   style="background: #f8fafc;" title="${item.item_desc || ''}">
+                        </td>
+                        <td>
+                            <input type="text" name="items[${index}][unit]" class="form-control unit-input" 
+                                   value="PCS" placeholder="Satuan">
+                        </td>
+                        <td>
+                            <input type="number" name="items[${index}][quantity]" class="form-control qty-input" 
+                                   min="0.01" step="0.01" value="${qty}">
+                        </td>
+                        <td>
+                            <input type="text" name="items[${index}][price]" class="form-control price-input" 
+                                   value="${formattedPrice}" readonly 
+                                   style="background: #f8fafc; text-align: right; font-weight: 500;">
+                        </td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(rowHtml);
+            });
         }
 
         $(document).ready(function() {
-            // FIX: Inisialisasi Flatpickr
-            flatpickr(".datepicker-flat", {
+            // Inisialisasi Flatpickr
+            fpDate = flatpickr(".datepicker-flat", {
                 altInput: true,      
                 altFormat: "d/m/Y",  
                 dateFormat: "Y-m-d", 
@@ -728,107 +757,120 @@
                 allowInput: true     
             });
 
-            // Init existing rows
-            $('.item-select').each(function() {
-                initSelect2($(this));
-            });
-
-            // Set unit untuk item pre-filled dari database
-            $('#items-table tbody tr').each(function() {
-                let $row = $(this);
-                let $select = $row.find('.item-select');
-                let unit = $select.find('option:selected').data('unit');
-                if (unit) {
-                    $row.find('.unit-input').val(unit);
-                }
-            });
-
-            // Add Row
+            // Add Row Manual
             $('#btn-add-row').on('click', function() {
-                let tbody = $('#items-table tbody');
-                let rowCount = tbody.find('tr').length;
-                addRow(rowCount);
+                let rowCount = $('#items-table tbody tr:not(#empty-hint-row)').length;
+                addManualRow(rowCount);
             });
 
             // Remove Row
             $('#items-table').on('click', '.btn-remove-row', function() {
-                if ($('#items-table tbody tr').length > 1) {
-                    $(this).closest('tr').remove();
-                    renumberRows();
-                } else {
-                    // Reset if only 1 row remains
-                    let row = $(this).closest('tr');
-                    row.find('select').val(null).trigger('change');
-                    row.find('input').val('');
-                }
+                $(this).closest('tr').remove();
+                renumberRows();
             });
 
-            // Auto-fill Unit
-            $('#items-table').on('change', '.item-select', function() {
-                let $select = $(this);
-                let $row = $select.closest('tr');
-                let selectedOption = $select.find('option:selected');
-                let unit = selectedOption.data('unit');
-                $row.find('.unit-input').val(unit ? unit : '');
-            });
+            // Tombol Check LPB
+            $('#btn-check-lpb').on('click', function() {
+                let noLpb = $('#lpb_number_input').val().trim();
+                let year = $('#search_year_select').val();
 
-            // AJAX PO selection change
-            $('#po-select').on('change', function() {
-                let poId = $(this).val();
-                if (!poId) {
+                if (!noLpb) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Nomor LPB Kosong',
+                            text: 'Silakan ketik nomor LPB terlebih dahulu.'
+                        });
+                    } else {
+                        alert('Silakan ketik nomor LPB terlebih dahulu.');
+                    }
+                    $('#lpb_number_input').focus();
                     return;
                 }
 
-                let selectedOption = $(this).find('option:selected');
-                let supplier = selectedOption.data('supplier');
-                if (supplier) {
-                    $('#vendor-input').val(supplier);
-                }
+                let $btn = $(this);
+                let $icon = $('#icon-check-lpb');
+                let $text = $('#text-check-lpb');
 
-                // Show loading state
-                Swal.fire({
-                    title: 'Memuat data PO...',
-                    text: 'Mohon tunggu sejenak.',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                // Loading State
+                $btn.prop('disabled', true).css('opacity', '0.7');
+                $icon.removeClass('fa-search').addClass('fa-spinner fa-spin');
+                $text.text('Mengecek...');
 
                 $.ajax({
-                    url: '{{ url("api/purchase-orders") }}/' + poId + '/remaining-items',
+                    url: '{{ route("lpbs.check-foreign") }}',
                     type: 'GET',
+                    data: {
+                        no_lpb: noLpb,
+                        year: year
+                    },
                     dataType: 'json',
                     success: function(response) {
-                        Swal.close();
-                        let tbody = $('#items-table tbody');
-                        tbody.empty();
+                        $btn.prop('disabled', false).css('opacity', '1');
+                        $icon.removeClass('fa-spinner fa-spin').addClass('fa-search');
+                        $text.text('Check');
 
-                        if (response.items.length === 0) {
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'PO Selesai',
-                                text: 'Semua barang dalam PO ini sudah diterima.'
-                            });
-                            addRow(0);
-                            return;
+                        if (response.status === 'success') {
+                            // Isi tanggal jika ada
+                            if (response.header && response.header.formatted_date && fpDate) {
+                                fpDate.setDate(response.header.formatted_date);
+                            }
+
+                            // Isi No PO
+                            if (response.header && response.header.no_po) {
+                                $('#po-number-input').val(response.header.no_po);
+                            }
+
+                            // Isi Supplier / Vendor
+                            if (response.header && response.header.nama_supplier) {
+                                $('#vendor-input').val(response.header.nama_supplier);
+                            }
+
+                            // Render list item ke tabel
+                            renderForeignItems(response.items);
+
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Data Ditemukan!',
+                                    text: 'Berhasil menarik ' + response.items.length + ' item untuk LPB No. ' + noLpb,
+                                    timer: 2200,
+                                    showConfirmButton: false
+                                });
+                            }
                         }
-
-                        // Add rows for each remaining item
-                        response.items.forEach(function(item, index) {
-                            addRow(index, item.item_id, item.unit, item.remaining_qty);
-                        });
                     },
                     error: function(xhr) {
-                        Swal.close();
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Gagal memuat data barang PO.'
-                        });
+                        $btn.prop('disabled', false).css('opacity', '1');
+                        $icon.removeClass('fa-spinner fa-spin').addClass('fa-search');
+                        $text.text('Check');
+
+                        let errMsg = 'Data LPB tidak ditemukan di Otto Master.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMsg = xhr.responseJSON.message;
+                        }
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Perhatian',
+                                text: errMsg
+                            });
+                        } else {
+                            alert(errMsg);
+                        }
                     }
                 });
             });
+
+            // Tekan Enter pada input No LPB langsung trigger tombol Check
+            $('#lpb_number_input').on('keydown', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $('#btn-check-lpb').click();
+                }
+            });
+
         });
 
     })(jQuery);
