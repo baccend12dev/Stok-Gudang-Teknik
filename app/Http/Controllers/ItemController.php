@@ -31,7 +31,7 @@ class ItemController extends Controller
         $unit    = $request->get('unit', 'all');
         
         // FIX POIN 9: Default Pagination 100
-        $perPage = (int) $request->get('per_page', 100);
+        $perPage = (int) $request->get('per_page', 10);
         if ($perPage < 1) {
             $perPage = 100;
         }
