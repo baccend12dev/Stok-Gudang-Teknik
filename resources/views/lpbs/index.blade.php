@@ -629,6 +629,12 @@
                             </td>
                             <td>
                                 <div style="font-weight: 700; color: #1e293b; font-size:14px;">{{ $lpb->lpb_number }}</div>
+                                @if(!empty($lpb->no_po))
+                                    <div style="font-size: 11px; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
+                                        <i class="fa fa-file-text-o" style="color: #3b82f6;"></i> 
+                                        <span>PO: <strong>{{ $lpb->no_po }}</strong></span>
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;">
@@ -637,8 +643,8 @@
                                 </div>
                             </td>
                             <td>
-                                @if($lpb->vendor)
-                                    {{ $lpb->vendor }}
+                                @if($lpb->vendor || $lpb->supplier)
+                                    <div style="font-weight: 500; color: #1e293b; line-height: 1.4;">{{ $lpb->vendor ?: $lpb->supplier }}</div>
                                 @else
                                     <span class="badge-modern badge-gray">-</span>
                                 @endif

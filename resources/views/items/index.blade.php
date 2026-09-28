@@ -96,30 +96,52 @@ select.form-control {
 .btn-danger:hover { background: #fecaca; color: #7f1d1d; }
 .btn-danger:focus, .btn-danger:active { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 
-.btn-compact { padding: 0 12px; height: 34px; font-size: 13px; }
+.btn-compact { 
+    width: 32px; 
+    height: 32px; 
+    padding: 0; 
+    font-size: 13px; 
+    border-radius: 6px; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+}
 
 /* ====== TABLE STYLING ====== */
-.table-wrapper { border: 1px solid #eef2f7; border-radius: 10px; overflow: hidden; margin-top: 16px; }
-.table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; table-layout: fixed; }
+.table-wrapper { 
+    border: 1px solid #eef2f7; 
+    border-radius: 10px; 
+    overflow-x: auto; 
+    margin-top: 16px; 
+    background: #fff;
+}
+.table { 
+    width: 100%; 
+    min-width: 900px;
+    border-collapse: separate; 
+    border-spacing: 0; 
+    background: #fff; 
+    table-layout: fixed; 
+}
 
 .table thead th {
     background: #f8fafc;
     color: #475467;
     font-weight: 700;
-    font-size: 12px; 
+    font-size: 11px; 
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 14px 12px;
+    padding: 11px 8px;
     border-bottom: 1px solid #eef2f7;
     white-space: nowrap;
     vertical-align: middle;
 }
 
 .table tbody td {
-    padding: 12px 12px;
+    padding: 10px 8px;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
-    font-size: 14px; 
+    font-size: 13px; 
     color: #1e293b;
     white-space: nowrap;
     overflow: hidden;
@@ -129,22 +151,23 @@ select.form-control {
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: #f8fafc; }
 
-/* === PROPORSIONAL KOLOM === */
-.col-code { width: 100px; text-align: center; }
-.col-name { width: 420px; white-space: normal !important; line-height: 1.5; } 
-.col-unit { width: 90px; text-align: center; } 
-.col-loc  { width: 110px; text-align: center; } 
-.col-buf  { width: 90px; text-align: center; }
-.col-stok { width: 90px; text-align: center; }
-.col-stat { width: 110px; text-align: center; }
-.col-act  { width: 130px; text-align: center; }
+/* === PROPORSIONAL KOLOM COMPACT === */
+.col-code { width: 85px; text-align: center; }
+.col-name { min-width: 250px; white-space: normal !important; line-height: 1.4; word-break: break-word; } 
+.col-unit { width: 65px; text-align: center; } 
+.col-loc  { width: 90px; text-align: center; } 
+.col-buf  { width: 65px; text-align: center; }
+.col-stok { width: 65px; text-align: center; }
+.col-po   { width: 65px; text-align: center; background: #eff6ff !important; color: #2563eb !important; border-bottom: 2px solid #3b82f6 !important; }
+.col-stat { width: 80px; text-align: center; }
+.col-act  { width: 86px; text-align: center; }
 
 /* Utilities */
 .t-center { text-align: center !important; }
 .t-right { text-align: right !important; }
 .t-left { text-align: left !important; }
 
-.badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 .badge-ok { background: #dcfce7; color: #166534; }
 .badge-low { background: #fee2e2; color: #991b1b; }
 
@@ -240,7 +263,7 @@ select.form-control {
             <th class="col-loc">Lokasi</th>
             <th class="col-buf">Buffer</th>
             <th class="col-stok">Stok</th>
-            <th style="width: 100px; text-align: center; background:#eff6ff; color:#2563eb; border-bottom:2px solid #3b82f6;">PO</th>
+            <th class="col-po">PO</th>
             <th class="col-stat">Status</th>
             <th class="col-act">Aksi</th>
           </tr>
@@ -289,7 +312,7 @@ select.form-control {
             @endif
           </td>
           <td class="t-center">
-            <div style="display:inline-flex; gap:8px; justify-content:center;">
+            <div style="display:inline-flex; gap:6px; justify-content:center;">
                 <a href="{{ route('items.edit',$it->id) }}" class="btn btn-primary btn-compact" title="Edit Data">
                     <i class="fa fa-pencil"></i>
                 </a>

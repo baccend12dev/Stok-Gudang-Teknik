@@ -30,7 +30,8 @@ class LpbController extends Controller
     {
         $q       = trim($request->get('q', ''));
         
-        $from    = $request->has('from') ? $request->get('from') : date('Y-m-01');
+        // Default filter tanggal: awal tahun berjalan agar seluruh transaksi tahun ini langsung terlihat di index
+        $from    = $request->has('from') ? $request->get('from') : date('Y-01-01');
         $to      = $request->has('to') ? $request->get('to') : date('Y-m-d');
         
         // FIX POIN 9: Default Pagination 100
@@ -42,11 +43,14 @@ class LpbController extends Controller
         $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
 
         $query = LpbHeader::with(array('details.item'))
-            ->orderBy('date', 'desc');
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc');
 
         if ($q !== '') {
             $query->where(function ($w) use ($q) {
                 $w->where('lpb_number', 'like', '%' . $q . '%')
+                  ->orWhere('vendor', 'like', '%' . $q . '%')
+                  ->orWhere('no_po', 'like', '%' . $q . '%')
                   ->orWhere('notes', 'like', '%' . $q . '%');
             });
         }
@@ -148,6 +152,85 @@ class LpbController extends Controller
             }
         }
 
+        $matchedCount = 0;
+        $enrichedItems = array();
+
+        foreach ($items as $it) {
+            $oracleCode = trim($it->item_code);
+            $oracleDesc = trim($it->item_desc);
+
+            // LOGIKA DIBALIK: Ambil kandidat dari master items lokal berdasarkan oracle_code atau code
+            $candidates = \App\Item::where('oracle_code', $oracleCode)
+                ->orWhere('code', $oracleCode)
+                ->get();
+
+            $bestMatch = null;
+            $maxLen = 0;
+
+            foreach ($candidates as $c) {
+                $cName = trim($c->name);
+                if (empty($cName)) continue;
+
+                // 1. Cek exact match
+                if (strcasecmp($oracleDesc, $cName) === 0) {
+                    $bestMatch = $c;
+                    break;
+                }
+
+                // 2. Cek apakah deskripsi Oracle diawali dengan nama item di database
+                if (stripos($oracleDesc, $cName) === 0) {
+                    if (strlen($cName) > $maxLen) {
+                        $bestMatch = $c;
+                        $maxLen = strlen($cName);
+                    }
+                }
+            }
+
+            // 3. Fallback: jika tidak diawali persis di depan, cek apakah nama lokal ada di dalam deskripsi Oracle
+            if (!$bestMatch) {
+                foreach ($candidates as $c) {
+                    $cName = trim($c->name);
+                    if (empty($cName) || strlen($cName) < 5) continue;
+
+                    if (stripos($oracleDesc, $cName) !== false) {
+                        if (strlen($cName) > $maxLen) {
+                            $bestMatch = $c;
+                            $maxLen = strlen($cName);
+                        }
+                    }
+                }
+            }
+
+            $qty       = (float) ($it->units ? $it->units : ($it->unitb ? $it->unitb : 1));
+            $thUnitb   = (float) $it->th_unitb;
+            $unitPrice = $qty > 0 ? ($thUnitb / $qty) : 0;
+
+            if ($bestMatch) {
+                $matchedCount++;
+            }
+
+            $enrichedItems[] = array(
+                'oracle_item_id'    => $it->item_id,
+                'item_type'         => $it->item_type,
+                'item_code'         => $it->item_code,
+                'item_desc'         => $it->item_desc,
+                'unitb'             => $it->unitb,
+                'units'             => $it->units,
+                'quantity'          => $qty,
+                'th_unitb'          => $thUnitb,
+                'price'             => $unitPrice,
+                'no_po'             => $it->no_po,
+                'nama_supplier'     => $it->nama_supplier,
+                // Data Pencocokan Master Lokal
+                'is_matched'        => $bestMatch ? true : false,
+                'matched_item_id'   => $bestMatch ? $bestMatch->id : null,
+                'matched_item_code' => $bestMatch ? $bestMatch->code : null,
+                'matched_item_name' => $bestMatch ? $bestMatch->name : null,
+                'matched_stock'     => $bestMatch ? (float) $bestMatch->current_stock : 0,
+                'matched_unit'      => $bestMatch && !empty($bestMatch->unit) ? $bestMatch->unit : 'PCS',
+            );
+        }
+
         return response()->json(array(
             'status' => 'success',
             'header' => array(
@@ -157,8 +240,10 @@ class LpbController extends Controller
                 'no_po'          => $first->no_po,
                 'nama_supplier'  => $first->nama_supplier,
                 'item_type'      => $first->item_type,
+                'total_items'    => count($items),
+                'matched_count'  => $matchedCount,
             ),
-            'items'  => $items
+            'items'  => $enrichedItems
         ));
     }
 
@@ -215,11 +300,15 @@ class LpbController extends Controller
             $hdr = LpbHeader::create(array(
                 'lpb_number'        => $request->get('lpb_number'),
                 'date'              => $request->get('date'),
+                'vendor'            => $request->get('vendor'),
+                'no_po'             => $request->get('no_po'),
                 'notes'             => $request->get('notes'),
                 'purchase_order_id' => $poId
             ));
 
             $items = $request->get('items');
+            $savedCount = 0;
+
             if (is_array($items)) {
                 foreach ($items as $row) {
                     $itemId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
@@ -243,8 +332,17 @@ class LpbController extends Controller
                             $hdr->lpb_number,
                             $qty
                         );
+
+                        $savedCount++;
                     }
                 }
+            }
+
+            if ($savedCount === 0) {
+                DB::rollBack();
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tidak ada barang yang terhubung ke Master Gudang. Minimal 1 barang harus terdaftar di master agar stok dapat diperbarui.');
             }
 
             if ($poId) {
@@ -253,9 +351,18 @@ class LpbController extends Controller
 
             DB::commit();
 
+            // Pastikan rentang tanggal mencakup tanggal LPB yang baru disimpan agar langsung tampil di baris teratas index
+            $redirectFrom = date('Y-01-01', strtotime($hdr->date));
+            if (strtotime($hdr->date) < strtotime(date('Y-01-01'))) {
+                $redirectFrom = date('Y-m-d', strtotime($hdr->date));
+            }
+
             return redirect()
-                ->route('lpbs.index')
-                ->with('success', 'LPB berhasil disimpan.');
+                ->route('lpbs.index', array(
+                    'from' => $redirectFrom,
+                    'to'   => date('Y-m-d')
+                ))
+                ->with('success', 'LPB ' . $hdr->lpb_number . ' berhasil disimpan dan stok (' . $savedCount . ' item) telah diperbarui.');
 
         } catch (QueryException $e) {
             DB::rollBack();
@@ -334,6 +441,8 @@ class LpbController extends Controller
             InventoryHelper::deleteMovement('LPB', $hdr->id);
 
             $hdr->date              = $request->get('date');
+            $hdr->vendor            = $request->get('vendor');
+            $hdr->no_po             = $request->get('no_po');
             $hdr->notes             = $request->get('notes');
             $hdr->purchase_order_id = $newPoId;
             $hdr->save();

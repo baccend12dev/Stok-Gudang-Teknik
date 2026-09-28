@@ -553,12 +553,13 @@
 
         {{-- SECTION 2: ITEMS --}}
         <div class="card-section">
-            <div class="card-header" style="justify-content: space-between;">
-                <div style="display:flex; align-items:center; gap:12px;">
+            <div class="card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap: wrap;">
                     <div class="header-icon-wrapper-small" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
                         <i class="fa fa-cubes"></i>
                     </div>
                     <h3 class="card-title">Detail Barang Masuk</h3>
+                    <span id="match-summary-badge" style="display:none; font-size:12px; font-weight:600; padding:4px 14px; border-radius:20px; align-items:center; gap:6px; transition: all 0.3s ease;"></span>
                 </div>
                 <button type="button" class="btn-add-row" id="btn-add-row">
                     <i class="fa fa-plus"></i> Tambah Baris
@@ -651,32 +652,74 @@
             });
         }
 
+        // Update Badge Ringkasan Pencocokan di Header Card
+        function updateMatchSummaryBadge(matchedCount, totalItems) {
+            let $badge = $('#match-summary-badge');
+            if (!totalItems || totalItems === 0) {
+                $badge.hide();
+                return;
+            }
+
+            if (matchedCount === totalItems) {
+                $badge.css({
+                    'display': 'inline-flex',
+                    'background': '#ecfdf5',
+                    'color': '#065f46',
+                    'border': '1px solid #10b981'
+                }).html('<i class="fa fa-check-circle" style="color: #10b981;"></i> ' + matchedCount + ' / ' + totalItems + ' Barang Cocok dengan Master (Stok Terhubung)');
+            } else if (matchedCount > 0) {
+                let unmatched = totalItems - matchedCount;
+                $badge.css({
+                    'display': 'inline-flex',
+                    'background': '#fffbeb',
+                    'color': '#92400e',
+                    'border': '1px solid #f59e0b'
+                }).html('<i class="fa fa-exclamation-triangle" style="color: #f59e0b;"></i> ' + matchedCount + ' / ' + totalItems + ' Cocok (' + unmatched + ' Belum Terdaftar di Master)');
+            } else {
+                $badge.css({
+                    'display': 'inline-flex',
+                    'background': '#fef2f2',
+                    'color': '#991b1b',
+                    'border': '1px solid #ef4444'
+                }).html('<i class="fa fa-times-circle" style="color: #ef4444;"></i> 0 / ' + totalItems + ' Barang Cocok (Belum Ada di Master)');
+            }
+        }
+
         // Tambah Baris Manual
         function addManualRow(index) {
             $('#empty-hint-row').remove();
             let tbody = $('#items-table tbody');
             let newRow = `
-                <tr>
-                    <td style="text-align: center;">
+                <tr class="lpb-item-row" data-matched="0" style="background-color: #ffffff;">
+                    <td style="text-align: center; vertical-align: top; padding-top: 18px;">
                         <div class="row-number">${index + 1}</div>
                     </td>
-                    <td>
+                    <td style="vertical-align: top;">
                         <input type="text" name="items[${index}][item_code]" class="form-control" placeholder="Kode Barang">
+                        <input type="hidden" name="items[${index}][item_id]" value="">
                         <input type="hidden" name="items[${index}][foreign_item_id]" value="">
+                        <div style="margin-top: 5px;">
+                            <span class="badge" style="background: #64748b; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa fa-pencil"></i> Input Manual
+                            </span>
+                        </div>
                     </td>
-                    <td>
+                    <td style="vertical-align: top;">
                         <input type="text" name="items[${index}][item_name]" class="form-control" placeholder="Nama / Deskripsi Barang">
+                        <div style="margin-top: 6px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11.5px; color: #64748b;">
+                            <i class="fa fa-info-circle"></i> Input manual membutuhkan kecocokan kode master barang jika ingin stok terupdate.
+                        </div>
                     </td>
-                    <td>
+                    <td style="vertical-align: top;">
                         <input type="text" name="items[${index}][unit]" class="form-control unit-input" value="PCS" placeholder="Satuan">
                     </td>
-                    <td>
+                    <td style="vertical-align: top;">
                         <input type="number" name="items[${index}][quantity]" class="form-control qty-input" min="0.01" step="0.01" value="1">
                     </td>
-                    <td>
-                        <input type="text" name="items[${index}][price]" class="form-control price-input" value="0" style="text-align: right;">
+                    <td style="vertical-align: top;">
+                        <input type="number" name="items[${index}][price]" class="form-control price-input" value="0" step="any" style="text-align: right;">
                     </td>
-                    <td style="text-align: center;">
+                    <td style="text-align: center; vertical-align: top; padding-top: 14px;">
                         <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
                             <i class="fa fa-trash"></i>
                         </button>
@@ -692,6 +735,7 @@
             tbody.empty();
 
             if (!items || items.length === 0) {
+                updateMatchSummaryBadge(0, 0);
                 tbody.html(`
                     <tr id="empty-hint-row">
                         <td colspan="7" style="text-align: center; color: #ef4444; padding: 25px;">
@@ -702,41 +746,96 @@
                 return;
             }
 
+            let matchedCount = 0;
+            let totalItems = items.length;
+
             items.forEach(function(item, index) {
-                let qty = item.units ? item.units : (item.unitb ? item.unitb : 1);
-                let price = item.th_unitb ? parseFloat(item.th_unitb) : 0;
-                let formattedPrice = formatNumber(price);
+                let qty = item.quantity ? item.quantity : (item.units ? item.units : (item.unitb ? item.unitb : 1));
+                let unitPrice = item.price ? parseFloat(item.price) : 0;
+                let totalPrice = item.th_unitb ? parseFloat(item.th_unitb) : (unitPrice * qty);
+                let formattedTotal = formatNumber(totalPrice);
+                let unit = item.matched_unit ? item.matched_unit : (item.unitb ? item.unitb : 'PCS');
+
+                let isMatched = item.is_matched === true;
+                if (isMatched) {
+                    matchedCount++;
+                }
+
+                let matchStatusBadge = '';
+                let matchDetailBox = '';
+
+                if (isMatched) {
+                    matchStatusBadge = `
+                        <div style="margin-top: 5px;">
+                            <span class="badge" style="background: #10b981; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa fa-check-circle"></i> Master Cocok
+                            </span>
+                        </div>
+                    `;
+                    matchDetailBox = `
+                        <div style="margin-top: 6px; padding: 6px 10px; background: #ecfdf5; border: 1px solid #10b98133; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: #065f46;">
+                            <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <i class="fa fa-check-circle" style="color: #10b981; font-size: 13px; flex-shrink: 0;"></i>
+                                <span style="overflow: hidden; text-overflow: ellipsis;" title="${item.matched_item_name}">
+                                    <strong>Master:</strong> [${item.matched_item_code}] ${item.matched_item_name}
+                                </span>
+                            </div>
+                            <span style="background: rgba(16, 185, 129, 0.15); color: #047857; padding: 2px 8px; border-radius: 10px; font-weight: 600; font-size: 11px; white-space: nowrap; margin-left: 8px;">
+                                Stok: ${item.matched_stock} ${unit}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    matchStatusBadge = `
+                        <div style="margin-top: 5px;">
+                            <span class="badge" style="background: #f59e0b; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa fa-exclamation-triangle"></i> Belum Terdaftar
+                            </span>
+                        </div>
+                    `;
+                    matchDetailBox = `
+                        <div style="margin-top: 6px; padding: 6px 10px; background: #fffbeb; border: 1px solid #f59e0b33; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #92400e;">
+                            <i class="fa fa-exclamation-triangle" style="color: #f59e0b; font-size: 13px; flex-shrink: 0;"></i>
+                            <span>Barang ini belum terdaftar di Master Gudang. <em>Stok tidak akan bertambah otomatis.</em></span>
+                        </div>
+                    `;
+                }
 
                 let rowHtml = `
-                    <tr>
-                        <td style="text-align: center;">
+                    <tr class="lpb-item-row" data-matched="${isMatched ? '1' : '0'}" style="${isMatched ? 'background-color: #fbfdfc;' : 'background-color: #fffdfa;'}">
+                        <td style="text-align: center; vertical-align: top; padding-top: 18px;">
                             <div class="row-number">${index + 1}</div>
                         </td>
-                        <td>
+                        <td style="vertical-align: top;">
                             <input type="text" name="items[${index}][item_code]" class="form-control" 
                                    value="${item.item_code || ''}" readonly 
                                    style="background: #f8fafc; font-weight: 600; color: #1e293b;">
-                            <input type="hidden" name="items[${index}][foreign_item_id]" value="${item.item_id || ''}">
+                            <input type="hidden" name="items[${index}][item_id]" value="${item.matched_item_id || ''}">
+                            <input type="hidden" name="items[${index}][foreign_item_id]" value="${item.oracle_item_id || item.item_id || ''}">
+                            ${matchStatusBadge}
                         </td>
-                        <td>
+                        <td style="vertical-align: top;">
                             <input type="text" name="items[${index}][item_name]" class="form-control" 
                                    value="${item.item_desc || ''}" readonly 
                                    style="background: #f8fafc;" title="${item.item_desc || ''}">
+                            ${matchDetailBox}
                         </td>
-                        <td>
+                        <td style="vertical-align: top;">
                             <input type="text" name="items[${index}][unit]" class="form-control unit-input" 
-                                   value="PCS" placeholder="Satuan">
+                                   value="${unit}" placeholder="Satuan">
                         </td>
-                        <td>
+                        <td style="vertical-align: top;">
                             <input type="number" name="items[${index}][quantity]" class="form-control qty-input" 
                                    min="0.01" step="0.01" value="${qty}">
                         </td>
-                        <td>
-                            <input type="text" name="items[${index}][price]" class="form-control price-input" 
-                                   value="${formattedPrice}" readonly 
-                                   style="background: #f8fafc; text-align: right; font-weight: 500;">
+                        <td style="vertical-align: top;">
+                            <input type="text" class="form-control price-input" 
+                                   value="${formattedTotal}" readonly 
+                                   style="background: #f8fafc; text-align: right; font-weight: 500;"
+                                   title="Total: Rp ${formattedTotal}">
+                            <input type="hidden" name="items[${index}][price]" value="${unitPrice}">
                         </td>
-                        <td style="text-align: center;">
+                        <td style="text-align: center; vertical-align: top; padding-top: 14px;">
                             <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
                                 <i class="fa fa-trash"></i>
                             </button>
@@ -745,6 +844,9 @@
                 `;
                 tbody.append(rowHtml);
             });
+
+            // Update Badge Ringkasan di Card Header
+            updateMatchSummaryBadge(matchedCount, totalItems);
         }
 
         $(document).ready(function() {
@@ -767,6 +869,11 @@
             $('#items-table').on('click', '.btn-remove-row', function() {
                 $(this).closest('tr').remove();
                 renumberRows();
+
+                // Recount matching status
+                let total = $('#items-table tbody tr.lpb-item-row').length;
+                let matched = $('#items-table tbody tr.lpb-item-row[data-matched="1"]').length;
+                updateMatchSummaryBadge(matched, total);
             });
 
             // Tombol Check LPB
@@ -829,12 +936,27 @@
                             // Render list item ke tabel
                             renderForeignItems(response.items);
 
+                            let matchedCount = response.header.matched_count || 0;
+                            let totalCount = response.header.total_items || response.items.length;
+
                             if (typeof Swal !== 'undefined') {
+                                let swalTitle = 'Data Ditemukan!';
+                                let swalIcon = 'success';
+                                let swalText = 'Berhasil memuat ' + totalCount + ' item untuk LPB No. ' + noLpb + '. ' + matchedCount + ' item cocok dengan Master Stok.';
+
+                                if (matchedCount === 0) {
+                                    swalIcon = 'warning';
+                                    swalText = 'Berhasil menarik ' + totalCount + ' item, namun belum ada yang cocok dengan Master Barang Gudang.';
+                                } else if (matchedCount < totalCount) {
+                                    swalIcon = 'info';
+                                    swalText = matchedCount + ' dari ' + totalCount + ' item berhasil dicocokkan dengan Master Gudang.';
+                                }
+
                                 Swal.fire({
-                                    icon: 'success',
-                                    title: 'Data Ditemukan!',
-                                    text: 'Berhasil menarik ' + response.items.length + ' item untuk LPB No. ' + noLpb,
-                                    timer: 2200,
+                                    icon: swalIcon,
+                                    title: swalTitle,
+                                    text: swalText,
+                                    timer: 2600,
                                     showConfirmButton: false
                                 });
                             }
@@ -868,6 +990,78 @@
                 if (e.which === 13) {
                     e.preventDefault();
                     $('#btn-check-lpb').click();
+                }
+            });
+
+            // Form Submit Interceptor & Verification
+            $('#lpb-form').on('submit', function(e) {
+                let rows = $('#items-table tbody tr.lpb-item-row');
+                if (rows.length === 0) {
+                    let anyRow = $('#items-table tbody tr:not(#empty-hint-row)');
+                    if (anyRow.length === 0) {
+                        e.preventDefault();
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Daftar Barang Kosong',
+                                text: 'Harap tambahkan minimal 1 baris barang sebelum menyimpan LPB.'
+                            });
+                        } else {
+                            alert('Harap tambahkan minimal 1 baris barang sebelum menyimpan LPB.');
+                        }
+                        return false;
+                    }
+                }
+
+                // Cek apakah sudah dikonfirmasi
+                if ($(this).data('submitting')) {
+                    return true;
+                }
+
+                let totalRows = rows.length;
+                let matchedRows = rows.filter('[data-matched="1"]').length;
+                let unmatchedRows = totalRows - matchedRows;
+
+                if (matchedRows === 0 && totalRows > 0) {
+                    e.preventDefault();
+                    let errMsg = 'Semua barang (' + totalRows + ' item) belum terdaftar di Master Barang Gudang. Stok tidak dapat diperbarui. Daftarkan barang terlebih dahulu di Master Barang sebelum mencatat LPB.';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Tidak Ada Item Cocok',
+                            text: errMsg
+                        });
+                    } else {
+                        alert(errMsg);
+                    }
+                    return false;
+                }
+
+                if (unmatchedRows > 0) {
+                    e.preventDefault();
+                    let confirmText = 'Terdapat ' + unmatchedRows + ' barang yang belum terdaftar di Master Gudang dan tidak akan menambah saldo stok. Sebanyak ' + matchedRows + ' barang lainnya yang cocok akan langsung diperbarui stoknya. Lanjutkan simpan?';
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Konfirmasi Penyimpanan',
+                            text: confirmText,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#2563eb',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Ya, Simpan LPB',
+                            cancelButtonText: 'Periksa Kembali'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $('#lpb-form').data('submitting', true).submit();
+                            }
+                        });
+                    } else {
+                        if (confirm(confirmText)) {
+                            $('#lpb-form').data('submitting', true).submit();
+                        }
+                    }
+                    return false;
                 }
             });
 
