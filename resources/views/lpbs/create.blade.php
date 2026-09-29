@@ -520,7 +520,16 @@
                                 <i class="fa fa-search" id="icon-check-lpb"></i> <span id="text-check-lpb">Check</span>
                             </button>
                         </div>
-                        <small style="font-size: 11px; color: var(--text-gray); margin-top: 5px; display: block;">
+                        <div id="lpb-duplicate-alert" style="display: none; margin-top: 8px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b; font-size: 12.5px; line-height: 1.5;">
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <i class="fa fa-times-circle" style="font-size: 16px; margin-top: 2px; color: #dc2626; flex-shrink: 0;"></i>
+                                <div>
+                                    <strong style="display: block; font-weight: 700; margin-bottom: 2px;">Nomor LPB Sudah Terdaftar!</strong>
+                                    <span id="lpb-duplicate-message">Nomor LPB ini sudah ada di Header LPB dan tidak dapat diinput ulang untuk mencegah dobel pencatatan.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <small style="font-size: 11px; color: var(--text-gray); margin-top: 5px; display: block;" id="lpb-hint-text">
                             <i class="fa fa-info-circle text-primary"></i> Masukkan No. LPB lalu klik <strong>Check</strong> untuk menarik data dari Otto Master.
                         </small>
                     </div>
@@ -594,7 +603,7 @@
                 </div>
 
                 <div style="background: #f8fafc; padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center;">
-                    <button type="submit" class="btn-submit">
+                    <button type="submit" class="btn-submit" id="btn-submit-lpb">
                         <i class="fa fa-save"></i> <span>Simpan LPB</span>
                     </button>
                 </div>
@@ -876,6 +885,103 @@
                 updateMatchSummaryBadge(matched, total);
             });
 
+            var isLpbDuplicate = false;
+            var lastCheckedLpb = '';
+
+            // Update status visual duplikasi No LPB
+            function setDuplicateState(isDuplicate, message) {
+                isLpbDuplicate = isDuplicate;
+                let $input = $('#lpb_number_input');
+                let $alert = $('#lpb-duplicate-alert');
+                let $msg = $('#lpb-duplicate-message');
+                let $btnSubmit = $('#btn-submit-lpb');
+
+                if (isDuplicate) {
+                    $input.css({
+                        'border-color': '#ef4444',
+                        'background-color': '#fff5f5'
+                    });
+                    if (message) {
+                        $msg.text(message);
+                    }
+                    $alert.slideDown(200);
+                    $btnSubmit.prop('disabled', true).css({
+                        'opacity': '0.5',
+                        'cursor': 'not-allowed'
+                    }).attr('title', 'Nomor LPB sudah pernah dicatat di Header LPB.');
+                } else {
+                    $input.css({
+                        'border-color': '',
+                        'background-color': ''
+                    });
+                    $alert.slideUp(200);
+                    $btnSubmit.prop('disabled', false).css({
+                        'opacity': '1',
+                        'cursor': 'pointer'
+                    }).removeAttr('title');
+                }
+            }
+
+            // Fungsi AJAX Verifikasi Duplikasi No LPB di Header
+            function verifyLpbDuplicate(noLpb, callback) {
+                noLpb = (noLpb || '').trim();
+                if (!noLpb) {
+                    setDuplicateState(false);
+                    if (typeof callback === 'function') callback(false);
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route("lpbs.check-exists") }}',
+                    type: 'GET',
+                    data: { no_lpb: noLpb },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.exists) {
+                            setDuplicateState(true, res.message);
+                            if (typeof callback === 'function') callback(true, res);
+                        } else {
+                            setDuplicateState(false);
+                            if (typeof callback === 'function') callback(false, res);
+                        }
+                    },
+                    error: function() {
+                        if (typeof callback === 'function') callback(false);
+                    }
+                });
+            }
+
+            // Event blur pada input No LPB untuk auto-check duplikat
+            $('#lpb_number_input').on('blur', function() {
+                let val = $(this).val().trim();
+                if (val && val !== lastCheckedLpb) {
+                    lastCheckedLpb = val;
+                    verifyLpbDuplicate(val, function(isDup, res) {
+                        if (isDup) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Nomor LPB Sudah Terdaftar!',
+                                    html: res.message + '<br><br><span style="font-size:12.5px; color:#64748b;">Nomor ini sudah ada di Header LPB sehingga tidak dapat diinput kembali untuk mencegah dobel pencatatan.</span>',
+                                    confirmButtonText: 'Mengerti',
+                                    confirmButtonColor: '#ef4444'
+                                });
+                            }
+                        }
+                    });
+                } else if (!val) {
+                    setDuplicateState(false);
+                }
+            });
+
+            // Reset status peringatan saat pengguna mengetik ulang nomor LPB
+            $('#lpb_number_input').on('input', function() {
+                if (isLpbDuplicate) {
+                    setDuplicateState(false);
+                    lastCheckedLpb = '';
+                }
+            });
+
             // Tombol Check LPB
             $('#btn-check-lpb').on('click', function() {
                 let noLpb = $('#lpb_number_input').val().trim();
@@ -892,6 +998,18 @@
                         alert('Silakan ketik nomor LPB terlebih dahulu.');
                     }
                     $('#lpb_number_input').focus();
+                    return;
+                }
+
+                if (isLpbDuplicate) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Nomor LPB Sudah Terdaftar!',
+                            text: 'Nomor LPB ini sudah ada di Header LPB dan tidak bisa diinput lagi.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    }
                     return;
                 }
 
@@ -916,6 +1034,8 @@
                         $btn.prop('disabled', false).css('opacity', '1');
                         $icon.removeClass('fa-spinner fa-spin').addClass('fa-search');
                         $text.text('Check');
+
+                        setDuplicateState(false);
 
                         if (response.status === 'success') {
                             // Isi tanggal jika ada
@@ -972,6 +1092,36 @@
                             errMsg = xhr.responseJSON.message;
                         }
 
+                        // JIKA NO LPB SUDAH ADA DI HEADER LPB (DUPLIKAT)
+                        if (xhr.responseJSON && xhr.responseJSON.status === 'duplicate') {
+                            setDuplicateState(true, errMsg);
+
+                            // Bersihkan tabel agar tidak ada barang yang bisa disimpan untuk LPB duplikat
+                            $('#items-table tbody').html(`
+                                <tr id="empty-hint-row">
+                                    <td colspan="7" style="text-align: center; color: #ef4444; padding: 35px 20px;">
+                                        <i class="fa fa-ban" style="font-size: 28px; color: #ef4444; display: block; margin-bottom: 8px;"></i>
+                                        <strong style="color: #991b1b; font-size: 14px;">Nomor LPB "${noLpb}" Sudah Pernah Dicatat!</strong><br>
+                                        <span style="font-size: 12px; color: #64748b;">Rincian barang tidak dimuat karena nomor LPB ini sudah ada di sistem dan tidak dapat diinput ulang.</span>
+                                    </td>
+                                </tr>
+                            `);
+                            updateMatchSummaryBadge(0, 0);
+
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Nomor LPB Sudah Terdaftar!',
+                                    html: errMsg + '<br><br><span style="font-size: 12.5px; color: #64748b;">Untuk mencegah dobel pencatatan barang dan stok gudang, sistem menolak input nomor LPB ini.</span>',
+                                    confirmButtonColor: '#ef4444',
+                                    confirmButtonText: 'Mengerti'
+                                });
+                            } else {
+                                alert(errMsg);
+                            }
+                            return;
+                        }
+
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 icon: 'warning',
@@ -993,13 +1143,12 @@
                 }
             });
 
-            // Form Submit Interceptor & Verification
-            $('#lpb-form').on('submit', function(e) {
+            // Fungsi eksekusi validasi form submit
+            function processFormSubmit() {
                 let rows = $('#items-table tbody tr.lpb-item-row');
                 if (rows.length === 0) {
                     let anyRow = $('#items-table tbody tr:not(#empty-hint-row)');
                     if (anyRow.length === 0) {
-                        e.preventDefault();
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 icon: 'warning',
@@ -1013,17 +1162,11 @@
                     }
                 }
 
-                // Cek apakah sudah dikonfirmasi
-                if ($(this).data('submitting')) {
-                    return true;
-                }
-
                 let totalRows = rows.length;
                 let matchedRows = rows.filter('[data-matched="1"]').length;
                 let unmatchedRows = totalRows - matchedRows;
 
                 if (matchedRows === 0 && totalRows > 0) {
-                    e.preventDefault();
                     let errMsg = 'Semua barang (' + totalRows + ' item) belum terdaftar di Master Barang Gudang. Stok tidak dapat diperbarui. Daftarkan barang terlebih dahulu di Master Barang sebelum mencatat LPB.';
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
@@ -1038,7 +1181,6 @@
                 }
 
                 if (unmatchedRows > 0) {
-                    e.preventDefault();
                     let confirmText = 'Terdapat ' + unmatchedRows + ' barang yang belum terdaftar di Master Gudang dan tidak akan menambah saldo stok. Sebanyak ' + matchedRows + ' barang lainnya yang cocok akan langsung diperbarui stoknya. Lanjutkan simpan?';
                     
                     if (typeof Swal !== 'undefined') {
@@ -1063,6 +1205,72 @@
                     }
                     return false;
                 }
+
+                // Jika semua barang cocok langsung submit
+                $('#lpb-form').data('submitting', true).submit();
+            }
+
+            // Form Submit Interceptor & Verification
+            $('#lpb-form').on('submit', function(e) {
+                // Cek apakah sudah dalam proses submit final
+                if ($(this).data('submitting')) {
+                    return true;
+                }
+
+                e.preventDefault();
+
+                let noLpb = $('#lpb_number_input').val().trim();
+                if (!noLpb) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Nomor LPB Wajib Diisi',
+                            text: 'Silakan isi nomor LPB terlebih dahulu.'
+                        });
+                    } else {
+                        alert('Silakan isi nomor LPB terlebih dahulu.');
+                    }
+                    $('#lpb_number_input').focus();
+                    return false;
+                }
+
+                if (isLpbDuplicate) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Nomor LPB Sudah Terdaftar!',
+                            text: 'Nomor LPB ini sudah ada di Header LPB dan tidak bisa disimpan untuk menghindari double pencatatan.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    } else {
+                        alert('Nomor LPB sudah pernah diinput sebelumnya!');
+                    }
+                    $('#lpb_number_input').focus();
+                    return false;
+                }
+
+                // Cek sekali lagi secara real-time ke server sebelum submit
+                verifyLpbDuplicate(noLpb, function(isDup, res) {
+                    if (isDup) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Nomor LPB Sudah Terdaftar!',
+                                html: res.message + '<br><br><span style="font-size:12.5px; color:#64748b;">Dokumen LPB tidak dapat disimpan karena sudah ada di Header LPB.</span>',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        } else {
+                            alert(res.message);
+                        }
+                        $('#lpb_number_input').focus();
+                        return false;
+                    }
+
+                    // Jika nomor valid dan belum ada, lanjutkan proses submit
+                    processFormSubmit();
+                });
+
+                return false;
             });
 
         });

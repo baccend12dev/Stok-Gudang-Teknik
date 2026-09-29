@@ -94,6 +94,30 @@ class LpbController extends Controller
         return view('lpbs.create', compact('items'));
     }
 
+    public function checkExists(Request $request)
+    {
+        $noLpb = trim($request->get('no_lpb', ''));
+        if ($noLpb === '') {
+            return response()->json(array('exists' => false));
+        }
+
+        $existing = LpbHeader::where('lpb_number', $noLpb)->first();
+        if ($existing) {
+            $formattedDate = $existing->date ? $existing->date->format('d/m/Y') : '-';
+            $vendorName = $existing->supplier ?: ($existing->vendor ?: '-');
+            return response()->json(array(
+                'exists'  => true,
+                'id'      => $existing->id,
+                'no_lpb'  => $existing->lpb_number,
+                'date'    => $formattedDate,
+                'vendor'  => $vendorName,
+                'message' => 'Nomor LPB "' . $noLpb . '" sudah pernah diinput pada tanggal ' . $formattedDate . ' (Vendor: ' . $vendorName . '). Tidak dapat diinput ulang untuk menghindari double pencatatan.'
+            ));
+        }
+
+        return response()->json(array('exists' => false));
+    }
+
     public function checkForeignLpb(Request $request)
     {
         $noLpb    = trim($request->get('no_lpb', ''));
@@ -104,6 +128,23 @@ class LpbController extends Controller
             return response()->json(array(
                 'status'  => 'error',
                 'message' => 'Silakan masukkan No. LPB terlebih dahulu.'
+            ), 422);
+        }
+
+        // Cek apakah No LPB sudah pernah diinput di Header LPB lokal
+        $existing = LpbHeader::where('lpb_number', $noLpb)->first();
+        if ($existing) {
+            $formattedDate = $existing->date ? $existing->date->format('d/m/Y') : '-';
+            $vendorName = $existing->supplier ?: ($existing->vendor ?: '-');
+            return response()->json(array(
+                'status'  => 'duplicate',
+                'message' => 'Nomor LPB "' . $noLpb . '" sudah pernah diinput sebelumnya pada tanggal ' . $formattedDate . ' (Vendor: ' . $vendorName . '). Tidak dapat diinput lagi untuk menghindari double pencatatan.',
+                'header'  => array(
+                    'id'            => $existing->id,
+                    'no_lpb'        => $existing->lpb_number,
+                    'formatted_date'=> $formattedDate,
+                    'nama_supplier' => $vendorName
+                )
             ), 422);
         }
 
@@ -289,7 +330,10 @@ class LpbController extends Controller
             'date'       => 'required|date',
             'items'      => 'required|array'
         ), array(
-            'lpb_number.unique' => 'No LPB sudah digunakan. Gunakan nomor lain.'
+            'lpb_number.required' => 'Nomor LPB wajib diisi.',
+            'lpb_number.unique'   => 'Nomor LPB ini sudah pernah diinput dan tersimpan di Header LPB. Tidak dapat diinput ulang untuk menghindari double pencatatan.',
+            'date.required'       => 'Tanggal penerimaan LPB wajib diisi.',
+            'items.required'      => 'Daftar barang LPB wajib diisi.'
         ));
 
         try {

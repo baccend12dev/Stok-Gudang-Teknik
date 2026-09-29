@@ -42,6 +42,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     /** LPB (barang masuk) */
     Route::get('/lpbs/check-foreign', 'LpbController@checkForeignLpb')->name('lpbs.check-foreign');
+    Route::get('/lpbs/check-exists', 'LpbController@checkExists')->name('lpbs.check-exists');
     Route::resource('lpbs', 'LpbController');
 
     Route::get('/lpbs', 'LpbController@index')->name('lpbs.index');
