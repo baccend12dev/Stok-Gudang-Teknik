@@ -1013,7 +1013,7 @@ class BonController extends Controller
         if ($q !== '') {
             $like = '%' . $q . '%';
             $items->where(function ($qq) use ($like) {
-                $qq->where('code', 'ILIKE', $like)
+                $qq->where('harmoni_code', 'ILIKE', $like)
                    ->orWhere('name', 'ILIKE', $like);
             });
         }
@@ -1031,11 +1031,11 @@ class BonController extends Controller
         foreach ($items as $it) {
             $out[] = [
                 'id'         => $it->id,
-                'code'       => $it->code,
+                'harmoni_code'       => $it->harmoni_code,
                 'name'       => $it->name,
                 'unit'       => $it->unit,
                 'buffer_min' => (float) $it->buffer_min, // FIX: Cast ke float
-                'text'       => $it->code . ' - ' . $it->name,
+                'text'       => $it->harmoni_code . ' - ' . $it->name,
             ];
         }
 

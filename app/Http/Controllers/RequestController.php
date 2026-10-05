@@ -135,17 +135,10 @@ class RequestController extends Controller
             $department = Department::find($deptId);
         }
 
-        // Ambil Item Aktif dengan Kategori
-        $items = Item::with('category')
-            ->where('current_status', 'ACTIVE')
-            ->orderBy('code', 'asc')
-            ->get();
-
         $approvals = \App\User::whereIn('role', ['APPROVAL', 'Approval', 'approval'])->orderBy('name')->get();
 
-        // View Data (SIMPLE & CLEAN)
+        // View Data (SIMPLE & CLEAN - Items diambil via AJAX on-demand Select2 seperti di BON)
         $data = [
-            'items'         => $items,
             'isSuperAdmin'  => $isSuperAdmin,
             'allUsers'      => $allUsers,
             'approvals'     => $approvals
@@ -156,6 +149,88 @@ class RequestController extends Controller
         }
 
         return view('requests.create', $data);
+    }
+
+    /**
+     * AJAX Lookup Items untuk Select2 (Ringan, On-Demand, Limit 30)
+     */
+    public function lookupItems(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        $op = (DB::getDriverName() === 'pgsql') ? 'ILIKE' : 'like';
+
+        $items = Item::with('category')
+            ->where('current_status', 'ACTIVE');
+
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            $items->where(function ($qq) use ($like, $op) {
+                $qq->where('harmoni_code', $op, $like)
+                   ->orWhere('code', $op, $like)
+                   ->orWhere('name', $op, $like);
+            });
+        }
+
+        $items = $items
+            ->orderBy('code', 'asc')
+            ->limit(30)
+            ->get();
+
+        $out = [];
+        foreach ($items as $it) {
+            $catCode = ($it->category && $it->category->code) ? strtoupper($it->category->code) : '';
+            $catName = ($it->category && $it->category->name) ? strtoupper($it->category->name) : '';
+            $displayCode = $it->harmoni_code ? $it->harmoni_code : $it->code;
+
+            $out[] = [
+                'id'           => $it->id,
+                'code'         => $it->code,
+                'harmoni_code' => $it->harmoni_code,
+                'name'         => $it->name,
+                'unit'         => $it->unit,
+                'cat_code'     => $catCode,
+                'cat_name'     => $catName,
+                'text'         => '[' . $displayCode . '] ' . $it->name,
+            ];
+        }
+
+        return response()->json($out);
+    }
+
+    /**
+     * AJAX Resolve Items untuk memulihkan old('items') jika validasi form gagal
+     */
+    public function resolveItems(Request $request)
+    {
+        $ids = (array) $request->get('ids', []);
+
+        if (count($ids) === 0) {
+            return response()->json([]);
+        }
+
+        $items = Item::with('category')
+            ->whereIn('id', $ids)
+            ->get();
+
+        $out = [];
+        foreach ($items as $it) {
+            $catCode = ($it->category && $it->category->code) ? strtoupper($it->category->code) : '';
+            $catName = ($it->category && $it->category->name) ? strtoupper($it->category->name) : '';
+            $displayCode = $it->harmoni_code ? $it->harmoni_code : $it->code;
+
+            $out[] = [
+                'id'           => $it->id,
+                'code'         => $it->code,
+                'harmoni_code' => $it->harmoni_code,
+                'name'         => $it->name,
+                'unit'         => $it->unit,
+                'cat_code'     => $catCode,
+                'cat_name'     => $catName,
+                'text'         => '[' . $displayCode . '] ' . $it->name,
+            ];
+        }
+
+        return response()->json($out);
     }
 
     // ============================================================

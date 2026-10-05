@@ -72,23 +72,8 @@
 
     $departmentName = isset($department) && $department ? $department->name : '-';
     
-    // Build map item untuk JS (Simple Info Only)
+    // Items diambil dinamis via AJAX Select2 (seperti di Create BON)
     $itemsMap = [];
-    if (isset($items) && $items) {
-        foreach ($items as $it) {
-            $catCode = ($it->category && $it->category->code) ? strtoupper($it->category->code) : '';
-            $catName = ($it->category && $it->category->name) ? strtoupper($it->category->name) : '';
-
-            $itemsMap[(int)$it->id] = [
-                'id'          => (int)$it->id,
-                'code'        => (string)$it->code,
-                'name'        => (string)$it->name,
-                'unit'        => (string)$it->unit,
-                'cat_code'    => $catCode,
-                'cat_name'    => $catName
-            ];
-        }
-    }
     
     // Warning Tanggal (Untuk UI Super Admin)
     $currentDay = (int)\Carbon\Carbon::now()->format('d');
@@ -358,14 +343,7 @@
             <div class="cardx-b">
                 <div class="fg" style="margin-bottom:12px;">
                     <label>Cari Item</label>
-                    <select id="itemPicker" class="ctl" style="width:100%;">
-                        <option value=""></option>
-                        @foreach($items as $it)
-                            <option value="{{ $it->id }}">
-                                {{ $it->code }} - {{ $it->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <select id="itemPicker" class="ctl" style="width:100%;"></select>
                 </div>
 
                 <div class="tablebox">
@@ -468,7 +446,7 @@
         });
     }
 
-    var ITEMS = {!! json_encode($itemsMap) !!};
+    var ITEMS = {};
 
     // --- LOGIC SMART CART ---
     var APPAREL_CODES = ['AK', 'PK'];
@@ -613,48 +591,51 @@
         loadDivisions(deptId, oldDivision);
     });
 
-    // SELECT2 ITEM PICKER
+    // SELECT2 ITEM PICKER (AJAX / On-Demand seperti Create BON)
     var $picker = $('#itemPicker');
     $picker.select2({
         theme: 'bootstrap',
         width: '100%',
-        placeholder: 'Ketik kode / nama item...',
+        placeholder: 'Pilih atau cari barang...',
         allowClear: true,
-        minimumInputLength: 1,
-        matcher: function(params, data) {
-            if ($.trim(params.term) === '') return data;
-            if (typeof data.text === 'undefined') return null;
-            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) return data;
-            return null;
+        minimumInputLength: 0,
+        ajax: {
+            url: '{{ route("requests.lookup.items") }}',
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { q: params.term };
+            },
+            processResults: function(data) {
+                return { results: data };
+            },
+            cache: true
         },
-        templateResult: function(state){
-            if (!state.id) return state.text;
-            var it = ITEMS[parseInt(state.id,10)];
-            if (!it) return state.text;
+        templateResult: function(item){
+            if (item.loading) return item.text;
+            if (!item.id) return item.text;
 
-            var isApp = isApparel(it.cat_code);
+            var isApp = isApparel(item.cat_code);
             var dotClass = isApp ? 'dot-app' : 'dot-gen';
             var typeLabel = isApp ? 'Apparel' : 'General';
+            var displayCode = item.harmoni_code || item.code || '';
 
-            var $el = $(
-                '<div style="padding:2px 0;">' +
-                    '<div class="s2-code"><span class="dot-cat ' + dotClass + '" title="' + typeLabel + '"></span> [' + (it.code || '') + '] ' + (it.name || '') + '</div>' +
-                    '<div class="s2-sub">Unit: ' + (it.unit || '-') + '</div>' +
+            return $(
+                '<div style="padding:4px 0;">' +
+                    '<div class="s2-code" style="font-weight:bold; font-size:13px; color:#1e293b;">' +
+                        '<span class="dot-cat ' + dotClass + '" title="' + typeLabel + '"></span> [' + displayCode + '] ' + (item.name || '') +
+                    '</div>' +
+                    '<div class="s2-sub" style="font-size:11px; color:#64748b;">Unit: ' + (item.unit || '-') + '</div>' +
                 '</div>'
             );
-            return $el;
         },
-        templateSelection: function(state){
-            if (!state.id) return 'Ketik kode / nama item...';
-            var it = ITEMS[parseInt(state.id,10)];
-            if (!it) return state.text;
-            return it.code + ' - ' + it.name;
+        templateSelection: function(item){
+            return item.text || 'Ketik kode / nama item...';
         }
     });
 
     function hardResetPicker(){
-        $picker.val(null).trigger('change.select2');
-        $picker.find('option').prop('selected', false);
+        $picker.val(null).trigger('change');
     }
     
     // FIX VITAL: JALANKAN DI LUAR $(document).ready() AGAR LEBIH CEPAT
@@ -686,18 +667,21 @@
         return found;
     }
 
-    function addRow(itemId){
-        var it = ITEMS[parseInt(itemId,10)];
-        if (!it) return;
+    function addRow(it){
+        if (!it || !it.id) return;
+        var itemId = it.id;
 
         if (existsItemId(itemId)) {
             alert('Item sudah ada di tabel.');
             return;
         }
 
+        ITEMS[itemId] = it;
+
         var isApp = isApparel(it.cat_code);
         var dotClass = isApp ? 'dot-app' : 'dot-gen';
         var typeLabel = isApp ? 'Apparel' : 'General';
+        var displayCode = it.harmoni_code || it.code || '-';
 
         // FIX: Template baris baru dengan step="0.01"
         var tr = '' +
@@ -709,7 +693,7 @@
                     '<span class="dot-cat ' + dotClass + '" title="' + typeLabel + '"></span> ' + 
                     (it.name || ('Item #' + it.id)) + 
                 '</div>' +
-                '<div class="item-sub">[' + (it.code || '-') + ']</div>' +
+                '<div class="item-sub">[' + displayCode + ']</div>' +
             '</td>' +
             '<td class="col-unit">' +
                 '<div style="font-weight:900;">' + (it.unit || '-') + '</div>' +
@@ -734,8 +718,10 @@
     }
 
     $picker.on('select2:select', function(e){
-        var itemId = e.params.data.id;
-        if (itemId) addRow(itemId);
+        var item = e.params.data;
+        if (item && item.id) {
+            addRow(item);
+        }
         hardResetPicker();
     });
 
@@ -759,17 +745,54 @@
             var isApp = isApparel(it.cat_code);
             var dotClass = isApp ? 'dot-app' : 'dot-gen';
             var typeLabel = isApp ? 'Apparel' : 'General';
+            var displayCode = it.harmoni_code || it.code || '-';
             
             var titleHtml = '<span class="dot-cat ' + dotClass + '" title="' + typeLabel + '"></span> ' + (it.name || ('Item #' + id));
             $tr.find('.js-item-title').html(titleHtml);
 
-            $tr.find('.js-item-code').text('[' + (it.code || '-') + ']');
+            $tr.find('.js-item-code').text('[' + displayCode + ']');
             $tr.find('.js-item-unit').text(it.unit || '-');
         });
         updateSmartInfo();
     }
 
-    hydrateOldRows();
+    // RESOLVE OLD ITEMS (JIKA VALIDASI FORM GAGAL)
+    var oldItems = {!! json_encode(old('items', [])) !!};
+    if (oldItems && oldItems.length > 0) {
+        var itemIds = [];
+        for (var i = 0; i < oldItems.length; i++) {
+            if (oldItems[i].item_id) {
+                itemIds.push(oldItems[i].item_id);
+            }
+        }
+
+        if (itemIds.length > 0) {
+            $.ajax({
+                url: '{{ route("requests.resolve.items") }}',
+                type: 'POST',
+                data: {
+                    ids: itemIds,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(items) {
+                    if (items && items.length > 0) {
+                        for (var j = 0; j < items.length; j++) {
+                            ITEMS[items[j].id] = items[j];
+                        }
+                    }
+                    hydrateOldRows();
+                },
+                error: function() {
+                    hydrateOldRows();
+                }
+            });
+        } else {
+            hydrateOldRows();
+        }
+    } else {
+        hydrateOldRows();
+    }
+
     renumber();
     showEmptyIfNeeded();
 

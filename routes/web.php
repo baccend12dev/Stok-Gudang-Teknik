@@ -85,7 +85,7 @@ Route::group(['middleware' => 'auth'], function () {
 
         // AJAX lookup item
         Route::get('lookup-items',  'BonController@lookupItems')->name('bons.lookup.items');
-        Route::get('resolve-items', 'BonController@resolveItems')->name('bons.resolve.items');
+        Route::match(['get', 'post'], 'resolve-items', 'BonController@resolveItems')->name('bons.resolve.items');
 
         // APPROVE & REJECT
         Route::post('{id}/approve', ['uses' => 'BonController@approve', 'as' => 'bons.approve']);
@@ -152,6 +152,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/requests/create', 'RequestController@create')->name('requests.create');
     Route::post('/requests', 'RequestController@store')->name('requests.store');
     
+    // AJAX lookup item & resolve items
+    Route::get('/requests/lookup-items', 'RequestController@lookupItems')->name('requests.lookup.items');
+    Route::match(['get', 'post'], '/requests/resolve-items', 'RequestController@resolveItems')->name('requests.resolve.items');
+
     Route::get('/requests/recap/export', 'RequestController@exportRecapExcel')->name('requests.recap.export');
     Route::get('/requests/recap', 'RequestController@recap')->name('requests.recap'); 
     

@@ -348,7 +348,7 @@
                 if (item.loading) return item.text;
                 return $(
                     '<div style="padding:4px 0;">' +
-                        '<div class="s2-item-code" style="font-weight:bold; font-size:13px; color:#1e293b;">[' + (item.code||'') + '] ' + (item.name||'') + '</div>' +
+                        '<div class="s2-item-code" style="font-weight:bold; font-size:13px; color:#1e293b;">[' + (item.harmoni_code||'') + '] ' + (item.name||'') + '</div>' +
                         '<div class="s2-item-sub" style="font-size:11px; color:#64748b;">Unit: ' + (item.unit||'-') + '</div>' +
                     '</div>'
                 );
@@ -373,7 +373,7 @@
             var tr = 
                 '<tr>' +
                     '<input type="hidden" name="items['+rowIdx+'][item_id]" value="'+item.id+'">' +
-                    '<td><div style="font-weight:600; color:#334155;">['+item.code+'] '+item.name+'</div></td>' +
+                    '<td><div style="font-weight:600; color:#334155;">['+item.harmoni_code+'] '+item.name+'</div></td>' +
                     '<td style="text-align: center;">'+(item.buffer_min || '-')+'</td>' +
                     '<td style="text-align: center;">'+(item.unit || '-')+'</td>' +
                     '<td><input type="number" name="items['+rowIdx+'][quantity]" class="form-control" value="1" min="0.01" step="0.01" required></td>' +
@@ -406,7 +406,7 @@
                             var id = idInput.val();
                             var it = itemMap[id];
                             if(it) {
-                                $(this).find('.item-name-cell').html('<div style="font-weight:600; color:#334155;">[' + it.code + '] ' + it.name + '</div>');
+                                $(this).find('.item-name-cell').html('<div style="font-weight:600; color:#334155;">[' + it.harmoni_code + '] ' + it.name + '</div>');
                                 $(this).find('.item-buffer-cell').text(it.buffer_min || '-');
                                 $(this).find('.item-unit-cell').text(it.unit || '-');
                             }

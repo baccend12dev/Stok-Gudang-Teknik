@@ -10,7 +10,7 @@ class Item extends Model
 
     protected $fillable = array(
         'code','name','unit','location','buffer_min','current_status',
-        'notes','current_stock','note','category_id','batas_fast_moving','batas_slow_moving','oracle_code'
+        'notes','current_stock','note','category_id','batas_fast_moving','batas_slow_moving','harmoni_code','oracle_code'
     );
 
     public function itemDepartmentBuffers()
