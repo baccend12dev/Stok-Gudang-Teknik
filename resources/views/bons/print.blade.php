@@ -273,21 +273,28 @@
                         $displayQty = $detail->approved_quantity;
                     }
                 @endphp
-                @if((float)$displayQty <= 0)
-                    @continue
-                @endif
-                <tr>
+                @php
+                    $isZero = ((float)$displayQty <= 0);
+                @endphp
+                <tr style="{{ $isZero ? 'background-color: #fafafa; color: #555;' : '' }}">
                     <td class="text-center">{{ $counter++ }}</td>
                     <td class="text-center">{{ $detail->item ? $detail->item->code : '-' }}</td>
-                    <td style="font-weight:bold;">{{ $detail->item ? $detail->item->name : 'Item #'.$detail->item_id }}</td>
+                    <td style="font-weight:bold;">
+                        {{ $detail->item ? $detail->item->name : 'Item #'.$detail->item_id }}
+                        @if($isZero)
+                            <span style="font-size:9pt; font-weight:normal; color:#dc2626; font-style:italic; display:block;">
+                                [ Stok Kosong / Tidak Diserahkan ]
+                            </span>
+                        @endif
+                    </td>
                     <td class="text-center">{{ $detail->item ? $detail->item->unit : '' }}</td>
                     
                     {{-- FIX LOGIC QTY: PRIORITAS ISSUED QUANTITY --}}
-                    <td class="text-center" style="font-weight:bold; font-size:12pt;">
+                    <td class="text-center" style="font-weight:bold; font-size:12pt; {{ $isZero ? 'color:#dc2626;' : '' }}">
                         {{ (float)$displayQty }}
                     </td>
                     
-                    <td>{{ $detail->notes }}</td>
+                    <td>{{ $detail->notes ?: ($isZero ? 'Barang tidak ada / Stok kosong' : '-') }}</td>
                 </tr>
                 @endforeach
             </tbody>

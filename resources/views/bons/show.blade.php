@@ -111,25 +111,26 @@
     .btn-nav.primary:hover { background: #DBEAFE; }
 
     /* --- 4. STEPPER (Timeline Visual) --- */
+    /* --- 4. STEPPER (Timeline Visual - Compact) --- */
     .stepper-card {
         background: var(--surface);
         border-radius: var(--radius);
-        padding: 30px;
+        padding: 16px 24px;
         box-shadow: var(--shadow-sm);
         border: 1px solid var(--border);
-        margin-bottom: 24px;
+        margin-bottom: 18px;
     }
     .step-list { display: flex; justify-content: space-between; position: relative; }
     .step-line {
-        position: absolute; top: 15px; left: 0; right: 0; height: 3px;
+        position: absolute; top: 14px; left: 0; right: 0; height: 3px;
         background: #F1F5F9; z-index: 0;
     }
     .step-item { position: relative; z-index: 1; text-align: center; background: white; padding: 0 10px; }
     .step-circle {
-        width: 34px; height: 34px; border-radius: 50%;
+        width: 30px; height: 30px; border-radius: 50%;
         background: white; border: 3px solid #E2E8F0;
         display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 8px; font-weight: 700; font-size: 12px; color: #94A3B8;
+        margin: 0 auto 6px; font-weight: 700; font-size: 11px; color: #94A3B8;
         transition: all 0.3s;
     }
     .step-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94A3B8; letter-spacing: 0.5px; }
@@ -141,56 +142,109 @@
     .step-item.done .step-circle { background: var(--success); border-color: var(--success); color: white; }
     .step-item.done .step-label { color: var(--success); }
 
-    /* --- 5. KPI METRICS (Alerts) --- */
-    .kpi-grid { display: flex; gap: 20px; margin-bottom: 24px; }
-    .kpi-box {
-        flex: 1;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 20px;
-        display: flex; align-items: center; gap: 16px;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease; /* 🔥 NEW: Smooth transition */
-    }
-    .kpi-icon {
-        width: 48px; height: 48px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center; font-size: 20px;
-        transition: all 0.3s ease; /* 🔥 NEW: Smooth transition */
-    }
-    .kpi-info h4 { margin: 0; font-size: 20px; font-weight: 800; color: var(--dark); }
-    .kpi-info p { margin: 2px 0 0; font-size: 12px; font-weight: 500; color: var(--secondary); }
-    
-    .bg-red-light { background: #FEF2F2; color: var(--danger); }
-    .bg-green-light { background: #ECFDF5; color: var(--success); }
-    .bg-blue-light { background: #EFF6FF; color: var(--primary); }
-
-    /* --- 6. MAIN CONTENT GRID --- */
-    .content-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
-    
-    /* INFO CARD (Left) */
-    .info-card {
+    /* --- 5. HEADER INFO CARD (Clean Horizontal Strip) --- */
+    .bon-header-card {
         background: var(--surface);
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        overflow: hidden; height: 100%;
+        padding: 16px 20px;
+        margin-bottom: 18px;
         box-shadow: var(--shadow-sm);
     }
-    .card-head {
-        background: #F8FAFC; padding: 16px 20px; border-bottom: 1px solid var(--border);
-        font-size: 13px; font-weight: 700; color: var(--secondary); text-transform: uppercase;
-        display: flex; align-items: center; gap: 8px;
+    .bon-header-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
     }
-    .card-body { padding: 20px; }
-    .info-group { margin-bottom: 20px; }
-    .info-label { font-size: 11px; font-weight: 600; color: var(--secondary); display: block; margin-bottom: 4px; text-transform: uppercase; }
-    .info-val { font-size: 14px; font-weight: 600; color: var(--dark); }
-    .note-box {
-        background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 12px;
-        border-radius: 8px; font-size: 13px; color: #475569; font-style: italic;
+    .bon-header-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .bon-h-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .bon-h-val {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--dark);
+        word-break: break-word;
+    }
+    @media (max-width: 900px) {
+        .bon-header-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 500px) {
+        .bon-header-grid { grid-template-columns: 1fr; }
     }
 
-    /* TABLE CARD (Right) */
+    /* STATUS PILLS */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+    }
+    .status-pill .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+    .status-pending { background: #FFF7ED; color: #C2410C; border: 1px solid #FFEDD5; }
+    .status-approved { background: #EFF6FF; color: #1D4ED8; border: 1px solid #DBEAFE; }
+    .status-issued { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
+    .status-rejected { background: #FEF2F2; color: #DC2626; border: 1px solid #FEE2E2; }
+    .status-canceled { background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; }
+
+    /* BADGES & TAGS */
+    .numtag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    .numtag.tag-blue { background: #EFF6FF; color: #1D4ED8; border: 1px solid #DBEAFE; }
+    .numtag.tag-green { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
+    .numtag.tag-red { background: #FEF2F2; color: #DC2626; border: 1px solid #FEE2E2; }
+
+    .codepill {
+        font-size: 11px;
+        font-family: monospace;
+        font-weight: 800;
+        background: #F1F5F9;
+        color: #334155;
+        padding: 2px 7px;
+        border-radius: 4px;
+        border: 1px solid #E2E8F0;
+        display: inline-block;
+    }
+
+    .stok-badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 1px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        margin-top: 3px;
+    }
+    .stok-ok { background: #DCFCE7; color: #16A34A; }
+    .stok-low { background: #FEF3C7; color: #B45309; }
+    .stok-zero { background: #FEE2E2; color: #B91C1C; }
+
+    /* TABLE CARD (Full Width & Clean) */
     .table-card {
         background: var(--surface);
         border-radius: var(--radius);
@@ -199,28 +253,39 @@
         overflow: hidden;
         display: flex; flex-direction: column;
     }
+    .table-card .card-head {
+        background: #F8FAFC;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
     .table-responsive { overflow-x: auto; }
     
     /* Modern Table Styling */
-    .app-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .app-table { width: 100%; border-collapse: collapse; }
     .app-table th {
         background: #F8FAFC;
-        padding: 14px 20px;
+        padding: 12px 18px;
         text-align: left;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         text-transform: uppercase;
-        color: var(--secondary);
+        color: #475569;
         border-bottom: 1px solid var(--border);
         letter-spacing: 0.5px;
     }
     .app-table td {
-        padding: 16px 20px;
+        padding: 14px 18px;
         border-bottom: 1px solid var(--border);
         vertical-align: middle;
         font-size: 13px;
         color: var(--dark);
     }
+    .app-table tbody tr:hover { background-color: #F8FAFC; }
     .app-table tr:last-child td { border-bottom: none; }
 
     /* Alignment Classes */
@@ -232,6 +297,48 @@
     .row-danger { background-color: #FEF2F2 !important; } /* Low Stock */
     .row-info-zero { background-color: #F8FAFC !important; } /* Stock 0, Input 0 - Wajar */
     .row-warn-forgot { background-color: #FFF7ED !important; border-left: 3px solid #F59E0B !important; } /* Stock > 0, Input 0 - Possibly Forgot */
+    .row-zero-stock { background-color: #F8FAFC !important; } /* Approved 0 / Kosong */
+    .row-zero-stock td { color: #64748B; }
+
+    /* Badges untuk Status Item Kosong / Sebagian */
+    .badge-out-of-stock {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #B91C1C;
+        background: #FEE2E2;
+        border: 1px solid #FECACA;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+    }
+    .badge-partial-approved {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #92400E;
+        background: #FEF3C7;
+        border: 1px solid #FDE68A;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+    }
+    .qty-zero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 800;
+        font-size: 12px;
+        color: #DC2626;
+        background: #FEE2E2;
+        border: 1px solid #FECACA;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
 
     /* Item Styling */
     .item-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: normal; word-break: break-word; }
@@ -454,14 +561,9 @@
 
     $countOverQuota = 0;
     $countLowStock = 0;
-    $activeItemsCount = 0;
+    $totalItemsCount = count($bon->details);
 
     foreach($bon->details as $d) {
-        if ($bon->status != 'PENDING' && (float)$d->approved_quantity <= 0) {
-            continue;
-        }
-        $activeItemsCount++;
-
         $totalReq += (float)$d->quantity; // FIX: Cast ke float
         $totalAppr += (float)$d->approved_quantity; // FIX: Cast ke float
         
@@ -479,24 +581,28 @@
     
     <div class="page-header">
         <div class="header-title">
-            <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <h1>Detail Permintaan (BON)</h1>
                 @if($bon->status == 'PENDING')
-                    <span style="background:#FFF7ED; color:#C2410C; border:1px solid #FFEDD5; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;">PENDING</span>
+                    <span class="status-pill status-pending"><span class="dot"></span> PENDING (Menunggu Persetujuan)</span>
                 @elseif($bon->status == 'APPROVED')
-                    <span style="background:#EFF6FF; color:#1D4ED8; border:1px solid #DBEAFE; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;">APPROVED</span>
+                    <span class="status-pill status-approved"><span class="dot"></span> APPROVED (Siap Di-issue)</span>
                 @elseif($bon->status == 'ISSUED')
-                    <span style="background:#ECFDF5; color:#047857; border:1px solid #D1FAE5; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;">ISSUED</span>
+                    <span class="status-pill status-issued"><span class="dot"></span> ISSUED (Barang Dikeluarkan)</span>
+                @elseif($bon->status == 'REJECTED')
+                    <span class="status-pill status-rejected"><span class="dot"></span> REJECTED (Ditolak)</span>
+                @elseif($bon->status == 'CANCELLED')
+                    <span class="status-pill status-canceled"><span class="dot"></span> CANCELLED (Dibatalkan)</span>
                 @endif
             </div>
             <div class="header-meta">
-                <span><i class="fa fa-hashtag"></i> {{ $bon->bon_number }}</span>
+                <span><i class="fa fa-hashtag"></i> <strong>{{ $bon->bon_number }}</strong></span>
                 <span><i class="fa fa-calendar"></i> {{ date('d M Y', strtotime($bon->date)) }}</span>
-                <span><i class="fa fa-building"></i> {{ $bon->department ? $bon->department->name : '-' }}</span>
+                <span><i class="fa fa-building"></i> {{ $bon->department ? $bon->department->name : ($bon->division_name ?: '-') }}</span>
             </div>
         </div>
         
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
             @if($bon->status === 'ISSUED')
                 <a href="{{ route('bons.print', $bon->id) }}" target="_blank" class="btn-nav" style="color:#0a0908ff;">
                     <i class="fa fa-print"></i> Cetak Tanda Terima
@@ -513,6 +619,7 @@
         </div>
     </div>
 
+    {{-- STEPPER STATUS (COMPACT) --}}
     <div class="stepper-card">
         <div class="step-list">
             <div class="step-line"></div>
@@ -523,167 +630,206 @@
         </div>
     </div>
 
-    @if(in_array($bon->status, ['PENDING', 'APPROVED']))
-    <div class="kpi-grid">
-        <div class="kpi-box {{ $countOverQuota > 0 ? 'bg-red-light' : 'bg-green-light' }}" id="kpi-over-quota">
-            <div class="kpi-icon"><i class="fa {{ $countOverQuota > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle' }}"></i></div>
-            <div class="kpi-info"><h4>{{ $countOverQuota }} Item</h4><p>Melebihi Plafon (Limit)</p></div>
-        </div>
-        <div class="kpi-box {{ $countLowStock > 0 ? 'bg-red-light' : 'bg-green-light' }}">
-            <div class="kpi-icon"><i class="fa {{ $countLowStock > 0 ? 'fa-cubes' : 'fa-check-circle' }}"></i></div>
-            <div class="kpi-info"><h4>{{ $countLowStock }} Item</h4><p>Stok Gudang Kurang</p></div>
-        </div>
-        <div class="kpi-box bg-blue-light">
-            <div class="kpi-icon"><i class="fa fa-list-ol"></i></div>
-            <div class="kpi-info"><h4>{{ $activeItemsCount }} Item</h4><p>Total Permintaan Aktif</p></div>
+    {{-- INFORMASI DOKUMEN BON (RINGKAS & HORIZONTAL) --}}
+    <div class="bon-header-card">
+        <div class="bon-header-grid">
+            <div class="bon-header-item">
+                <span class="bon-h-label"><i class="fa fa-user"></i> Pembuat Request</span>
+                <span class="bon-h-val">{{ ($bon->requestReference && $bon->requestReference->user) ? $bon->requestReference->user->name : ($bon->user ? $bon->user->name : '-') }}</span>
+            </div>
+            <div class="bon-header-item">
+                <span class="bon-h-label"><i class="fa fa-building-o"></i> Divisi / Bagian</span>
+                <span class="bon-h-val">{{ $bon->division_name ?: ($bon->department ? $bon->department->name : '-') }}</span>
+            </div>
+            <div class="bon-header-item">
+                <span class="bon-h-label"><i class="fa fa-user-circle-o"></i> Disetujui Oleh (Atasan)</span>
+                <span class="bon-h-val">{{ $bon->requestReference && $bon->requestReference->approver ? $bon->requestReference->approver->name : '-' }}</span>
+            </div>
+            <div class="bon-header-item">
+                <span class="bon-h-label"><i class="fa fa-file-text-o"></i> Permintaan Terkait</span>
+                <span class="bon-h-val">
+                    @if($bon->requestReference)
+                        <a href="{{ route('requests.show', $bon->requestReference->id) }}" style="color:var(--primary); font-weight:700; text-decoration:none;" title="Lihat Dokumen Request">
+                            {{ $bon->requestReference->request_number }} <i class="fa fa-external-link" style="font-size:11px;"></i>
+                        </a>
+                    @else
+                        -
+                    @endif
+                </span>
+            </div>
+            <div class="bon-header-item">
+                <span class="bon-h-label"><i class="fa fa-comment-o"></i> Catatan Pemohon</span>
+                <span class="bon-h-val" style="font-style:italic; color:#475569;">"{{ $bon->notes ?: 'Tidak ada catatan.' }}"</span>
+            </div>
         </div>
     </div>
-    @endif
 
-    <div class="content-grid">
-        
-        <div class="info-card">
-            <div class="card-head"><i class="fa fa-info-circle"></i> Header Info</div>
-            <div class="card-body">
-                <div class="info-group">
-                    <span class="info-label">Divisi / Bagian</span>
-                    <span class="info-val">{{ $bon->division_name ?: '-' }}</span>
-                </div>
-                <div class="info-group">
-                    <span class="info-label">Approval Oleh (Atasan)</span>
-                    <span class="info-val">{{ $bon->requestReference && $bon->requestReference->approver ? $bon->requestReference->approver->name : '-' }}</span>
-                </div>
-                <div class="info-group">
-                    <span class="info-label">Catatan User</span>
-                    <div class="note-box">"{{ $bon->notes ?: 'Tidak ada catatan.' }}"</div>
-                </div>
+    {{-- TABEL ITEM (FOKUS UTAMA & LEBAR PENUH) --}}
+    <div class="table-card">
+        <div class="card-head">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa fa-cubes text-primary" style="font-size:16px;"></i> 
+                <span style="font-size:15px; font-weight:800; color:var(--dark);">Daftar Item Barang</span>
+                <span style="background:#EEF2FF; color:var(--primary); font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px; margin-left:4px;">
+                    {{ count($bon->details) }} Item
+                </span>
             </div>
+            @if($bon->status == 'PENDING')
+                <div style="font-size:12px; color:#475569; font-weight:600;">
+                    <i class="fa fa-info-circle text-primary"></i> Tentukan jumlah disetujui. Input <strong style="color:#DC2626;">0</strong> jika barang kosong / tidak ada.
+                </div>
+            @endif
         </div>
 
-        <div class="table-card">
-            <div class="card-head">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i class="fa fa-th-list text-primary"></i> Rincian Barang
-                </div>
-                @if($bon->status == 'PENDING')
-                    <span style="font-size:11px; background:#EEF2FF; color:var(--primary); padding:4px 8px; border-radius:4px;">Mode Approval</span>
-                @endif
-            </div>
+        @if($bon->status == 'PENDING')
+        <form action="{{ route('bons.approve', $bon->id) }}" method="POST" id="form-approve">
+            {{ csrf_field() }}
+            <input type="hidden" name="override_quota" id="input-override-quota" value="0">
+            <input type="hidden" name="confirm_zero_items" id="input-confirm-zero" value="0">
+        @endif
 
-            @if($bon->status == 'PENDING')
-            <form action="{{ route('bons.approve', $bon->id) }}" method="POST" id="form-approve">
-                {{ csrf_field() }}
-                <input type="hidden" name="override_quota" id="input-override-quota" value="0">
-                <input type="hidden" name="confirm_zero_items" id="input-confirm-zero" value="0">
-            @endif
+        <div class="table-responsive">
+            <table class="app-table">
+                <thead>
+                    <tr>
+                        <th style="width:45px;" class="text-center">No</th>
+                        <th style="width:28%;">Barang & Kode</th>
+                        <th class="text-center" style="width:120px;">Stok Gudang</th>
+                        <th>Catatan / Keterangan</th>
+                        <th class="text-center" style="width:110px;">Qty Minta</th>
+                        <th class="text-center" style="width:180px;">Qty Disetujui</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($bon->details as $d)
+                        <?php 
+                            $item = $d->item;
+                            $stock = $item ? (float)$item->current_stock : 0;
+                            
+                            $qa = isset($quotaAnalysis[$d->id]) ? $quotaAnalysis[$d->id] : null;
+                            $qTotal = ($qa && isset($qa['limit'])) ? (float)$qa['limit'] : 0; 
+                            $qUsed  = ($qa && isset($qa['used'])) ? (float)$qa['used'] : 0;
+                            $qSisaAwal = ($qa && isset($qa['sisa_awal'])) ? (float)$qa['sisa_awal'] : 0;
+                            $qReqQty = ($qa && isset($qa['req_qty'])) ? (float)$qa['req_qty'] : 0;
+                            $qSisaAkhir = ($qa && isset($qa['sisa_akhir'])) ? (float)$qa['sisa_akhir'] : 0;
+                            
+                            $isOverQuota = ($qa && isset($qa['is_over'])) ? $qa['is_over'] : false;
+                            $isLowStock  = ($stock < $d->quantity);
 
-            <div class="table-responsive">
-                <table class="app-table">
-                    <thead>
-                        <tr>
-                            <th style="width:30%;">Item & Kode</th>
-                            <th class="text-center" style="width:12%;">Stok</th>
-                            <th style="width:28%;">Catatan / Keterangan</th>
-                            <th class="text-center" style="width:10%;">Minta</th>
-                            <th class="text-center" style="width:20%;">Setuju</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($bon->details as $d)
-                            @continue($bon->status != 'PENDING' && (float)$d->approved_quantity <= 0)
-                            <?php 
-                                $item = $d->item;
-                                $stock = $item ? (float)$item->current_stock : 0; // FIX: Cast ke float
-                                
-                                $qa = isset($quotaAnalysis[$d->id]) ? $quotaAnalysis[$d->id] : null;
-                                $qTotal = ($qa && isset($qa['limit'])) ? (float)$qa['limit'] : 0; 
-                                $qUsed  = ($qa && isset($qa['used'])) ? (float)$qa['used'] : 0;
-                                $qSisaAwal = ($qa && isset($qa['sisa_awal'])) ? (float)$qa['sisa_awal'] : 0;
-                                $qReqQty = ($qa && isset($qa['req_qty'])) ? (float)$qa['req_qty'] : 0;
-                                $qSisaAkhir = ($qa && isset($qa['sisa_akhir'])) ? (float)$qa['sisa_akhir'] : 0;
-                                
-                                $isOverQuota = ($qa && isset($qa['is_over'])) ? $qa['is_over'] : false;
-                                $isLowStock  = ($stock < $d->quantity);
-                                
-                                $pctUsed = 0; $pctReq = 0;
-                                if ($qTotal > 0) {
-                                    $vizUsed = max(0, min(100, ($qUsed / $qTotal) * 100));
-                                    $vizReq  = max(0, min(100, ($qReqQty / $qTotal) * 100));
-                                    if(($vizUsed + $vizReq) > 100) $vizReq = 100 - $vizUsed;
-                                    $pctUsed = $vizUsed;
-                                    $pctReq = $vizReq;
+                            $isZeroApproved = ($bon->status != 'PENDING' && (float)$d->approved_quantity <= 0);
+                            $isPartialApproved = ($bon->status != 'PENDING' && (float)$d->approved_quantity > 0 && (float)$d->approved_quantity < (float)$d->quantity);
+                            
+                            $pctUsed = 0; $pctReq = 0;
+                            if ($qTotal > 0) {
+                                $vizUsed = max(0, min(100, ($qUsed / $qTotal) * 100));
+                                $vizReq  = max(0, min(100, ($qReqQty / $qTotal) * 100));
+                                if(($vizUsed + $vizReq) > 100) $vizReq = 100 - $vizUsed;
+                                $pctUsed = $vizUsed;
+                                $pctReq = $vizReq;
+                            }
+
+                            $valApproved = old('details.' . $d->id . '.approved_quantity');
+                            
+                            if ($bon->status == 'PENDING' && $valApproved === null) {
+                                $valApproved = (float)$d->approved_quantity;
+                                if ($valApproved === null || $valApproved == 0) {
+                                    $valApproved = 0;
                                 }
+                            } elseif ($bon->status != 'PENDING') {
+                                $valApproved = (float)$d->approved_quantity;
+                            }
 
-                                // FIX: Logic Auto-Fill & Calculation PHP
-                                $valApproved = old('details.' . $d->id . '.approved_quantity');
-                                
-                                if ($bon->status == 'PENDING' && $valApproved === null) {
-                                    $valApproved = (float)$d->approved_quantity;
-                                    if ($valApproved === null || $valApproved == 0) {
-                                        $valApproved = 0; // Default di awal 0 sesuai permintaan user agar user harus input manual qty dari 0
-                                    }
-                                } elseif ($bon->status != 'PENDING') {
-                                    $valApproved = (float)$d->approved_quantity;
-                                }
+                            $grandTotalApprovedInitial += (float)$valApproved;
 
-                                // Tambahkan ke Grand Total (Server Side Calc)
-                                $grandTotalApprovedInitial += (float)$valApproved;
+                            $reqDetail = null;
+                            if ($bon->requestReference) {
+                                $reqDetail = $bon->requestReference->details
+                                    ->where('item_id', $d->item_id)
+                                    ->first();
+                            }
+                            $remarks = $reqDetail ? $reqDetail->remarks : '-';
+                        ?>
+                        <tr class="{{ $isZeroApproved ? 'row-zero-stock' : ($isLowStock ? 'row-danger' : ($isOverQuota ? 'row-warning' : '')) }} item-row detail-row" 
+                            data-detail-id="{{ $d->id }}"
+                            data-item-id="{{ $d->item_id }}" 
+                            data-item-name="{{ $item ? $item->name : 'Item #'.$d->item_id }}"
+                            data-stock="{{ $stock }}"
+                            data-quota-limit="{{ $qTotal }}"
+                            data-quota-used="{{ $qUsed }}"
+                            data-quota-sisa-awal="{{ $qSisaAwal }}"
+                            data-quota-req-qty="{{ $qReqQty }}"
+                            data-quota-sisa-akhir="{{ $qSisaAkhir }}">
+                            
+                            <td class="text-center" style="font-weight:700; color:#94A3B8;">{{ $loop->iteration }}</td>
 
-                                // Ambil Catatan/Keterangan dari RequestDetail
-                                $reqDetail = null;
-                                if ($bon->requestReference) {
-                                    $reqDetail = $bon->requestReference->details
-                                        ->where('item_id', $d->item_id)
-                                        ->first();
-                                }
-                                $remarks = $reqDetail ? $reqDetail->remarks : '-';
-                            ?>
-                            <tr class="{{ $isLowStock ? 'row-danger' : ($isOverQuota ? 'row-warning' : '') }} item-row detail-row" 
-                                data-detail-id="{{ $d->id }}"
-                                data-item-id="{{ $d->item_id }}" 
-                                data-item-name="{{ $item ? $item->name : 'Item #'.$d->item_id }}"
-                                data-stock="{{ $stock }}"
-                                data-quota-limit="{{ $qTotal }}"
-                                data-quota-used="{{ $qUsed }}"
-                                data-quota-sisa-awal="{{ $qSisaAwal }}"
-                                data-quota-req-qty="{{ $qReqQty }}"
-                                data-quota-sisa-akhir="{{ $qSisaAkhir }}">
-                                <td>
-                                    <div class="item-title">{{ $item ? $item->name : 'Item #'.$d->item_id }}</div>
-                                    <div class="item-sub">{{ $item ? $item->code : '-' }}</div>
-                                    {{-- 🔥 NEW: Real-time Over Limit Badge --}}
-                                    <div class="item-over-limit-badge {{ $isOverQuota ? 'show' : '' }}">
-                                        <i class="fa fa-exclamation-triangle"></i> Over Limit
-                                    </div>
-                                </td>
-
-                                <td class="text-center">
-                                    <div style="font-weight:700; {{ $isLowStock ? 'color:var(--danger);' : '' }}">
-                                        {{ (float)$stock }} {{-- FIX: Tampilkan float --}}
-                                    </div>
-                                    <div style="font-size:10px; color:var(--secondary);">{{ $item->unit }}</div>
-                                    @if($isLowStock)
-                                        <div style="color:var(--danger); font-size:10px; font-weight:700;">Kurang</div>
+                            <td>
+                                <div class="item-title" style="{{ $isZeroApproved ? 'color:#94a3b8;' : '' }}">
+                                    {{ $item ? $item->name : 'Item #'.$d->item_id }}
+                                </div>
+                                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px;">
+                                    <span class="codepill">{{ $item ? $item->code : '-' }}</span>
+                                    @if($item && $item->category)
+                                        <span style="font-size:11px; color:#64748B;">{{ $item->category->name }}</span>
                                     @endif
-                                </td>
+                                </div>
 
-                                <td>
-                                    <div style="font-size:12px; font-weight:700; color:#334155; white-space:normal; line-height:1.4;">
-                                        {{ $remarks }}
+                                @if($isZeroApproved)
+                                    <div>
+                                        <span class="badge-out-of-stock">
+                                            <i class="fa fa-times-circle"></i> Barang Tidak Ada / Kosong
+                                        </span>
                                     </div>
-                                </td>
+                                @elseif($isPartialApproved)
+                                    <div>
+                                        <span class="badge-partial-approved">
+                                            <i class="fa fa-adjust"></i> Disetujui Sebagian ({{ (float)$d->approved_quantity }} dari {{ (float)$d->quantity }})
+                                        </span>
+                                    </div>
+                                @elseif($bon->status == 'PENDING' && $stock <= 0)
+                                    <div>
+                                        <span class="badge-out-of-stock">
+                                            <i class="fa fa-exclamation-circle"></i> Stok Gudang Kosong (0)
+                                        </span>
+                                    </div>
+                                @endif
 
-                                <td class="text-center">
-                                    <span style="font-weight:700; font-size:14px;">{{ (float)$d->quantity }}</span> {{-- FIX --}}
-                                </td>
+                                {{-- 🔥 Real-time Over Limit Badge --}}
+                                <div class="item-over-limit-badge {{ $isOverQuota ? 'show' : '' }}">
+                                    <i class="fa fa-exclamation-triangle"></i> Over Limit
+                                </div>
+                            </td>
 
-                                <td class="text-center">
-                                    @if($bon->status == 'PENDING')
-                                        {{-- FIX: step="1" --}}
+                            <td class="text-center">
+                                <div style="font-weight:800; font-size:14px; {{ ($isLowStock || $stock <= 0) ? 'color:var(--danger);' : 'color:var(--dark);' }}">
+                                    {{ (float)$stock }}
+                                </div>
+                                <div style="font-size:10px; color:var(--secondary); font-weight:600;">{{ $item ? $item->unit : '-' }}</div>
+                                @if($stock <= 0)
+                                    <span class="stok-badge stok-zero">Kosong (0)</span>
+                                @elseif($isLowStock)
+                                    <span class="stok-badge stok-low">Kurang</span>
+                                @else
+                                    <span class="stok-badge stok-ok">Cukup</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                <div style="font-size:12px; font-weight:600; color:#334155; white-space:normal; line-height:1.4;">
+                                    {{ $remarks }}
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="numtag tag-blue" style="{{ $isZeroApproved ? 'opacity:0.6;' : '' }}">{{ (float)$d->quantity }}</span>
+                            </td>
+
+                            <td class="text-center">
+                                @if($bon->status == 'PENDING')
+                                    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
                                         <input type="number" 
                                                name="details[{{ $d->id }}][approved_quantity]" 
                                                value="{{ $valApproved }}" 
-                                               class="input-modern js-calc approved-qty-input {{ $isLowStock ? 'error' : '' }}"
+                                               class="input-modern js-calc approved-qty-input {{ ($isLowStock || $stock <= 0) ? 'error' : '' }}"
                                                min="0"
                                                step="1"
                                                data-item-name="{{ $item ? $item->name : 'Item' }}"
@@ -692,35 +838,56 @@
                                                onfocus="if(Number(this.value) === 0) this.value = '';"
                                                onblur="if(this.value === '') { this.value = '0'; validateInput(this); }"
                                                oninput="validateInput(this)">
-                                    @else
-                                        <span style="font-weight:800; font-size:14px; color:var(--primary);">
-                                            {{ (float)$d->approved_quantity }} {{-- FIX --}}
+                                        @if($stock > 0)
+                                            <div style="display:flex; gap:4px;">
+                                                <button type="button" class="btn btn-xs btn-default" style="font-size:10px; padding:1px 6px;" onclick="var inp=this.closest('td').querySelector('.approved-qty-input'); inp.value=Math.min({{ $stock }}, {{ (float)$d->quantity }}); validateInput(inp);" title="Isi sesuai stok/permintaan">Maks ({{ min((float)$stock, (float)$d->quantity) }})</button>
+                                                <button type="button" class="btn btn-xs btn-default" style="font-size:10px; padding:1px 6px; color:#DC2626;" onclick="var inp=this.closest('td').querySelector('.approved-qty-input'); inp.value=0; validateInput(inp);" title="Set ke 0 (Barang Kosong)">0</button>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    @if($isZeroApproved)
+                                        <span class="qty-zero-badge">
+                                            <i class="fa fa-ban"></i> 0 (Tidak Ada)
                                         </span>
+                                    @else
+                                        <span class="numtag tag-green" style="font-size:14px;">
+                                            {{ (float)$d->approved_quantity }}
+                                        </span>
+                                        @if($bon->status == 'ISSUED')
+                                            <div style="font-size:11px; color:var(--success); font-weight:700; margin-top:3px;">
+                                                <i class="fa fa-check"></i> Diserahkan: {{ (float)$d->issued_quantity }}
+                                            </div>
+                                        @endif
                                     @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="table-summary-panel">
-                <div class="sum-item">
-                    <span class="sum-label">Total Diminta</span>
-                    <span class="sum-val">{{ (float)$totalReq }}</span> {{-- FIX --}}
-                </div>
-                <div class="sum-item">
-                    <span class="sum-label">Total Disetujui</span>
-                    <span class="sum-val blue" id="summary-total">
-                        {{ (float)($bon->status == 'PENDING' ? $grandTotalApprovedInitial : $totalAppr) }} {{-- FIX --}}
-                    </span>
-                </div>
-            </div>
-
-            @if($bon->status == 'PENDING')
-            </form>
-            @endif
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
+
+        <div class="table-summary-panel">
+            <div class="sum-item">
+                <span class="sum-label">Total Item</span>
+                <span class="sum-val">{{ count($bon->details) }} Item</span>
+            </div>
+            <div class="sum-item">
+                <span class="sum-label">Total Diminta</span>
+                <span class="sum-val">{{ (float)$totalReq }}</span>
+            </div>
+            <div class="sum-item">
+                <span class="sum-label">Total Disetujui</span>
+                <span class="sum-val blue" id="summary-total">
+                    {{ (float)($bon->status == 'PENDING' ? $grandTotalApprovedInitial : $totalAppr) }}
+                </span>
+            </div>
+        </div>
+
+        @if($bon->status == 'PENDING')
+        </form>
+        @endif
     </div>
 </div>
 
@@ -792,7 +959,7 @@
                         <i class="fa fa-exclamation-triangle"></i> <span id="count-forgot-items">0</span> item dengan Stok Tersedia tapi Disetujui 0
                     </div>
                     <div style="font-size:11px; color:#9A3412; font-style:italic;">
-                        Item dengan jumlah 0 <strong>tidak akan diproses</strong> dan tidak akan memotong stok gudang.
+                        Item dengan jumlah 0 akan ditandai sebagai <strong>Barang Tidak Ada (Stok Kosong)</strong> dan tidak memotong stok gudang.
                     </div>
                 </div>
                 
@@ -1021,10 +1188,10 @@
 
     // 🔥 NEW FUNCTION: Update tampilan KPI Card "Melebihi Plafon" secara real-time!
     function updateKpiCardOverQuota() {
-        var count = countOverQuotaRealtime();
-        
-        // Cari KPI Card pertama (Melebihi Plafon)
         var kpiCard = $('#kpi-over-quota');
+        if (!kpiCard.length) return;
+        
+        var count = countOverQuotaRealtime();
         var kpiValue = kpiCard.find('h4');
         var kpiIcon = kpiCard.find('.kpi-icon i');
         
@@ -1087,14 +1254,15 @@
         $('#input-override-quota').val('0'); 
         $('#input-confirm-zero').val('0'); // RESET FLAG
 
-        // VALIDASI 1: Minimal 1 item harus > 0
+        // VALIDASI 1: Kasus Seluruh Item Diinput 0 (Semua Barang Kosong/Tidak Ada)
         if(totalProcessed === 0) {
-            wrapper.html('<div class="modal-icon-box danger"><i class="fa fa-ban text-danger" style="font-size:24px;"></i></div>');
-            $('#gk-title').text('Input Tidak Valid!');
-            $('#gk-desc').html('BON harus memiliki <strong>minimal 1 item</strong> dengan jumlah > 0.<br><br>Jika tidak ada item yang disetujui, silakan <strong>Edit BON</strong> untuk menghapus item, atau batalkan BON ini.');
+            wrapper.html('<div class="modal-icon-box warn"><i class="fa fa-exclamation-circle text-warning" style="font-size:24px;"></i></div>');
+            $('#gk-title').text('Konfirmasi Semua Barang Kosong');
+            $('#gk-desc').html('Seluruh item disetujui dengan <strong>Qty 0 (Stok Kosong / Tidak Ada)</strong>.<br><br>BON ini akan tetap disetujui (<strong>APPROVED</strong>) dengan tanda bahwa seluruh barang tidak tersedia, dan <strong>tidak akan memotong stok gudang</strong>.<br><br>Lanjutkan proses approval?');
             alertForgot.hide();
             alertOverride.hide();
-            btn.hide();
+            $('#input-confirm-zero').val('1');
+            btn.show().attr('class', 'btn-modal confirm warning').text('Ya, Tetap Approve (Barang Kosong)');
             modal.modal('show');
             return;
         }

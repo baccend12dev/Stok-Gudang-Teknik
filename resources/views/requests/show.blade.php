@@ -216,13 +216,14 @@
     .kpi .k { font-size: 11px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 7px; }
     .kpi .v { font-size: 18px; font-weight: 950; color: var(--text); }
 
-    .rq-tablewrap { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
-    table.rq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .rq-table thead th { background: #f8fafc; border-bottom: 1px solid var(--line); padding: 11px 12px; font-size: 11px; color: #64748b; font-weight: 950; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; white-space: nowrap; }
+    .rq-tablewrap { border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; background: #fff; }
+    table.rq-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .rq-table thead th { background: #f8fafc; border-bottom: 1px solid var(--line); padding: 8px 10px; font-size: 10.5px; color: #64748b; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; white-space: nowrap; }
     .rq-table thead th.th-center { text-align: center; }
-    .rq-table tbody td { border-bottom: 1px solid #f1f5f9; padding: 12px 12px; vertical-align: middle; color: #0f172a; font-weight: 700; }
+    .rq-table tbody td { border-bottom: 1px solid #f1f5f9; padding: 7px 10px; vertical-align: middle; color: #0f172a; font-weight: 700; line-height: 1.25; }
     .text-center { text-align: center !important; }
     .rq-table tbody tr:last-child td { border-bottom: none; }
+    .rq-table tbody tr:hover { background-color: #f8fafc; }
 
     /* --- LOGIC SCOPE VISUAL --- */
     .row-disabled td { background: #f9fafb; color: #94a3b8 !important; }
@@ -236,16 +237,16 @@
     .row-highlight td { background: #f0fdf4 !important; color: #166534 !important; }
     .row-highlight .codepill { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
 
-    .codepill { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; border: 1px solid #bfdbfe; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 950; }
-    .subtxt { margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: 800; }
-    .numtag { display: inline-flex; min-width: 34px; justify-content: center; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-weight: 950; font-size: 11px; color: #0f172a; }
+    .codepill { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; background: #eff6ff; color: #1d4ed8; font-size: 10.5px; font-weight: 800; font-family: monospace; }
+    .subtxt { margin-top: 0; color: var(--muted); font-size: 10.5px; font-weight: 700; }
+    .numtag { display: inline-flex; min-width: 28px; justify-content: center; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-weight: 800; font-size: 11px; color: #0f172a; }
     .tag-blue { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
     .tag-red { border-color: #fecaca; background: #fff1f2; color: #b91c1c; }
     .tag-amber { border-color: #fde68a; background: #fffbeb; color: #92400e; }
     .tag-green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
     .tag-gray { background: #f1f5f9; color: #64748b; border:none; }
     
-    .stok-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-left: 6px; }
+    .stok-badge { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-top: 2px; display: inline-block; }
     .stok-ok { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
     .stok-low { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
 
@@ -396,6 +397,90 @@
     .btn-modal.confirm.success { background: var(--success); }
     .btn-modal.confirm.danger { background: var(--danger); }
     .btn-modal.confirm.warning { background: #f59e0b; color:white; }
+
+    /* MODAL PREVIEW & BON CARDS STYLING */
+    .modal-dialog-preview {
+        max-width: 720px !important;
+        width: 95% !important;
+        margin: 4% auto !important;
+    }
+    .modal-preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        background: #fff;
+    }
+    .modal-preview-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 800;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+        font-size: 11px;
+        text-transform: uppercase;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    .modal-preview-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        color: #0f172a;
+    }
+    .modal-preview-table tr:last-child td {
+        border-bottom: none;
+    }
+    .bon-card-item {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        transition: all 0.2s;
+    }
+    .bon-card-item:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+    .bon-card-head {
+        background: #f8fafc;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .bon-card-body {
+        padding: 0;
+    }
+    .badge-out-stock {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .badge-approved-stock {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+    }
 
     @media (max-width: 992px) {
         .rq-grid { grid-template-columns: 1fr; }
@@ -626,19 +711,19 @@
                 <table class="rq-table">
                     <thead>
                         <tr>
-                            <th style="width:60px;">No</th>
-                            <th style="width:110px;">Kode</th>
+                            <th style="width:40px;" class="th-center">No</th>
+                            <th style="width:95px;">Kode</th>
                             <th>Nama Item</th>
-                            <th style="width:100px;" class="th-center">Unit</th>
+                            <th style="width:65px;" class="th-center">Unit</th>
                             
                             @if($isProcessor)
-                                <th style="width:100px;" class="th-center">Stok Gudang</th>
+                                <th style="width:85px;" class="th-center">Stok</th>
                             @endif
 
-                            <th style="width:120px;" class="th-center">Qty Req</th>
-                            <th style="width:140px;" class="th-center">Diproses</th>
-                            <th style="width:120px;" class="th-center">Sisa</th>
-                            <th style="width:200px;">Remarks</th>
+                            <th style="width:75px;" class="th-center">Minta</th>
+                            <th style="width:80px;" class="th-center">Diproses</th>
+                            <th style="width:75px;" class="th-center">Sisa</th>
+                            <th style="width:160px;">Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -682,7 +767,7 @@
                                     }
                                 @endphp
                                 <tr class="{{ $rowClass }}">
-                                    <td>{{ $i + 1 }}</td>
+                                    <td class="text-center" style="color:#64748b; font-size:11px; font-weight:700;">{{ $i + 1 }}</td>
                                     <td>
                                         <span class="codepill">{{ $itemCode }}</span>
                                         @if($rowClass == 'row-disabled')
@@ -690,21 +775,53 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div style="font-weight:950;">{{ $itemName }}</div>
-                                        @if(isset($d->item) && isset($d->item->category) && isset($d->item->category->name))
-                                            <div class="subtxt">Kategori: {{ $d->item->category->name }}</div>
-                                        @endif
+                                        <div style="font-weight:800; font-size:12.5px; line-height:1.25; color:#0f172a;" title="{{ $itemName }}">{{ $itemName }}</div>
+                                        
+                                        @php
+                                            $matchedBonDetail = null;
+                                            $matchedBonStatus = null;
+                                            if(isset($relatedBons) && count($relatedBons) > 0) {
+                                                foreach($relatedBons as $b) {
+                                                    $f = $b->details->where('item_id', $d->item_id)->first();
+                                                    if($f) {
+                                                        $matchedBonDetail = $f;
+                                                        $matchedBonStatus = strtoupper($b->status);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        @endphp
+                                        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:2px;">
+                                            @if(isset($d->item) && isset($d->item->category) && isset($d->item->category->name))
+                                                <span class="subtxt" style="background:#f1f5f9; color:#475569; padding:1px 5px; border-radius:3px; font-size:10px; font-weight:700;">
+                                                    {{ $d->item->category->name }}
+                                                </span>
+                                            @endif
+
+                                            @if($matchedBonDetail)
+                                                @if($matchedBonStatus !== 'PENDING' && (float)$matchedBonDetail->approved_quantity <= 0)
+                                                    <span class="badge-out-stock" style="font-size:9.5px; padding:1px 6px;">
+                                                        <i class="fa fa-times-circle"></i> Stok Kosong di Gudang
+                                                    </span>
+                                                @elseif($matchedBonStatus === 'APPROVED' && (float)$matchedBonDetail->approved_quantity > 0)
+                                                    <span class="badge-approved-stock" style="font-size:9.5px; padding:1px 6px;">
+                                                        <i class="fa fa-check"></i> BON: {{ (float)$matchedBonDetail->approved_quantity }} {{ $unit }}
+                                                    </span>
+                                                @elseif($matchedBonStatus === 'PENDING')
+                                                    <span style="font-size:9.5px; color:#d97706; font-weight:700; background:#fef3c7; padding:1px 6px; border-radius:3px; display:inline-flex; align-items:center; gap:3px;">
+                                                        <i class="fa fa-clock-o"></i> Proses Gudang
+                                                    </span>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="text-center">{{ $unit }}</td>
+                                    <td class="text-center" style="font-size:11px; color:#64748b; font-weight:700;">{{ $unit }}</td>
 
                                     @if($isProcessor)
                                         <td class="text-center">
-                                            {{-- FIX: Float Display --}}
-                                            <span class="numtag tag-gray" style="font-weight:bold;">{{ (float)$currentStock }}</span>
-                                            
-                                            {{-- FIX: Tampilkan label stok hanya di row aktif & status OPEN/APPROVED --}}
-                                            @if(in_array($status, ['OPEN', 'APPROVED']) && $rowClass !== 'row-disabled') 
-                                                <div class="stok-badge {{ $stockClass }}">{{ $stockLabel }}</div>
+                                            <span class="numtag tag-gray" style="font-weight:800;">{{ (float)$currentStock }}</span>
+                                            @if(in_array($status, ['OPEN', 'APPROVED', 'PENDING_APPROVAL']) && $rowClass !== 'row-disabled') 
+                                                <div><span class="stok-badge {{ $stockClass }}">{{ $stockLabel }}</span></div>
                                             @endif
                                         </td>
                                     @endif
@@ -712,7 +829,7 @@
                                     <td class="text-center"><span class="numtag tag-blue">{{ (float)$qtyReq }}</span></td>
                                     <td class="text-center"><span class="numtag tag-red">{{ (float)$doneFinal }}</span></td>
                                     <td class="text-center"><span class="numtag {{ $remainClass }}">{{ (float)$remain }}</span></td>
-                                    <td>{{ $remarks }}</td>
+                                    <td style="font-size:11.5px; color:#475569; line-height:1.2; word-break:break-word;">{{ $remarks }}</td>
                                 </tr>
                             @endforeach
                         @else
@@ -726,45 +843,155 @@
                 </table>
             </div>
             
-            <div class="rq-divider"></div>
-            
-            {{-- FIX: TAMPILKAN BON TERKAIT UNTUK USER JUGA (TAPI VIEW ONLY) --}}
+            {{-- RINCIAN BON TERKAIT BESERTA LIST ITEM LENGKAP --}}
             @if(isset($relatedBons) && count($relatedBons) > 0)
-                <div class="rq-note" style="margin-bottom:10px;">BON terkait:</div>
-                <div class="rq-tablewrap">
-                    <table class="rq-table">
-                        <thead>
-                            <tr>
-                                <th style="width:70px;">No</th>
-                                <th>No BON</th>
-                                <th style="width:140px;">Tanggal</th>
-                                <th style="width:120px;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($relatedBons as $bi => $bon)
-                                <tr>
-                                    <td>{{ $bi + 1 }}</td>
-                                    <td>
-                                        @if($role !== 'USER')
-                                            {{-- ADMIN: BISA KLIK --}}
-                                            <a href="{{ route('bons.show', $bon->id) }}" style="color:#2563eb; font-weight:900; text-decoration:none;">
-                                                {{ $bon->bon_number }}
-                                            </a>
-                                        @else
-                                            {{-- USER: VIEW ONLY (TEXT) SUPAYA GAK AMNESIA --}}
-                                            <span style="color:#0f172a; font-weight:900;">
-                                                {{ $bon->bon_number }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td>{{ date('d/m/Y', strtotime($bon->date)) }}</td>
-                                    <td>{{ strtoupper($bon->status) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="rq-divider"></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; margin-top:20px;">
+                    <div class="ttl" style="font-size:14px; font-weight:900; color:var(--text); display:flex; align-items:center; gap:8px;">
+                        <i class="fa fa-cubes" style="color:var(--primary);"></i>
+                        <span>Rincian BON Terkait & Status Persetujuan Barang</span>
+                    </div>
+                    <span style="font-size:12px; color:var(--muted); font-weight:700;">
+                        {{ count($relatedBons) }} Dokumen BON
+                    </span>
                 </div>
+
+                @foreach($relatedBons as $bi => $bon)
+                    @php
+                        $bonStatus = strtoupper($bon->status);
+                        $bonStatusClass = 'st-open';
+                        if ($bonStatus === 'PENDING') $bonStatusClass = 'st-pending';
+                        elseif ($bonStatus === 'APPROVED') $bonStatusClass = 'st-approved';
+                        elseif ($bonStatus === 'ISSUED') $bonStatusClass = 'st-closed';
+                        elseif ($bonStatus === 'REJECTED') $bonStatusClass = 'st-rejected';
+                        elseif ($bonStatus === 'CANCELLED') $bonStatusClass = 'st-canceled';
+
+                        $bonTotalReq = $bon->details->sum('quantity');
+                        $bonTotalAppr = $bon->details->sum('approved_quantity');
+                        $bonTotalIssued = $bon->details->sum('issued_quantity');
+                        
+                        $countBonEmpty = 0;
+                        if ($bonStatus !== 'PENDING') {
+                            foreach($bon->details as $bd) {
+                                if ((float)$bd->approved_quantity <= 0) $countBonEmpty++;
+                            }
+                        }
+                    @endphp
+                    <div class="bon-card-item">
+                        <div class="bon-card-head">
+                            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                                <span style="font-weight:900; font-size:14px; color:#0f172a;">
+                                    #{{ $bi + 1 }}
+                                    @if($role !== 'USER')
+                                        <a href="{{ route('bons.show', $bon->id) }}" style="color:#2563eb; text-decoration:none; margin-left:4px;" title="Buka Detail BON">
+                                            {{ $bon->bon_number }} <i class="fa fa-external-link" style="font-size:11px;"></i>
+                                        </a>
+                                    @else
+                                        <span style="color:#2563eb; margin-left:4px;">{{ $bon->bon_number }}</span>
+                                    @endif
+                                </span>
+                                <span style="font-size:12px; color:#64748b;">
+                                    <i class="fa fa-calendar"></i> {{ date('d M Y', strtotime($bon->date)) }}
+                                </span>
+                                <div class="pill {{ $bonStatusClass }}" style="padding:4px 10px; font-size:11px;">
+                                    <span class="dot"></span>
+                                    <span>
+                                        @if($bonStatus === 'PENDING') Menunggu Persetujuan Gudang
+                                        @elseif($bonStatus === 'APPROVED') Disetujui Gudang
+                                        @elseif($bonStatus === 'ISSUED') Selesai (Issued)
+                                        @else {{ $bonStatus }}
+                                        @endif
+                                    </span>
+                                </div>
+                                @if($countBonEmpty > 0)
+                                    <span style="font-size:11px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; padding:2px 8px; border-radius:4px; font-weight:800;">
+                                        <i class="fa fa-times-circle"></i> {{ $countBonEmpty }} Item Stok Kosong
+                                    </span>
+                                @endif
+                            </div>
+                            <div>
+                                <span style="font-size:12px; color:#475569; font-weight:700;">
+                                    Total Disetujui: <strong style="color:var(--primary); font-size:13px;">{{ (float)$bonTotalAppr }}</strong> / {{ (float)$bonTotalReq }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="bon-card-body">
+                            <div class="rq-tablewrap" style="border:none; border-radius:0;">
+                                <table class="rq-table">
+                                    <thead>
+                                        <tr style="background:#fcfdfe;">
+                                            <th style="width:40px;">No</th>
+                                            <th style="width:110px;">Kode</th>
+                                            <th>Nama Barang</th>
+                                            <th style="width:80px;" class="th-center">Satuan</th>
+                                            <th style="width:100px;" class="th-center">Minta</th>
+                                            <th style="width:160px;" class="th-center">Disetujui</th>
+                                            @if($bonStatus === 'ISSUED')
+                                                <th style="width:110px;" class="th-center">Dikeluarkan</th>
+                                            @endif
+                                            <th>Status Barang</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($bon->details as $bidx => $bdtl)
+                                            @php
+                                                $bItem = $bdtl->item;
+                                                $bQtyReq = (float)$bdtl->quantity;
+                                                $bQtyAppr = (float)$bdtl->approved_quantity;
+                                                $bQtyIssued = (float)$bdtl->issued_quantity;
+                                                $bIsZero = ($bonStatus !== 'PENDING' && $bQtyAppr <= 0);
+                                                $bIsPartial = ($bonStatus !== 'PENDING' && $bQtyAppr > 0 && $bQtyAppr < $bQtyReq);
+                                            @endphp
+                                            <tr style="{{ $bIsZero ? 'background-color:#fff5f5;' : '' }}">
+                                                <td>{{ $bidx + 1 }}</td>
+                                                <td><span class="codepill" style="{{ $bIsZero ? 'border-color:#fecaca; background:#fff1f2; color:#b91c1c;' : '' }}">{{ $bItem ? $bItem->code : '-' }}</span></td>
+                                                <td>
+                                                    <div style="font-weight:900; {{ $bIsZero ? 'color:#64748b; text-decoration:line-through;' : '' }}">
+                                                        {{ $bItem ? $bItem->name : 'Item #'.$bdtl->item_id }}
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">{{ $bItem ? $bItem->unit : '-' }}</td>
+                                                <td class="text-center"><span class="numtag tag-blue">{{ $bQtyReq }}</span></td>
+                                                <td class="text-center">
+                                                    @if($bonStatus === 'PENDING')
+                                                        <span style="color:#d97706; font-size:11px; font-weight:700;"><i class="fa fa-clock-o"></i> Menunggu Gudang</span>
+                                                    @elseif($bIsZero)
+                                                        <span class="badge-out-stock"><i class="fa fa-times-circle"></i> 0 (Tidak Ada)</span>
+                                                    @else
+                                                        <span class="numtag tag-green" style="font-size:12px; font-weight:900;">{{ $bQtyAppr }}</span>
+                                                    @endif
+                                                </td>
+                                                @if($bonStatus === 'ISSUED')
+                                                    <td class="text-center">
+                                                        @if($bQtyIssued > 0)
+                                                            <span class="numtag tag-green" style="font-weight:900;">{{ $bQtyIssued }}</span>
+                                                        @else
+                                                            <span style="color:#94a3b8; font-weight:700;">-</span>
+                                                        @endif
+                                                    </td>
+                                                @endif
+                                                <td>
+                                                    @if($bonStatus === 'PENDING')
+                                                        <span style="font-size:11px; color:#64748b; font-style:italic;">Menunggu keputusan gudang</span>
+                                                    @elseif($bIsZero)
+                                                        <span class="badge-out-stock"><i class="fa fa-times-circle"></i> Stok Kosong / Tidak Ada</span>
+                                                    @elseif($bIsPartial)
+                                                        <span style="display:inline-flex; align-items:center; gap:4px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;">
+                                                            <i class="fa fa-adjust"></i> Disetujui Sebagian ({{ $bQtyAppr }}/{{ $bQtyReq }})
+                                                        </span>
+                                                    @else
+                                                        <span class="badge-approved-stock"><i class="fa fa-check-circle"></i> Disetujui Penuh</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             @endif
         </div>
     </div>
@@ -781,12 +1008,82 @@
 @endif
 
 <div class="modal fade" id="modalGeneric" tabindex="-1" role="dialog" style="z-index: 10000;">
-    <div class="modal-dialog modal-sm" role="document" style="margin-top: 10%;">
+    <div class="modal-dialog modal-sm" id="gen-modal-dialog" role="document" style="margin-top: 10%;">
         <div class="modal-content modal-clean">
             <div class="modal-head-clean" id="gen-icon-wrapper"></div>
             <div class="modal-body-clean">
                 <h3 class="modal-title-clean" id="gen-title"></h3>
                 <p class="modal-desc-clean" id="gen-desc"></p>
+
+                {{-- PREVIEW LIST ITEM UNTUK TAHAP APPROVE --}}
+                <div id="gen-preview-items" style="display:none; margin-top:16px; text-align:left;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; font-weight:800; color:#334155;">
+                            <i class="fa fa-cubes text-primary" style="margin-right:6px;"></i> Rincian Barang yang Diminta
+                        </span>
+                        <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:800; font-size:11px; padding:4px 8px; border-radius:6px;">
+                            {{ count($details) }} Item
+                        </span>
+                    </div>
+                    <div style="max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <table class="modal-preview-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px; text-align:center;">No</th>
+                                    <th>Kode & Nama Barang</th>
+                                    <th style="width:110px; text-align:center;">Qty Minta</th>
+                                    @if($isProcessor)
+                                        <th style="width:100px; text-align:center;">Stok Gudang</th>
+                                    @endif
+                                    <th style="width:140px;">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($details as $idx => $det)
+                                    @php
+                                        $detCode = (isset($det->item) && isset($det->item->code)) ? $det->item->code : '-';
+                                        $detName = (isset($det->item) && isset($det->item->name)) ? $det->item->name : 'Item #'.$det->item_id;
+                                        $detUnit = (isset($det->item) && isset($det->item->unit)) ? $det->item->unit : 'PCS';
+                                        $detQty  = (float)$det->qty;
+                                        $detStock = (isset($det->item) && isset($det->item->stock)) ? (float)$det->item->stock : 0;
+                                        $detRemarks = (isset($det->remarks) && $det->remarks !== null && $det->remarks !== '') ? $det->remarks : '-';
+                                        $stockBadgeClass = ($detStock >= $detQty) ? 'color:#16a34a; background:#dcfce7;' : (($detStock > 0) ? 'color:#d97706; background:#fef3c7;' : 'color:#dc2626; background:#fee2e2;');
+                                        $stockBadgeText = ($detStock >= $detQty) ? 'Cukup' : (($detStock > 0) ? 'Kurang' : 'Kosong');
+                                    @endphp
+                                    <tr>
+                                        <td style="text-align:center; color:#64748b; font-weight:700;">{{ $idx + 1 }}</td>
+                                        <td>
+                                            <div style="font-weight:800; color:#0f172a; line-height:1.2;">{{ $detName }}</div>
+                                            <span class="codepill" style="font-size:10px; padding:2px 6px; margin-top:3px; display:inline-block;">{{ $detCode }}</span>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <span class="numtag tag-blue" style="font-size:11px; font-weight:800;">
+                                                {{ $detQty }} {{ $detUnit }}
+                                            </span>
+                                        </td>
+                                        @if($isProcessor)
+                                            <td style="text-align:center;">
+                                                <div style="font-weight:800; font-size:11px; color:#334155;">{{ $detStock }}</div>
+                                                <span style="font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px; display:inline-block; {{ $stockBadgeClass }}">
+                                                    {{ $stockBadgeText }}
+                                                </span>
+                                            </td>
+                                        @endif
+                                        <td style="font-size:11px; color:#475569; word-break:break-word;">
+                                            {{ $detRemarks }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ $isProcessor ? 5 : 4 }}" style="text-align:center; padding:16px; color:#94a3b8;">
+                                            Tidak ada detail item pada request ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="modal-foot-clean">
                 <button type="button" class="btn-modal" data-dismiss="modal">Batal</button>
@@ -817,13 +1114,25 @@
 
     function openModal(type) {
         var modal = $('#modalGeneric');
+        var dialog = $('#gen-modal-dialog');
+        var preview = $('#gen-preview-items');
         var iconClass = '', iconContent = '', title = '', desc = '', btnClass = '', submitId = '';
+
+        var isApproveStep = (type === 'modalApproverApprove' || type === 'modalApprove');
+
+        if (isApproveStep) {
+            dialog.removeClass('modal-sm').addClass('modal-dialog-preview').css('margin-top', '');
+            preview.show();
+        } else {
+            dialog.removeClass('modal-dialog-preview').addClass('modal-sm').css('margin-top', '10%');
+            preview.hide();
+        }
 
         if (type === 'modalApprove') {
             iconClass = 'success';
             iconContent = '<i class="fa fa-check text-success" style="font-size:24px;"></i>';
             title = 'Approve Request?';
-            desc = 'Status request akan berubah menjadi APPROVED. Silakan buat BON untuk memproses barang.';
+            desc = 'Periksa rincian item di bawah. Status request akan disetujui (APPROVED) dan siap dibuatkan BON.';
             btnClass = 'btn-modal confirm success';
             submitId = '#form-approve';
         } else if (type === 'modalReject') {
@@ -858,7 +1167,7 @@
             iconClass = 'success';
             iconContent = '<i class="fa fa-check-circle text-success" style="font-size:24px;"></i>';
             title = 'Setujui Request Ini?';
-            desc = 'Anda menyetujui permintaan ini sebagai atasan. Request akan diteruskan ke Admin untuk diproses.';
+            desc = 'Periksa rincian item di bawah sebelum menyetujui. Permintaan akan diteruskan ke Admin Gudang untuk diproses.';
             btnClass = 'btn-modal confirm success';
             submitId = '#form-approver-approve';
         } else if (type === 'modalApproverReject') {

@@ -695,7 +695,11 @@ class RequestController extends Controller
         $mineRemain  = max(0, $mineTotalQty - $mineDoneQty - $mineReservedQty);
         $otherRemain = max(0, $otherTotalQty - $otherDoneQty - $otherReservedQty);
 
-        $relatedBons = BonHeader::where('notes', 'ILIKE', '%From Req: ' . $hdr->request_number . '%')
+        $relatedBons = BonHeader::with(['details.item'])
+            ->where(function($q) use ($hdr) {
+                $q->where('request_id', (int) $hdr->id)
+                  ->orWhere('notes', 'ILIKE', '%From Req: ' . $hdr->request_number . '%');
+            })
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->get();

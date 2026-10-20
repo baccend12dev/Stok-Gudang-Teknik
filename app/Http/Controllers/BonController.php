@@ -402,7 +402,7 @@ class BonController extends Controller
     public function show($id)
     {
         // 1. Ambil Data Utama
-        $bon = BonHeader::with(['details.item', 'department', 'user', 'requestReference.approver', 'requestReference.details'])->findOrFail($id);
+        $bon = BonHeader::with(['details.item', 'department', 'user', 'requestReference.user', 'requestReference.approver', 'requestReference.details'])->findOrFail($id);
 
         // 2. LOGIC BARU: ANALISA JATAH (COMPREHENSIVE FIX!)
         $quotaAnalysis = [];
@@ -826,9 +826,9 @@ class BonController extends Controller
                 $processedCount++;
             }
 
-            // === VALIDASI FINAL: Minimal ada 1 item yang qty > 0 ===
-            if ($processedCount === 0) {
-                throw new \Exception("Tidak ada item yang disetujui dengan qty > 0. BON tidak dapat di-approve.");
+            // === VALIDASI FINAL: Pastikan setidaknya ada item yang diproses ===
+            if ($processedCount === 0 && $zeroCount === 0) {
+                throw new \Exception("Tidak ada data item yang diproses pada BON ini.");
             }
 
             // === UPDATE STATUS BON ===
@@ -844,11 +844,12 @@ class BonController extends Controller
             DB::commit();
             
             // === SUCCESS MESSAGE (Clean & Informative) ===
-            $msg = 'BON berhasil disetujui.';
-            if ($zeroCount > 0) {
-                $msg .= " ({$processedCount} item diproses, {$zeroCount} item qty = 0)";
+            if ($processedCount === 0 && $zeroCount > 0) {
+                $msg = "BON berhasil disetujui (Seluruh {$zeroCount} item berstatus Stok Kosong / Tidak Tersedia).";
+            } elseif ($zeroCount > 0) {
+                $msg = "BON berhasil disetujui. ({$processedCount} item disetujui, {$zeroCount} item stok kosong).";
             } else {
-                $msg .= " Semua item valid dan stok mencukupi.";
+                $msg = "BON berhasil disetujui. Semua item valid dan stok mencukupi.";
             }
             
             return redirect()->route('bons.show', $bon->id)->with('success', $msg);
@@ -924,8 +925,18 @@ class BonController extends Controller
 
             DB::commit();
 
-            return redirect()->route('bons.show', $bon->id)
-                ->with('success', 'Barang berhasil dikeluarkan (Issued). Stok telah terpotong sesuai jumlah disetujui.');
+            $hasIssued = false;
+            foreach ($bon->details as $d) {
+                if ((float)$d->issued_quantity > 0) {
+                    $hasIssued = true;
+                    break;
+                }
+            }
+            $msg = $hasIssued
+                ? 'Barang berhasil dikeluarkan (Issued). Stok telah terpotong sesuai jumlah disetujui.'
+                : 'BON telah diselesaikan (Issued). Tidak ada stok yang dipotong karena seluruh item bersaldo 0 (Stok Kosong).';
+
+            return redirect()->route('bons.show', $bon->id)->with('success', $msg);
 
         } catch (\Exception $e) {
             DB::rollBack();
