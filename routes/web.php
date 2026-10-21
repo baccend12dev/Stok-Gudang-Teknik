@@ -15,6 +15,13 @@ Route::get('/', function () {
 Route::get('/login', 'AuthController@showLoginForm')->name('login');
 Route::post('/login', 'AuthController@login')->name('login.post');
 
+// ============================================================
+// HALAMAN KHUSUS APPROVAL ATASAN (PUBLIC ACCESS VIA TOKEN)
+// ============================================================
+Route::get('/approval/review/{token}', 'RequestController@publicApprovalShow')->name('approvals.public.show');
+Route::post('/approval/review/{token}/approve', 'RequestController@publicApprovalApprove')->name('approvals.public.approve');
+Route::post('/approval/review/{token}/reject', 'RequestController@publicApprovalReject')->name('approvals.public.reject');
+
 Route::group(['middleware' => 'auth'], function () {
     // Dashboard
     Route::get('/dashboard', 'DashboardController@index')->name('dashboard');

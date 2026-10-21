@@ -17,7 +17,11 @@ class RequestController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth', ['except' => [
+            'publicApprovalShow',
+            'publicApprovalApprove',
+            'publicApprovalReject'
+        ]]);
     }
 
     // ============================================================
@@ -285,6 +289,7 @@ class RequestController extends Controller
             $hdr->user_id = $targetUserId;
             $hdr->notes = $request->notes; 
             $hdr->status = 'PENDING_APPROVAL';
+            $hdr->approval_token = bin2hex(openssl_random_pseudo_bytes(32));
             $hdr->save();
 
             // Simpan Details
@@ -307,6 +312,10 @@ class RequestController extends Controller
             try {
                 $approver = \App\User::find($hdr->approver_id);
                 if ($approver && !empty($approver->email)) {
+                    if (empty($hdr->approval_token)) {
+                        $hdr->approval_token = bin2hex(openssl_random_pseudo_bytes(32));
+                        $hdr->save();
+                    }
                     $hdr->load(['details.item', 'department', 'user']);
                     \Illuminate\Support\Facades\Mail::send(
                         'emails.approval_request',
@@ -392,6 +401,9 @@ class RequestController extends Controller
             $hdr->division_name = $request->division_name;
             $hdr->approver_id = $request->approval;
             $hdr->notes = $request->notes; // Update catatan dari input
+            if (empty($hdr->approval_token)) {
+                $hdr->approval_token = bin2hex(openssl_random_pseudo_bytes(32));
+            }
             $hdr->save();
 
             // Reset Details
@@ -807,6 +819,106 @@ class RequestController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menolak request: ' . $e->getMessage());
+        }
+    }
+
+    // ============================================================
+    // 5a.1) HALAMAN KHUSUS APPROVAL ATASAN (PUBLIC ACCESS VIA TOKEN)
+    // ============================================================
+    public function publicApprovalShow($token)
+    {
+        $hdr = RequestHeader::with(['details.item.category', 'department', 'user', 'approver'])
+            ->where('approval_token', $token)
+            ->first();
+
+        if (!$hdr) {
+            abort(404, 'Tautan persetujuan tidak ditemukan atau sudah tidak valid.');
+        }
+
+        return view('approvals.public_show', compact('hdr', 'token'));
+    }
+
+    public function publicApprovalApprove(Request $request, $token)
+    {
+        DB::beginTransaction();
+        try {
+            $hdr = RequestHeader::with('details')->where('approval_token', $token)->firstOrFail();
+
+            if ($hdr->status !== 'PENDING_APPROVAL') {
+                return redirect()->route('approvals.public.show', $token)
+                    ->with('error', 'Permintaan ini sudah diproses sebelumnya (Status: ' . $hdr->status . ').');
+            }
+
+            // 1. Update status request
+            $hdr->status = 'PENDING';
+            $hdr->approved_by_approver_at = Carbon::now();
+            $hdr->save();
+
+            // 2. Buat BonHeader otomatis (Single BON untuk seluruh item)
+            $bon = new BonHeader();
+            $bon->bon_number    = $this->generateBonNumber(Carbon::now());
+            $bon->date          = Carbon::now()->format('Y-m-d');
+            $bon->department_id = $hdr->department_id;
+            $bon->division_name = $hdr->division_name;
+            $bon->request_id    = $hdr->id;
+            $bon->notes         = 'From Req: ' . $hdr->request_number;
+            $bon->status        = 'PENDING';
+            $bon->save();
+
+            // 3. Salin semua detail ke BonDetail
+            foreach ($hdr->details as $d) {
+                $bd = new BonDetail();
+                $bd->bon_header_id     = $bon->id;
+                $bd->item_id           = (int) $d->item_id;
+                $bd->quantity          = (float) $d->quantity;
+                $bd->approved_quantity = 0; // Diisi Admin Gudang
+                $bd->issued_quantity   = 0;
+                $bd->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('approvals.public.show', $token)
+                ->with('success', 'Permintaan #' . $hdr->request_number . ' BERHASIL DISETUJUI! Dokumen BON ' . $bon->bon_number . ' telah otomatis diterbitkan untuk diproses Admin Gudang.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('approvals.public.show', $token)
+                ->with('error', 'Gagal menyetujui request: ' . $e->getMessage());
+        }
+    }
+
+    public function publicApprovalReject(Request $request, $token)
+    {
+        DB::beginTransaction();
+        try {
+            $hdr = RequestHeader::with('approver')->where('approval_token', $token)->firstOrFail();
+
+            if ($hdr->status !== 'PENDING_APPROVAL') {
+                return redirect()->route('approvals.public.show', $token)
+                    ->with('error', 'Permintaan ini sudah diproses sebelumnya (Status: ' . $hdr->status . ').');
+            }
+
+            $reason = trim($request->input('reason'));
+            $approverName = $hdr->approver ? $hdr->approver->name : 'Atasan';
+
+            $hdr->status = 'REJECTED';
+            $noteAppend = 'Ditolak oleh atasan: ' . $approverName;
+            if (!empty($reason)) {
+                $noteAppend .= ' (Alasan: ' . $reason . ')';
+            }
+            $hdr->notes = ($hdr->notes ? $hdr->notes . ' | ' : '') . $noteAppend;
+            $hdr->save();
+
+            DB::commit();
+
+            return redirect()->route('approvals.public.show', $token)
+                ->with('success', 'Permintaan #' . $hdr->request_number . ' TELAH DITOLAK.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('approvals.public.show', $token)
+                ->with('error', 'Gagal menolak request: ' . $e->getMessage());
         }
     }
 

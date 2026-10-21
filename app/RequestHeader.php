@@ -19,6 +19,7 @@ class RequestHeader extends Model
         'bon_header_id',
         'approver_id',
         'approved_by_approver_at',
+        'approval_token',
     );
 
     protected $dates = array('date', 'approved_by_approver_at', 'created_at', 'updated_at');

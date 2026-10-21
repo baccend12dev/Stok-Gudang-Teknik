@@ -145,12 +145,17 @@
                 </tbody>
             </table>
 
+            @php
+                $reviewUrl = !empty($hdr->approval_token) 
+                    ? route('approvals.public.show', $hdr->approval_token) 
+                    : route('requests.show', $hdr->id);
+            @endphp
             <div class="btn-container">
-                <a href="{{ route('requests.show', $hdr->id) }}" class="btn" target="_blank">Tinjau & Disetujui / Tolak</a>
+                <a href="{{ $reviewUrl }}" class="btn" target="_blank">Tinjau & Disetujui / Tolak</a>
             </div>
             <p style="font-size: 12px; color: #64748b; text-align: center;">
                 Jika tombol di atas tidak berfungsi, salin dan buka tautan berikut di browser Anda:<br>
-                <a href="{{ route('requests.show', $hdr->id) }}">{{ route('requests.show', $hdr->id) }}</a>
+                <a href="{{ $reviewUrl }}">{{ $reviewUrl }}</a>
             </p>
         </div>
         <div class="footer">
