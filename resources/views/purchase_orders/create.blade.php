@@ -18,6 +18,7 @@
 
 @section('content')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -486,47 +487,35 @@
                     <div class="header-icon-wrapper-small" style="background: rgba(16, 185, 129, 0.1); color: var(--success);"><i class="fa fa-cubes"></i></div>
                     <h3 class="card-title">Detail Barang Pesanan</h3>
                 </div>
-                <button type="button" class="btn-add-row" id="btn-add-row">
-                    <i class="fa fa-plus"></i> Tambah Baris
-                </button>
             </div>
             
-            <div class="card-body" style="padding:0;">
-                <div style="padding: 12px;">
-                    <div class="table-container">
-                        <table class="table" id="items-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px; text-align: center;">No</th>
-                                    <th style="min-width: 320px;">Nama Barang</th>
-                                    <th style="width: 120px; text-align: center;">Satuan</th>
-                                    <th style="width: 180px; text-align: center;">Kuantitas Pesan</th>
-                                    <th style="width: 250px;">Catatan Item (Opsional)</th>
-                                    <th style="width: 80px; text-align: center;">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $oldItems = old('items');
-                                    if (!is_array($oldItems) || count($oldItems) == 0) {
-                                        if (isset($selectedItems) && count($selectedItems) > 0) {
-                                            $oldItems = [];
-                                            foreach($selectedItems as $item) {
-                                                $oldItems[] = [
-                                                    'item_id' => $item->id,
-                                                    'unit' => $item->unit,
-                                                    'quantity' => $item->suggested_qty ?: 1.0,
-                                                    'notes' => ''
-                                                ];
-                                            }
-                                        } else {
-                                            $oldItems = [[], [], []]; 
-                                        }
-                                    }
-                                @endphp
+            <div class="card-body">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; font-size: 13px; color: var(--text-dark); margin-bottom: 8px; display: block;">Cari & Tambah Barang</label>
+                    <select id="itemPicker" class="form-control" style="width: 100%;"></select>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 5px;">Pilih barang langsung dari daftar, atau ketik nama/kode barang untuk memfilter hasil.</div>
+                </div>
 
-                                @foreach($oldItems as $idx => $row)
+                <div class="table-container">
+                    <table class="table" id="items-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px; text-align: center;">No</th>
+                                <th style="min-width: 320px;">Nama Barang</th>
+                                <th style="width: 120px; text-align: center;">Satuan</th>
+                                <th style="width: 180px; text-align: center;">Kuantitas Pesan</th>
+                                <th style="width: 250px;">Catatan Item (Opsional)</th>
+                                <th style="width: 80px; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $rowIdx = 0;
+                            @endphp
+                            @if(old('items'))
+                                @foreach(old('items') as $idx => $row)
                                     @php
+                                        $rowIdx++;
                                         $oldItemId = isset($row['item_id']) ? $row['item_id'] : '';
                                         $oldUnit   = isset($row['unit']) ? $row['unit'] : '';
                                         $oldQty    = isset($row['quantity']) ? $row['quantity'] : '';
@@ -534,22 +523,15 @@
                                     @endphp
                                     <tr>
                                         <td style="text-align: center;">
-                                            <div class="row-number">{{ $idx + 1 }}</div>
+                                            <div class="row-number">{{ $rowIdx }}</div>
                                         </td>
                                         <td>
-                                            <select name="items[{{ $idx }}][item_id]" class="form-control item-select">
-                                                <option value="">-- Cari Barang --</option>
-                                                @foreach($allItems as $item)
-                                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}"
-                                                        {{ $oldItemId == $item->id ? 'selected' : '' }}>
-                                                        [{{ $item->code }}] {{ $item->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                            <input type="hidden" name="items[{{ $idx }}][item_id]" value="{{ $oldItemId }}">
+                                            <div class="item-name-cell" style="font-weight: 600; color: #334155;">Memuat data...</div>
                                         </td>
                                         <td>
                                             <input type="text" name="items[{{ $idx }}][unit]"
-                                                   class="form-control unit-input"
+                                                   class="form-control unit-input item-unit-cell"
                                                    value="{{ $oldUnit }}" readonly tabindex="-1"
                                                    placeholder="Auto" style="text-align: center;">
                                         </td>
@@ -572,19 +554,64 @@
                                         </td>
                                     </tr>
                                 @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            @elseif(isset($selectedItems) && count($selectedItems) > 0)
+                                @foreach($selectedItems as $idx => $item)
+                                    @php
+                                        $rowIdx++;
+                                        $displayCode = $item->harmoni_code ? $item->harmoni_code : $item->code;
+                                    @endphp
+                                    <tr>
+                                        <td style="text-align: center;">
+                                            <div class="row-number">{{ $rowIdx }}</div>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="items[{{ $idx }}][item_id]" value="{{ $item->id }}">
+                                            <div style="font-weight: 600; color: #334155;">[{{ $displayCode }}] {{ $item->name }}</div>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="items[{{ $idx }}][unit]"
+                                                   class="form-control unit-input"
+                                                   value="{{ $item->unit }}" readonly tabindex="-1"
+                                                   placeholder="Auto" style="text-align: center;">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[{{ $idx }}][quantity]"
+                                                   class="form-control qty-input"
+                                                   min="0.01" step="0.01" placeholder="0"
+                                                   value="{{ $item->suggested_qty ?: 1.0 }}" style="text-align: center;" required>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="items[{{ $idx }}][notes]"
+                                                   class="form-control"
+                                                   placeholder="Catatan ukuran, merk, dll..."
+                                                   value="">
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @endif
+                        </tbody>
+                    </table>
                 </div>
 
-                <div style="background: #f8fafc; padding: 10px 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; gap:12px;">
-                    <button type="submit" name="action" value="draft" class="btn-draft">
-                        <i class="fa fa-save"></i> <span>Simpan sebagai Draft</span>
-                    </button>
-                    <button type="submit" name="action" value="ordered" class="btn-submit">
-                        <i class="fa fa-send"></i> <span>Simpan & Pesan</span>
-                    </button>
+                <div id="empty-row-msg" style="text-align: center; padding: 35px 20px; color: #94a3b8; {{ (old('items') || (isset($selectedItems) && count($selectedItems) > 0)) ? 'display:none;' : '' }}">
+                    <i class="fa fa-shopping-basket" style="font-size: 28px; margin-bottom: 10px; color: #cbd5e1; display: block;"></i>
+                    <div style="font-size: 14px; font-weight: 600; color: #64748b;">Belum ada barang yang dipilih.</div>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Gunakan kotak <strong>Cari & Tambah Barang</strong> di atas untuk menambahkan barang ke Purchase Order.</div>
                 </div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; gap:12px;">
+                <button type="submit" name="action" value="draft" class="btn-draft">
+                    <i class="fa fa-save"></i> <span>Simpan sebagai Draft</span>
+                </button>
+                <button type="submit" name="action" value="ordered" class="btn-submit">
+                    <i class="fa fa-send"></i> <span>Simpan & Pesan</span>
+                </button>
             </div>
         </div>
 
@@ -592,7 +619,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
@@ -600,26 +627,69 @@
     (function($) {
         'use strict';
 
-        function initSelect2($element) {
-            $element.select2({
-                placeholder: "-- Cari Barang --",
-                allowClear: true,
-                width: '100%'
-            });
-        }
+        var rowIdx = {{ old('items') ? count(old('items')) : (isset($selectedItems) ? count($selectedItems) : 0) }};
 
         function renumberRows() {
             $('#items-table tbody tr').each(function(index) {
                 $(this).find('.row-number').text(index + 1);
                 
-                $(this).find('select, input').each(function() {
-                    let name = $(this).attr('name');
+                $(this).find('input').each(function() {
+                    var name = $(this).attr('name');
                     if (name) {
-                        let newName = name.replace(/items\[\d+\]/, 'items[' + index + ']');
+                        var newName = name.replace(/items\[\d+\]/, 'items[' + index + ']');
                         $(this).attr('name', newName);
                     }
                 });
             });
+        }
+
+        function addItemToTable(item) {
+            if (!item || !item.id) return;
+            var tbody = $('#items-table tbody');
+
+            // Cek duplikasi
+            var exists = false;
+            tbody.find('input[type="hidden"][name$="[item_id]"]').each(function() {
+                if ($(this).val() == item.id) {
+                    exists = true;
+                    return false;
+                }
+            });
+
+            if (exists) {
+                alert('Barang ini sudah ada di dalam tabel.');
+                return;
+            }
+
+            $('#empty-row-msg').hide();
+
+            var displayCode = item.harmoni_code || item.code || '';
+            var tr = 
+                '<tr>' +
+                    '<td style="text-align: center;"><div class="row-number"></div></td>' +
+                    '<td>' +
+                        '<input type="hidden" name="items[' + rowIdx + '][item_id]" value="' + item.id + '">' +
+                        '<div style="font-weight: 600; color: #334155;">[' + displayCode + '] ' + (item.name || '') + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="text" name="items[' + rowIdx + '][unit]" class="form-control unit-input" value="' + (item.unit || '') + '" readonly tabindex="-1" placeholder="Auto" style="text-align: center;">' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="number" name="items[' + rowIdx + '][quantity]" class="form-control qty-input" min="0.01" step="0.01" placeholder="0" value="1" style="text-align: center;" required>' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="text" name="items[' + rowIdx + '][notes]" class="form-control" placeholder="Catatan ukuran, merk, dll...">' +
+                    '</td>' +
+                    '<td style="text-align: center;">' +
+                        '<button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">' +
+                            '<i class="fa fa-trash"></i>' +
+                        '</button>' +
+                    '</td>' +
+                '</tr>';
+
+            tbody.append(tr);
+            rowIdx++;
+            renumberRows();
         }
 
         $(document).ready(function() {
@@ -631,81 +701,100 @@
                 allowInput: true     
             });
 
-            $('.item-select').each(function() {
-                initSelect2($(this));
-            });
-
-            // Set unit untuk item pre-filled dari alerts
-            $('#items-table tbody tr').each(function() {
-                let $row = $(this);
-                let $select = $row.find('.item-select');
-                let unit = $select.find('option:selected').data('unit');
-                if (unit) {
-                    $row.find('.unit-input').val(unit);
+            // Inisialisasi Item Picker (AJAX Select2 On-Demand seperti BON)
+            $('#itemPicker').select2({
+                theme: 'bootstrap',
+                width: '100%',
+                placeholder: 'Pilih atau cari barang...',
+                allowClear: true,
+                minimumInputLength: 0,
+                ajax: {
+                    url: '{{ route("purchase-orders.lookup.items") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return { q: params.term };
+                    },
+                    processResults: function(data) {
+                        return { results: data };
+                    },
+                    cache: true
+                },
+                templateResult: function(item) {
+                    if (item.loading) return item.text;
+                    var displayCode = item.harmoni_code || item.code || '';
+                    return $(
+                        '<div style="padding:4px 0;">' +
+                            '<div style="font-weight:600; font-size:13px; color:#1e293b;">[' + displayCode + '] ' + (item.name || '') + '</div>' +
+                            '<div style="font-size:11px; color:#64748b;">Satuan: ' + (item.unit || '-') + '</div>' +
+                        '</div>'
+                    );
+                },
+                templateSelection: function(item) {
+                    return item.text || 'Ketik Nama atau Kode Barang...';
                 }
             });
 
-            $('#btn-add-row').on('click', function() {
-                let tbody = $('#items-table tbody');
-                let rowCount = tbody.find('tr').length;
-                
-                let newRow = `
-                    <tr>
-                        <td style="text-align: center;">
-                            <div class="row-number">${rowCount + 1}</div>
-                        </td>
-                        <td>
-                            <select name="items[${rowCount}][item_id]" class="form-control item-select">
-                                <option value="">-- Cari Barang --</option>
-                                @foreach($allItems as $item)
-                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}">
-                                        [{{ $item->code }}] {{ $item->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="items[${rowCount}][unit]" class="form-control unit-input" readonly tabindex="-1" placeholder="Auto" style="text-align: center;">
-                        </td>
-                        <td>
-                            <input type="number" name="items[${rowCount}][quantity]" class="form-control qty-input" min="0.01" step="0.01" placeholder="0" style="text-align: center;" required>
-                        </td>
-                        <td>
-                            <input type="text" name="items[${rowCount}][notes]" class="form-control" placeholder="Catatan ukuran, merk, dll...">
-                        </td>
-                        <td style="text-align: center;">
-                            <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-
-                let $newRowObj = $(newRow);
-                tbody.append($newRowObj);
-                initSelect2($newRowObj.find('.item-select'));
+            $('#itemPicker').on('select2:select', function(e) {
+                addItemToTable(e.params.data);
+                $(this).val(null).trigger('change');
             });
 
+            // Hapus baris item
             $('#items-table').on('click', '.btn-remove-row', function() {
-                if ($('#items-table tbody tr').length > 1) {
-                    $(this).closest('tr').remove();
-                    renumberRows();
-                } else {
-                    let row = $(this).closest('tr');
-                    row.find('select').val(null).trigger('change');
-                    row.find('input').val('');
+                $(this).closest('tr').remove();
+                renumberRows();
+                if ($('#items-table tbody tr').length === 0) {
+                    $('#empty-row-msg').show();
                 }
             });
 
-            $('#items-table').on('change', '.item-select', function() {
-                let $select = $(this);
-                let $row = $select.closest('tr');
-                let selectedOption = $select.find('option:selected');
-                let unit = selectedOption.data('unit');
-                $row.find('.unit-input').val(unit ? unit : '');
+            // Validasi submit agar tidak kosong
+            $('form').on('submit', function(e) {
+                if ($('#items-table tbody tr').length === 0) {
+                    e.preventDefault();
+                    alert('Harap pilih minimal 1 barang sebelum menyimpan PO.');
+                    return false;
+                }
             });
-        });
 
+            // Resolve old items jika ada validasi error
+            var oldItems = {!! json_encode(old('items', [])) !!};
+            if (oldItems && oldItems.length > 0) {
+                var itemIds = [];
+                for (var i = 0; i < oldItems.length; i++) {
+                    if (oldItems[i].item_id) {
+                        itemIds.push(oldItems[i].item_id);
+                    }
+                }
+
+                if (itemIds.length > 0) {
+                    $.ajax({
+                        url: '{{ route("purchase-orders.resolve.items") }}',
+                        type: 'POST',
+                        data: {
+                            ids: itemIds,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(items) {
+                            var itemMap = {};
+                            for (var j = 0; j < items.length; j++) {
+                                itemMap[items[j].id] = items[j];
+                            }
+                            $('#items-table tbody tr').each(function() {
+                                var id = $(this).find('input[type="hidden"]').val();
+                                var it = itemMap[id];
+                                if (it) {
+                                    var displayCode = it.harmoni_code || it.code || '';
+                                    $(this).find('.item-name-cell').html('[' + displayCode + '] ' + it.name);
+                                    $(this).find('.item-unit-cell').val(it.unit || '');
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
     })(jQuery);
 </script>
 @endsection

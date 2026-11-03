@@ -113,20 +113,97 @@ class PurchaseOrderController extends Controller
             });
         }
 
-        // List semua barang untuk pilihan dinamis
-        $itemsQuery = Item::where('current_status', 'ACTIVE')->orderBy('name', 'asc');
-        if (is_array($allowedItemIds)) {
-            $itemsQuery->whereIn('id', $allowedItemIds);
-        }
-        $allItems = $itemsQuery->get();
-
         // Generate PO Number Otomatis format PO-YYYYMMDD-XXXX
         $today = Carbon::today();
         // Hitung total PO yang dibuat hari ini untuk increment
         $todayCount = PurchaseOrder::whereDate('created_at', $today)->count();
         $autoPoNumber = 'PR-' . date('Ymd') . '-' . str_pad($todayCount + 1, 4, '0', STR_PAD_LEFT);
 
-        return view('purchase_orders.create', compact('selectedItems', 'allItems', 'autoPoNumber'));
+        return view('purchase_orders.create', compact('selectedItems', 'autoPoNumber'));
+    }
+
+    /**
+     * AJAX Lookup Items untuk Select2 (Ringan, On-Demand, Limit 30)
+     */
+    public function lookupItems(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        $op = (DB::getDriverName() === 'pgsql') ? 'ILIKE' : 'like';
+
+        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
+
+        $items = Item::where('current_status', 'ACTIVE');
+
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            $items->where(function ($qq) use ($like, $op) {
+                $qq->where('harmoni_code', $op, $like)
+                   ->orWhere('code', $op, $like)
+                   ->orWhere('name', $op, $like);
+            });
+        }
+
+        if (is_array($allowedItemIds)) {
+            $items->whereIn('id', $allowedItemIds);
+        }
+
+        $items = $items
+            ->orderBy('name', 'asc')
+            ->limit(30)
+            ->get();
+
+        $out = [];
+        foreach ($items as $it) {
+            $displayCode = $it->harmoni_code ? $it->harmoni_code : $it->code;
+            $out[] = [
+                'id'           => $it->id,
+                'code'         => $it->code,
+                'harmoni_code' => $it->harmoni_code,
+                'display_code' => $displayCode,
+                'name'         => $it->name,
+                'unit'         => $it->unit,
+                'text'         => '[' . $displayCode . '] ' . $it->name,
+            ];
+        }
+
+        return response()->json($out);
+    }
+
+    /**
+     * AJAX Resolve Items untuk memulihkan old('items')
+     */
+    public function resolveItems(Request $request)
+    {
+        $ids = (array) $request->get('ids', []);
+
+        if (count($ids) === 0) {
+            return response()->json([]);
+        }
+
+        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
+
+        $items = Item::whereIn('id', $ids);
+        if (is_array($allowedItemIds)) {
+            $items->whereIn('id', $allowedItemIds);
+        }
+
+        $items = $items->get();
+
+        $out = [];
+        foreach ($items as $it) {
+            $displayCode = $it->harmoni_code ? $it->harmoni_code : $it->code;
+            $out[] = [
+                'id'           => $it->id,
+                'code'         => $it->code,
+                'harmoni_code' => $it->harmoni_code,
+                'display_code' => $displayCode,
+                'name'         => $it->name,
+                'unit'         => $it->unit,
+                'text'         => '[' . $displayCode . '] ' . $it->name,
+            ];
+        }
+
+        return response()->json($out);
     }
 
     public function store(Request $request)

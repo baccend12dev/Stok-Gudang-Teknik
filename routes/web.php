@@ -65,6 +65,8 @@ Route::group(['middleware' => 'auth'], function () {
 
     /** PURCHASE ORDER (PO) */
     Route::post('purchase-orders/create-from-alerts', 'PurchaseOrderController@createFromAlerts')->name('purchase-orders.create-from-alerts');
+    Route::get('purchase-orders/lookup-items', 'PurchaseOrderController@lookupItems')->name('purchase-orders.lookup.items');
+    Route::match(['get', 'post'], 'purchase-orders/resolve-items', 'PurchaseOrderController@resolveItems')->name('purchase-orders.resolve.items');
     Route::post('purchase-orders/{id}/ordered', 'PurchaseOrderController@markAsOrdered')->name('purchase-orders.ordered');
     Route::post('purchase-orders/{id}/cancel', 'PurchaseOrderController@cancel')->name('purchase-orders.cancel');
     Route::resource('purchase-orders', 'PurchaseOrderController');
