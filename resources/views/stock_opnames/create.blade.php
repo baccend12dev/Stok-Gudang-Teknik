@@ -179,6 +179,23 @@
 
     /* LOADING */
     .loading-overlay { display: none; padding: 80px 20px; text-align: center; color: #64748b; }
+
+    /* PAGINATION BAR */
+    .pagination-bar {
+        display: none; align-items: center; justify-content: space-between;
+        padding: 12px 24px; background: #f8fafc; border-top: 1px solid var(--border);
+        font-size: 13px; color: #64748b; flex-wrap: wrap; gap: 12px;
+    }
+    .page-btn-group { display: flex; align-items: center; gap: 6px; }
+    .btn-pager {
+        min-width: 34px; height: 34px; padding: 0 10px; border-radius: 6px;
+        border: 1px solid #cbd5e1; background: #fff; color: #334155; font-weight: 600;
+        cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        transition: 0.15s; font-size: 12px;
+    }
+    .btn-pager:hover:not(:disabled) { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .btn-pager.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .btn-pager:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 
 <div class="page-container">
@@ -282,6 +299,12 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- PAGINATION BAR --}}
+                <div class="pagination-bar" id="paginationBar">
+                    <div id="pageInfo">Menampilkan 0 - 0 dari 0 item</div>
+                    <div class="page-btn-group" id="pageBtnGroup"></div>
+                </div>
             </div>
 
             <div style="padding: 24px; background: #f8fafc; border-top: 1px solid var(--border); text-align: right;">
@@ -361,6 +384,12 @@
     }
 
     jQuery(function($){
+        // State Data
+        var allItems = [];
+        var filteredItems = [];
+        var currentPage = 1;
+        var pageSize = 50;
+
         // 1. Init Flatpickr
         flatpickr(".datepicker-flat", {
             altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d", locale: "id", allowInput: true
@@ -369,8 +398,7 @@
         // 2. Logic Load Data
         $('#btnLoadData').click(function(e){
             e.preventDefault();
-            // Cek apakah ada data di tabel? (cek row item)
-            var hasData = $('#tbody tr.item-row').length > 0;
+            var hasData = allItems.length > 0;
             
             if(hasData) {
                 openCustomModal('cm-confirm-load');
@@ -395,10 +423,15 @@
             var $body = $('#tbody');
             var $load = $('#loadingState');
             var $wrap = $('.table-wrap');
+            var $pager = $('#paginationBar');
+
+            // Reset Search Box
+            $('#tableSearch').val('');
 
             // Set UI Loading
             $btn.addClass('btn-disabled').prop('disabled', true).html('<i class="fa fa-spin fa-circle-o-notch"></i> Loading...');
             $wrap.hide();
+            $pager.hide();
             $body.empty();
             $load.show();
 
@@ -406,35 +439,27 @@
                 url: '{{ route("api.so.items_by_category") }}',
                 method: 'GET',
                 data: { category_id: catId, mode: mode, date: date },
-                dataType: 'json', // Expect JSON
+                dataType: 'json',
                 success: function(data) {
-                    var rows = [];
-                    if(!data || data.length === 0) {
-                        rows.push(`<tr><td colspan="9" class="text-center" style="padding:80px 20px; color:#94a3b8;"><i class="fa fa-search" style="font-size:32px; margin-bottom:10px; display:block; opacity:0.5;"></i><span style="font-weight:600;">Tidak ditemukan item.</span><br>Coba ubah kategori atau tanggal periode.</td></tr>`);
-                    } else {
+                    allItems = [];
+                    if(data && data.length > 0) {
                         $.each(data, function(i, item){
-                            // FIX: FLOAT CAST
-                            var sys = parseFloat(item.current_stock);
-                            var loc = item.location ? item.location : '-';
-                            rows.push(`
-                            <tr class="item-row" data-id="${item.id}" data-sys="${sys}">
-                                <td class="text-center" style="color:#94a3b8;">${i + 1}</td>
-                                <td class="text-center" style="font-weight:700; color:#475569;">${item.code}</td>
-                                <td><div style="font-weight:600; color:#1e293b;">${item.name}</div></td>
-                                <td style="color:#64748b; font-size:12px;"><i class="fa fa-map-marker"></i> ${loc}</td>
-                                <td class="text-center text-muted">${item.unit || '-'}</td>
-                                <td class="text-center" style="font-weight:700; color:#64748b;">${sys}</td>
-                                <td style="background:#eff6ff; padding:8px;">
-                                    {{-- FIX: Input step 0.01 --}}
-                                    <input type="number" class="inp-fisik" value="${sys}" min="0" step="0.01">
-                                </td>
-                                <td class="text-center"><span class="badge-diff bd-zero">0</span></td>
-                                <td><input type="text" class="inp-notes" placeholder="..."></td>
-                            </tr>`);
+                            var sys = parseFloat(item.current_stock) || 0;
+                            allItems.push({
+                                id: item.id,
+                                code: item.code || '-',
+                                name: item.name || '-',
+                                location: item.location || '-',
+                                unit: item.unit || '-',
+                                sys: sys,
+                                physical: sys, // Default input fisik = sistem
+                                notes: ''
+                            });
                         });
                     }
-                    $body.html(rows.join(''));
-                    if(data && data.length > 0) setTimeout(function(){ $('.inp-fisik').first().focus(); }, 100);
+                    filteredItems = allItems.slice();
+                    currentPage = 1;
+                    renderTable();
                 },
                 error: function(xhr, status, error) {
                     console.error("AJAX Error:", error);
@@ -454,13 +479,121 @@
             });
         }
 
-        // 3. Realtime Calculation
+        // Render Table & Pagination Bar
+        function renderTable() {
+            var $body = $('#tbody');
+            var $pager = $('#paginationBar');
+            var total = filteredItems.length;
+
+            if (total === 0) {
+                $body.html(`<tr><td colspan="9" class="text-center" style="padding:80px 20px; color:#94a3b8;"><i class="fa fa-search" style="font-size:32px; margin-bottom:10px; display:block; opacity:0.5;"></i><span style="font-weight:600;">Tidak ditemukan item.</span><br>Coba ubah kata kunci pencarian, kategori, atau tanggal periode.</td></tr>`);
+                $pager.hide();
+                return;
+            }
+
+            var totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            var startIdx = (currentPage - 1) * pageSize;
+            var endIdx = Math.min(startIdx + pageSize, total);
+            var pageData = filteredItems.slice(startIdx, endIdx);
+
+            var rows = [];
+            $.each(pageData, function(idx, item) {
+                var rowNo = startIdx + idx + 1;
+                var fis = (item.physical !== '' && item.physical !== null) ? parseFloat(item.physical) : null;
+                var diff = (fis !== null) ? (fis - item.sys) : null;
+                
+                var diffBadge = '<span class="badge-diff bd-zero">-</span>';
+                if (diff !== null) {
+                    var diffDisplay = (diff % 1 === 0) ? diff : diff.toFixed(2);
+                    var sign = diff > 0 ? '+' : '';
+                    var badgeClass = diff === 0 ? 'bd-zero' : (diff > 0 ? 'bd-plus' : 'bd-minus');
+                    diffBadge = `<span class="badge-diff ${badgeClass}">${sign}${diffDisplay}</span>`;
+                }
+
+                var physicalVal = (item.physical !== null && item.physical !== undefined) ? item.physical : '';
+                var notesVal = item.notes ? item.notes.replace(/"/g, '&quot;') : '';
+
+                rows.push(`
+                <tr class="item-row" data-id="${item.id}">
+                    <td class="text-center" style="color:#94a3b8;">${rowNo}</td>
+                    <td class="text-center" style="font-weight:700; color:#475569;">${item.code}</td>
+                    <td><div style="font-weight:600; color:#1e293b;">${item.name}</div></td>
+                    <td style="color:#64748b; font-size:12px;"><i class="fa fa-map-marker"></i> ${item.location}</td>
+                    <td class="text-center text-muted">${item.unit}</td>
+                    <td class="text-center" style="font-weight:700; color:#64748b;">${item.sys}</td>
+                    <td style="background:#eff6ff; padding:8px;">
+                        <input type="number" class="inp-fisik" value="${physicalVal}" min="0" step="0.01">
+                    </td>
+                    <td class="text-center">${diffBadge}</td>
+                    <td><input type="text" class="inp-notes" value="${notesVal}" placeholder="..."></td>
+                </tr>`);
+            });
+
+            $body.html(rows.join(''));
+            renderPaginationControls(total, totalPages, startIdx + 1, endIdx);
+            $pager.css('display', 'flex');
+        }
+
+        // Render Pagination Buttons
+        function renderPaginationControls(total, totalPages, from, to) {
+            $('#pageInfo').html(`Menampilkan <strong>${from} - ${to}</strong> dari total <strong>${total}</strong> item`);
+            var $group = $('#pageBtnGroup').empty();
+
+            if (totalPages <= 1) return;
+
+            // Prev Button
+            $group.append(`<button type="button" class="btn-pager" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}><i class="fa fa-chevron-left"></i></button>`);
+
+            // Page Numbers Logic (Show max 7 buttons)
+            var startP = Math.max(1, currentPage - 2);
+            var endP = Math.min(totalPages, currentPage + 2);
+
+            if (startP > 1) {
+                $group.append(`<button type="button" class="btn-pager" data-page="1">1</button>`);
+                if (startP > 2) $group.append(`<span style="padding:0 4px; color:#94a3b8;">...</span>`);
+            }
+
+            for (var p = startP; p <= endP; p++) {
+                var activeClass = (p === currentPage) ? 'active' : '';
+                $group.append(`<button type="button" class="btn-pager ${activeClass}" data-page="${p}">${p}</button>`);
+            }
+
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) $group.append(`<span style="padding:0 4px; color:#94a3b8;">...</span>`);
+                $group.append(`<button type="button" class="btn-pager" data-page="${totalPages}">${totalPages}</button>`);
+            }
+
+            // Next Button
+            $group.append(`<button type="button" class="btn-pager" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa fa-chevron-right"></i></button>`);
+        }
+
+        // Pager Click Event
+        $('#pageBtnGroup').on('click', '.btn-pager:not(:disabled)', function() {
+            var targetPage = parseInt($(this).data('page'));
+            if (targetPage && targetPage !== currentPage) {
+                currentPage = targetPage;
+                renderTable();
+                $('.table-wrap').scrollTop(0);
+            }
+        });
+
+        // 3. Realtime Input Listener (Sync ke allItems)
         $('#tbody').on('input keyup', '.inp-fisik', function(){
             var $row = $(this).closest('tr');
-            // FIX: Parse Float
-            var sys = parseFloat($row.data('sys')) || 0;
+            var itemId = $row.data('id');
             var val = $(this).val();
-            
+
+            // Cari item di allItems
+            var item = allItems.find(function(it) { return it.id === itemId; });
+            if (item) {
+                item.physical = (val === '' ? '' : parseFloat(val));
+            }
+
+            // Update badge di baris tersebut
+            var sys = item ? item.sys : 0;
             var $badge = $row.find('.badge-diff');
             $badge.removeClass('bd-zero bd-plus bd-minus');
 
@@ -469,11 +602,8 @@
                 return;
             }
 
-            // FIX: Parse Float
             var fis = parseFloat(val);
             var diff = fis - sys;
-            
-            // Format 2 desimal jika ada koma
             var diffDisplay = (diff % 1 === 0) ? diff : diff.toFixed(2);
             var sign = diff > 0 ? '+' : '';
             
@@ -483,7 +613,16 @@
             else $badge.addClass('bd-minus');
         });
 
-        // 4. Keyboard Navigation
+        $('#tbody').on('input keyup', '.inp-notes', function(){
+            var itemId = $(this).closest('tr').data('id');
+            var val = $(this).val();
+            var item = allItems.find(function(it) { return it.id === itemId; });
+            if (item) {
+                item.notes = val;
+            }
+        });
+
+        // 4. Keyboard Navigation (Enter pindah ke input berikutnya)
         $('#tbody').on('keydown', '.inp-fisik', function(e) {
             if (e.which === 13) { 
                 e.preventDefault();
@@ -496,45 +635,60 @@
             }
         });
 
-        // 5. Search
-        $('#tableSearch').on('keyup', function() {
-            var value = $(this).val().toLowerCase();
-            $("#tbody tr.item-row").filter(function() {
-                var text = $(this).find('td').eq(1).text().toLowerCase() + ' ' + $(this).find('td').eq(2).text().toLowerCase();
-                $(this).toggle(text.indexOf(value) > -1)
-            });
+        // 5. Fast Client-side Search (Cari dari memory allItems)
+        var searchTimer;
+        $('#tableSearch').on('input', function() {
+            clearTimeout(searchTimer);
+            var query = $(this).val().toLowerCase().trim();
+            searchTimer = setTimeout(function() {
+                if (!query) {
+                    filteredItems = allItems.slice();
+                } else {
+                    filteredItems = allItems.filter(function(item) {
+                        return (item.code && item.code.toLowerCase().indexOf(query) > -1) ||
+                               (item.name && item.name.toLowerCase().indexOf(query) > -1) ||
+                               (item.location && item.location.toLowerCase().indexOf(query) > -1);
+                    });
+                }
+                currentPage = 1;
+                renderTable();
+            }, 150);
         });
 
-        // 6. Pre-Submit Validation
+        // 6. Pre-Submit Validation (Kumpulkan semua data dari allItems)
         $('#btnPreSubmit').click(function(e) {
             e.preventDefault();
             
             var data = [];
             var hasInput = false;
 
-            $('.item-row').each(function() {
-                var row = $(this);
-                var val = row.find('.inp-fisik').val();
-                
-                // Simpan jika TIDAK KOSONG. '0' dianggap input valid.
-                if (val !== '' && val !== null) {
+            $.each(allItems, function(i, item) {
+                if (item.physical !== '' && item.physical !== null && item.physical !== undefined) {
                     hasInput = true;
                     data.push({
-                        item_id: row.data('id'),
-                        system: row.data('sys'),
-                        physical: val,
-                        notes: row.find('.inp-notes').val()
+                        item_id: item.id,
+                        system: item.sys,
+                        physical: item.physical,
+                        notes: item.notes || ''
                     });
                 }
             });
 
             if (!hasInput) {
-                showCustomAlert('Data Kosong', 'Belum ada data fisik yang diinput!<br>Mohon isi minimal satu item (meskipun 0) sebelum menyimpan.', 'warn');
+                showCustomAlert('Data Kosong', 'Belum ada data fisik yang diinput!<br>Mohon isi minimal satu item sebelum menyimpan.', 'warn');
                 return false;
             }
 
             $('#items_json').val(JSON.stringify(data));
             $('#soForm').submit();
+        });
+
+        // Prevent Enter Submit
+        $(window).keydown(function(event){
+            if(event.keyCode == 13 && event.target.nodeName != 'TEXTAREA') {
+                event.preventDefault();
+                return false;
+            }
         });
 
         // Prevent Enter Submit
