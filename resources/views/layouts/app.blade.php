@@ -358,12 +358,12 @@
                         </a>
                     </li>
 
-                    <li class="{{ Request::is('category*') ? 'active' : '' }}">
+                    <!-- <li class="{{ Request::is('category*') ? 'active' : '' }}">
                         <a href="{{ route('category.index') }}">
                             <i class="fa fa-tags"></i>
                             <span>Master Kategori</span>
                         </a>
-                    </li>
+                    </li> -->
                     
                     <li class="sidebar-header">INVENTORY CONTROL</li>
                     <li class="{{ Request::is('lpbs*') ? 'active' : '' }}">

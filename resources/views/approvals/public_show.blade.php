@@ -548,7 +548,7 @@
                         <th style="width: 40px; text-align: center;">No</th>
                         <th style="width: 140px;">Kode Barang</th>
                         <th>Nama Barang</th>
-                        <th style="width: 130px;">Kategori</th>
+                        <!-- <th style="width: 130px;">Kategori</th> -->
                         <th style="width: 110px; text-align: right;">Jumlah Qty</th>
                         <th style="width: 80px;">Satuan</th>
                         <th>Keperluan / Remarks</th>
@@ -564,11 +564,11 @@
                             <td>
                                 <div class="item-name">{{ $dtl->item ? $dtl->item->name : '-' }}</div>
                             </td>
-                            <td>
+                            <!-- <td>
                                 <span class="category-pill">
                                     {{ $dtl->item && $dtl->item->category ? $dtl->item->category->name : '-' }}
                                 </span>
-                            </td>
+                            </td> -->
                             <td style="text-align: right;">
                                 <span class="item-qty">{{ (float)$dtl->quantity }}</span>
                             </td>

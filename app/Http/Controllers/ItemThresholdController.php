@@ -28,51 +28,42 @@ class ItemThresholdController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $q       = $request->get('q', '');
+        $perPage = (int) $request->get('per_page', 50);
+        if ($perPage < 1) {
+            $perPage = 50;
+        }
 
-        // 1. LOAD CATEGORIES (DENGAN SCOPE FILTER)
-        $catQuery = Category::orderBy('name', 'asc');
+        // Base Query Item Aktif
+        $query = Item::with('category')
+                    ->where('current_status', 'ACTIVE');
 
+        // Scope Filter User (General / Apparel / All)
         if (method_exists($user, 'categoryCodesForScope')) {
             $allowedCodes = $user->categoryCodesForScope();
             if ($allowedCodes !== null) {
-                $catQuery->whereIn('code', $allowedCodes);
+                $query->whereHas('category', function($cq) use ($allowedCodes) {
+                    $cq->whereIn('code', $allowedCodes);
+                });
             }
         }
 
-        $categories = $catQuery->get();
-
-        if ($categories->isEmpty()) {
-            return view('thresholds.index', [
-                'categories'  => [],
-                'items'       => [],
-                'activeCatId' => null
-            ])->with('error', 'Anda tidak memiliki akses ke kategori manapun.');
+        // Pencarian Nama / Kode Barang
+        if (!empty($q)) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('name', 'ILIKE', '%' . $q . '%')
+                    ->orWhere('code', 'ILIKE', '%' . $q . '%');
+            });
         }
 
-        // 2. TENTUKAN KATEGORI AKTIF
-        $activeCatId = $request->get('cat_id');
-
-        if ($activeCatId && !$categories->contains('id', $activeCatId)) {
-            $activeCatId = null;
-        }
-
-        if (!$activeCatId) {
-            $activeCatId = $categories->first()->id;
-        }
-
-        // 3. LOAD DATA Items
-        $items = [];
-        if ($activeCatId) {
-            $items = Item::where('category_id', $activeCatId)
-                        ->where('current_status', 'ACTIVE')
-                        ->orderBy('code', 'asc')
-                        ->get();
-        }
+        $items = $query->orderBy('code', 'asc')
+                       ->paginate($perPage)
+                       ->appends($request->except('page'));
 
         return view('thresholds.index', [
-            'categories'  => $categories,
-            'items'       => $items,
-            'activeCatId' => $activeCatId
+            'items'   => $items,
+            'q'       => $q,
+            'perPage' => $perPage,
         ]);
     }
 
@@ -99,7 +90,7 @@ class ItemThresholdController extends Controller
                 // VALIDASI EXTRA: Pastikan item yang diedit adalah milik scope user
                 if ($allowedCodes !== null) {
                     $itemCheck = Item::with('category')->find($itemId);
-                    if ($itemCheck && !in_array($itemCheck->category->code, $allowedCodes)) {
+                    if ($itemCheck && (!isset($itemCheck->category) || !in_array($itemCheck->category->code, $allowedCodes))) {
                         continue;
                     }
                 }
@@ -117,9 +108,7 @@ class ItemThresholdController extends Controller
 
             DB::commit();
             
-            $catId = $request->get('active_cat_id');
-            return redirect()->route('thresholds.index', ['cat_id' => $catId])
-                ->with('success', 'Batas Threshold berhasil diperbarui.');
+            return redirect()->back()->with('success', 'Batas Threshold berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();

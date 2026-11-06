@@ -4,7 +4,7 @@
 @section('help-content')
     <div class="help-alert">
         <i class="fa fa-info-circle"></i> 
-        <strong>KONSEP DASAR:</strong> Halaman ini digunakan untuk mengatur batas <strong>Fast Moving</strong> dan <strong>Slow Moving</strong> pada setiap barang per kategori.
+        <strong>KONSEP DASAR:</strong> Halaman ini digunakan untuk mengatur batas <strong>Fast Moving</strong> dan <strong>Slow Moving</strong> pada setiap barang.
     </div>
 
     <h4 class="help-h"><i class="fa fa-shield text-primary"></i> Fungsi & Tujuan</h4>
@@ -16,18 +16,21 @@
     <p class="help-p">Gunakan fitur pintar berikut untuk mempercepat pengisian:</p>
     <ul class="help-list">
         <li>
+            <strong>Pilihan Baris & Pencarian:</strong> Anda dapat mengatur jumlah baris per halaman (25, 50, 100, 250) atau mencari barang langsung dari kotak pencarian.
+        </li>
+        <li>
             <strong>Isi Massal per Barang (Baris):</strong> 
             Klik ikon <i class="fa fa-pencil-square-o text-primary"></i> di samping <strong>Nama Barang</strong> untuk mengisi angka Batas Fast dan Batas Slow yang sama pada barang tersebut sekaligus.
         </li>
         <li>
             <strong>Isi Massal per Kolom:</strong> 
-            Klik ikon <i class="fa fa-pencil-square-o text-primary"></i> di bawah header <strong>Batas Fast</strong> atau <strong>Batas Slow</strong> untuk menyamakan semua nilai kolom tersebut untuk seluruh barang yang tampil.
+            Klik ikon <i class="fa fa-pencil-square-o text-primary"></i> di bawah header <strong>Batas Fast</strong> atau <strong>Batas Slow</strong> untuk menyamakan semua nilai kolom tersebut untuk seluruh barang yang tampil di halaman ini.
         </li>
     </ul>
 
     <h4 class="help-h"><i class="fa fa-floppy-o text-primary"></i> Penyimpanan Data</h4>
     <p class="help-p">
-        Sistem menggunakan <strong>Auto-Detect</strong>. Tombol "Simpan Perubahan" hanya akan muncul melayang di bawah layar jika Anda melakukan perubahan data. Pastikan klik simpan sebelum pindah halaman.
+        Sistem menggunakan <strong>Auto-Detect</strong>. Tombol "Simpan Perubahan" hanya akan muncul melayang di bawah layar jika Anda melakukan perubahan data. Pastikan klik simpan sebelum pindah halaman pagination.
     </p>
 @endsection
 
@@ -98,10 +101,12 @@
     /* --- 4. TOOLBAR --- */
     .toolbar { 
         display: flex; justify-content: space-between; align-items: center; 
-        margin-bottom: 15px; gap: 20px; background: #fff; padding: 10px; 
+        margin-bottom: 15px; gap: 15px; background: #fff; padding: 12px 16px; 
         border-radius: var(--radius); border: 1px solid var(--border);
+        flex-wrap: wrap;
     }
-    .search-box { position: relative; flex: 1; max-width: 350px; }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; flex: 1; flex-wrap: wrap; }
+    .search-box { position: relative; flex: 1; min-width: 260px; max-width: 380px; }
     .search-input {
         width: 100%; padding: 10px 15px 10px 38px; border-radius: 6px; border: 1px solid var(--border);
         font-size: 13px; color: #1E293B; transition: all 0.2s; background: #F8FAFC;
@@ -111,6 +116,47 @@
         box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
     }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94A3B8; font-size: 14px; }
+
+    .per-page-box { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; font-weight: 500; }
+    .select-page {
+        height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 6px;
+        background: #F8FAFC; font-size: 13px; font-weight: 600; color: #1E293B; cursor: pointer;
+    }
+    .select-page:focus { border-color: var(--primary); outline: none; background: #fff; }
+
+    /* ====== MODERN PAGINATION ====== */
+    .pagination-wrapper { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-top: 15px; 
+        padding: 14px 18px;
+        background: #fff;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        font-size: 13px;
+        color: #475569;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .pagination-wrapper .pagination { display: inline-flex; margin: 0; padding: 0; gap: 6px; list-style: none; }
+    .pagination-wrapper .pagination > li { display: inline; }
+    .pagination-wrapper .pagination > li > a,
+    .pagination-wrapper .pagination > li > span {
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0;
+        color: #475467;
+        background: #fff;
+        padding: 7px 13px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.15s;
+    }
+    .pagination-wrapper .pagination > li > a:hover { background: #EEF2FF; border-color: var(--primary); color: var(--primary); text-decoration: none; }
+    .pagination-wrapper .pagination > .active > span { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .pagination-wrapper .pagination > .disabled > span { background: #f8fafc; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
 
     /* --- 5. MATRIX TABLE --- */
     .matrix-wrap { 
@@ -285,26 +331,26 @@
         </div>
     </div>
 
-    {{-- Tabs Kategori --}}
-    <div class="cat-tabs">
-        @foreach($categories as $cat)
-            @if(stripos($cat->name, 'uncategorized') !== false) 
-                @continue 
-            @endif
-
-            <a href="{{ route('thresholds.index', ['cat_id' => $cat->id]) }}" 
-               class="tab-btn {{ $activeCatId == $cat->id ? 'active' : '' }}">
-                {{ $cat->name }}
-            </a>
-        @endforeach
-    </div>
-
     {{-- Toolbar --}}
     <div class="toolbar">
-        <div class="search-box">
-            <i class="fa fa-search search-icon"></i>
-            <input type="text" id="tableSearch" class="search-input" placeholder="Ketik nama barang untuk filter cepat...">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" id="tableSearch" class="search-input" value="{{ $q }}" placeholder="Ketik nama atau kode barang..." autocomplete="off">
+            </div>
+            
+            <div class="per-page-box">
+                <span>Tampilkan:</span>
+                <select id="perPageSelect" class="select-page" onchange="changePerPage(this.value)">
+                    <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
+                    <option value="250" {{ $perPage == 250 ? 'selected' : '' }}>250</option>
+                </select>
+                <span>baris</span>
+            </div>
         </div>
+
         <div style="font-size:12px; color:#64748b; font-weight:500; display:flex; align-items:center; gap:5px;">
             <i class="fa fa-lightbulb-o text-warning"></i>
             <span>Tips: Klik <i class="fa fa-pencil-square-o"></i> untuk isi otomatis sebaris/sekolom.</span>
@@ -314,7 +360,6 @@
     @if(count($items) > 0)
         <form action="{{ route('thresholds.store') }}" method="POST" id="thresholdForm">
             {{ csrf_field() }}
-            <input type="hidden" name="active_cat_id" value="{{ $activeCatId }}">
 
             <div class="matrix-wrap">
                 <table class="matrix-table" id="thresholdTable">
@@ -349,11 +394,14 @@
                                             <div class="item-sub">
                                                 <span class="item-code">{{ $item->code }}</span>
                                                 <span>{{ $item->unit }}</span>
+                                                @if($item->category)
+                                                    <span style="background:#EEF2FF; color:var(--primary); padding:1px 5px; border-radius:3px; font-weight:600;">{{ $item->category->name }}</span>
+                                                @endif
                                             </div>
                                         </div>
                                         <i class="fa fa-pencil-square-o mass-btn" 
                                            title="Isi Massal: {{ $item->name }}" 
-                                           onclick="massEditRow({{ $item->id }}, '{{ $item->name }}')"></i>
+                                           onclick="massEditRow({{ $item->id }}, '{{ addslashes($item->name) }}')"></i>
                                     </div>
                                 </td>
 
@@ -383,6 +431,16 @@
                 </table>
             </div>
 
+            {{-- PAGINATION --}}
+            <div class="pagination-wrapper">
+                <div>
+                    Menampilkan <strong>{{ $items->firstItem() }}</strong> - <strong>{{ $items->lastItem() }}</strong> dari <strong>{{ $items->total() }}</strong> item
+                </div>
+                <div>
+                    {{ $items->links() }}
+                </div>
+            </div>
+
             <div class="floating-save" id="saveDock">
                 <button type="submit" class="btn-save">
                     <i class="fa fa-save"></i> Simpan Perubahan
@@ -392,8 +450,8 @@
     @else
         <div class="empty-state">
             <img src="https://img.icons8.com/fluency/96/nothing-found.png" class="empty-icon" alt="Empty"/>
-            <h3 style="margin:0; font-weight:700; color:#1E293B;">Tidak ada item aktif</h3>
-            <p style="color:#64748B; margin-top:8px;">Pilih kategori lain atau tambahkan item baru di Master Data.</p>
+            <h3 style="margin:0; font-weight:700; color:#1E293B;">Tidak ada item ditemukan</h3>
+            <p style="color:#64748B; margin-top:8px;">Coba ubah kata kunci pencarian atau tambahkan item baru di Master Data.</p>
         </div>
     @endif
 
@@ -403,22 +461,42 @@
 <script>
     let isDirty = false;
 
-    // 1. Live Search
-    document.getElementById('tableSearch').addEventListener('keyup', function() {
-        var filter = this.value.toLowerCase();
-        var rows = document.querySelectorAll('#thresholdTable tbody tr');
-
-        rows.forEach(function(row) {
-            var text = row.querySelector('.item-name').textContent.toLowerCase() + 
-                       " " + 
-                       row.querySelector('.item-code').textContent.toLowerCase();
-            if (text.includes(filter)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+    // 1. Live Search & Server Filter
+    let searchTimeout;
+    document.getElementById('tableSearch').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        let val = this.value.trim();
+        searchTimeout = setTimeout(function() {
+            if (isDirty) {
+                if (!confirm('Ada data yang belum disimpan. Jika mencari data baru, perubahan yang belum disimpan akan hilang. Lanjutkan?')) {
+                    return;
+                }
+                isDirty = false;
             }
-        });
+            let url = new URL(window.location.href);
+            if (val) {
+                url.searchParams.set('q', val);
+            } else {
+                url.searchParams.delete('q');
+            }
+            url.searchParams.delete('page'); // reset ke page 1
+            window.location.href = url.toString();
+        }, 500);
     });
+
+    // Per Page Change
+    window.changePerPage = function(perPage) {
+        if (isDirty) {
+            if (!confirm('Ada data yang belum disimpan. Ubah jumlah baris akan memuat ulang halaman. Lanjutkan?')) {
+                return;
+            }
+            isDirty = false;
+        }
+        let url = new URL(window.location.href);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+    };
 
     // 2. Change Detection & Dirty State
     window.markChanged = function(el) {
