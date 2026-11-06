@@ -516,7 +516,7 @@
                         <th class="col-center" style="width: 100px;">Kode</th>
                         <th>Nama Barang</th>
                         <th style="width: 110px;">Satuan</th>
-                        <th class="col-center" style="width: 250px;">Kategori</th>
+                        <!-- <th class="col-center" style="width: 250px;">Kategori</th> -->
                         <th class="col-center" style="width: 120px;">Qty Masuk</th>
                     </tr>
                 </thead>
@@ -544,9 +544,9 @@
                             </td>
                             <td>{{ $unitLabel }}</td>
                             {{-- KATEGORI PINDAH KE SINI --}}
-                            <td class="col-center">
+                            <!-- <td class="col-center">
                                 <span class="col-category">{{ $kategoriName }}</span>
-                            </td>
+                            </td> -->
                             <td class="col-center col-bold" style="color: #16a34a;">
                                 {{ number_format($qty, 2, ',', '.') }}
                             </td>

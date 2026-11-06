@@ -568,7 +568,7 @@
                         <th class="col-center" style="width: 100px;">Kode</th>
                         <th>Nama Barang</th>
                         <th style="width: 110px;">Satuan</th>
-                        <th class="col-center" style="width: 250px;">Kategori</th>
+                        <!-- <th class="col-center" style="width: 250px;">Kategori</th> -->
                         <th style="width: 150px;">Departemen</th>
                         <th style="width: 150px;">Divisi</th>
                         <th class="col-center" style="width: 120px;">Qty (Unit)</th>
@@ -605,9 +605,9 @@
                             </td>
                             <td>{{ $unitLabel }}</td>
                             {{-- ISI KOLOM KATEGORI --}}
-                            <td class="col-center">
+                            <!-- <td class="col-center">
                                 <span class="col-category">{{ $categoryName }}</span>
-                            </td>
+                            </td> -->
                             <td>
                                 <span class="col-dept">{{ $deptName }}</span>
                             </td>

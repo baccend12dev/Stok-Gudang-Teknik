@@ -139,6 +139,60 @@
         }
         .sidebar-nav li.active a i { color: var(--warning); }
 
+        /* Treeview / Submenu Styling */
+        .sidebar-dropdown > a {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between !important;
+        }
+        .sidebar-dropdown > a .menu-label-wrap {
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-dropdown > a .arrow-indicator {
+            font-size: 12px;
+            transition: transform 0.25s ease;
+            margin-right: 0 !important;
+            width: auto !important;
+            color: #94a3b8;
+        }
+        .sidebar-dropdown.open > a .arrow-indicator {
+            transform: rotate(90deg);
+            color: var(--warning);
+        }
+        .sidebar-submenu {
+            list-style: none;
+            padding: 4px 0 6px 0;
+            margin: 0;
+            background: rgba(0, 0, 0, 0.18);
+            display: none;
+        }
+        .sidebar-dropdown.open > .sidebar-submenu {
+            display: block;
+        }
+        .sidebar-submenu li a {
+            padding: 9px 24px 9px 50px !important;
+            font-size: 13px !important;
+            color: #94a3b8 !important;
+            border-left: 3px solid transparent !important;
+        }
+        .sidebar-submenu li a:hover {
+            color: #fff !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            padding-left: 54px !important;
+        }
+        .sidebar-submenu li.active a {
+            color: #fff !important;
+            background: rgba(255, 159, 67, 0.1) !important;
+            border-left-color: var(--warning) !important;
+            font-weight: 600 !important;
+        }
+        .sidebar-submenu li a i {
+            font-size: 13px !important;
+            margin-right: 8px !important;
+        }
+
         /* Logic Toggle */
         #wrapper.toggled #sidebar-wrapper { width: 260px; }
         @media(min-width: 768px) {
@@ -331,39 +385,34 @@
                         </a>
                     </li>
 
-                    <li class="sidebar-header">MASTER DATA</li>
-                    <li class="{{ Request::is('items*') ? 'active' : '' }}">
-                        <a href="{{ route('items.index') }}">
-                            <i class="fa fa-archive"></i> <span>Daftar Barang</span>
+                    @php
+                        $isMasterDataActive = Request::is('items*') || Request::is('thresholds*') || Request::is('departments*') || Request::is('category*') || Request::is('budgets*');
+                    @endphp
+                    <li class="sidebar-dropdown {{ $isMasterDataActive ? 'open active' : '' }}">
+                        <a href="javascript:void(0);" class="sidebar-dropdown-toggle">
+                            <div class="menu-label-wrap">
+                                <i class="fa fa-database"></i> <span>Master Data</span>
+                            </div>
+                            <i class="fa fa-chevron-right arrow-indicator"></i>
                         </a>
+                        <ul class="sidebar-submenu" style="{{ $isMasterDataActive ? 'display:block;' : '' }}">
+                            <li class="{{ Request::is('items*') ? 'active' : '' }}">
+                                <a href="{{ route('items.index') }}">
+                                    <i class="fa fa-archive"></i> <span>Daftar Barang</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('thresholds*') ? 'active' : '' }}">
+                                <a href="{{ route('thresholds.index') }}">
+                                    <i class="fa fa-sliders"></i> <span>Atur Threshold</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('departments*') ? 'active' : '' }}">
+                                <a href="{{ route('departments.index') }}">
+                                    <i class="fa fa-building-o"></i> <span>Master Departemen</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-
-                    <!-- <li class="{{ Request::is('budgets*') ? 'active' : '' }}">
-                        <a href="{{ route('budgets.index') }}">
-                            <i class="fa fa-sliders"></i> 
-                            <span>Atur Plafon Dept.</span>
-                        </a>
-                    </li> -->
-                    <li class="{{ Request::is('thresholds*') ? 'active' : '' }}">
-                        <a href="{{ route('thresholds.index') }}">
-                            <i class="fa fa-sliders"></i> 
-                            <span>Atur TrashHold.</span>
-                        </a>
-                    </li>
-
-                    <li class="{{ Request::is('departments*') ? 'active' : '' }}">
-                        <a href="{{ route('departments.index') }}">
-                            <i class="fa fa-building-o"></i>
-                            <span>Master Departemen</span>
-                        </a>
-                    </li>
-
-                    <!-- <li class="{{ Request::is('category*') ? 'active' : '' }}">
-                        <a href="{{ route('category.index') }}">
-                            <i class="fa fa-tags"></i>
-                            <span>Master Kategori</span>
-                        </a>
-                    </li> -->
                     
                     <li class="sidebar-header">INVENTORY CONTROL</li>
                     <li class="{{ Request::is('lpbs*') ? 'active' : '' }}">
@@ -555,6 +604,16 @@
             $("#menu-toggle").click(function(e) {
                 e.preventDefault();
                 $("#wrapper").toggleClass("toggled");
+            });
+
+            // Sidebar Dropdown Toggle (Expand / Collapse)
+            $('.sidebar-dropdown-toggle').click(function(e) {
+                e.preventDefault();
+                var $parent = $(this).closest('.sidebar-dropdown');
+                var $submenu = $parent.find('.sidebar-submenu');
+                
+                $parent.toggleClass('open');
+                $submenu.slideToggle(200);
             });
 
             $.extend( true, $.fn.dataTable.defaults, {

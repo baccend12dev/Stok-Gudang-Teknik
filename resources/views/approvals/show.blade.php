@@ -253,7 +253,7 @@
                         <th style="width: 50px; text-align: center;">No</th>
                         <th style="width: 140px;">Kode Barang</th>
                         <th>Nama Barang</th>
-                        <th style="width: 140px;">Kategori</th>
+                        <!-- <th style="width: 140px;">Kategori</th> -->
                         <th style="width: 110px; text-align: right;">Jumlah Qty</th>
                         <th style="width: 90px;">Satuan</th>
                         <th>Keperluan / Remarks</th>
@@ -271,11 +271,11 @@
                             <td style="font-weight: 600; color: #0f172a;">
                                 {{ $dtl->item ? $dtl->item->name : '-' }}
                             </td>
-                            <td>
+                            <!-- <td>
                                 <span style="font-size: 12px; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #475569;">
                                     {{ $dtl->item && $dtl->item->category ? $dtl->item->category->name : '-' }}
                                 </span>
-                            </td>
+                            </td> -->
                             <td style="text-align: right; font-weight: 700; font-size: 15px; color: #0f172a;">
                                 {{ (float)$dtl->quantity }}
                             </td>

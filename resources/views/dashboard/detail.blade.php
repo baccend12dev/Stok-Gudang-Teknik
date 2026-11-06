@@ -310,7 +310,7 @@
                     <th width="60" class="text-center">NO</th> 
                     <th>Kode Barang</th>
                     <th>Nama Barang</th>
-                    <th>Kategori</th>
+                    <!-- <th>Kategori</th> -->
                     {{-- HEADER CENTER --}}
                     <th class="text-center">Transaksi</th>
                     <th class="text-center">Total Qty</th>
@@ -332,11 +332,11 @@
                     <td style="font-weight: 600; color: #1e293b;">
                         {{ $item->name }}
                     </td>
-                    <td>
+                    <!-- <td>
                         <span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;">
                             {{ isset($item->category_name) ? $item->category_name : '-' }}
                         </span>
-                    </td>
+                    </td> -->
                     {{-- CONTENT CENTER (Transaksi) --}}
                     <td class="text-center">
                         <span style="font-weight: 700; color: #334155; font-size:15px;">{{ $item->freq }}</span>
