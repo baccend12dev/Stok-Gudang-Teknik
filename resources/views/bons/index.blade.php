@@ -67,57 +67,57 @@
         font-family: 'Inter', sans-serif;
     }
 
-    /* --- LAYOUT UTAMA --- */
+    /* --- LAYOUT UTAMA: Diperluas tanpa margin kosong berlebih --- */
     .page-container {
         width: 100%;
-        padding: 24px 32px;
+        padding: 0 0 20px 0;
         box-sizing: border-box;
     }
 
     /* --- FIX: PERKECIL UKURAN FLATPICKR --- */
     .flatpickr-calendar {
-        font-size: 12px !important; /* Perkecil base font */
-        width: 310px !important;    /* Perkecil lebar total */
+        font-size: 12px !important;
+        width: 310px !important;
     }
     .flatpickr-rContainer, .flatpickr-days, .dayContainer {
-        width: 310px !important;    /* Sesuaikan lebar container hari */
+        width: 310px !important;
     }
     .flatpickr-day {
-        height: 32px !important;    /* Perkecil area klik tanggal */
+        height: 32px !important;
         line-height: 32px !important;
         max-width: 42px !important;
     }
     .flatpickr-current-month {
-        font-size: 110% !important; /* Sesuaikan ukuran font bulan */
+        font-size: 110% !important;
         padding-top: 10px !important;
     }
 
-    /* --- HEADER SECTION --- */
+    /* --- HEADER SECTION (COMPACT) --- */
     .header-wrapper {
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+        margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
     }
 
-    .page-title { display: flex; align-items: center; gap: 16px; }
+    .page-title { display: flex; align-items: center; gap: 12px; }
 
     .icon-box {
-        width: 48px; height: 48px;
+        width: 40px; height: 40px;
         background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-        color: #4338ca; border-radius: 12px;
+        color: #4338ca; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 20px; box-shadow: var(--shadow-sm); border: 1px solid #c7d2fe;
+        font-size: 18px; box-shadow: var(--shadow-sm); border: 1px solid #c7d2fe;
     }
 
-    .title-text h1 { font-size: 24px; font-weight: 700; color: #1e293b; margin: 0; letter-spacing: -0.5px; }
-    .title-text p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0; }
+    .title-text h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin: 0; letter-spacing: -0.4px; }
+    .title-text p { font-size: 12.5px; color: var(--text-muted); margin: 2px 0 0 0; }
 
     /* --- BUTTONS --- */
-    .btn-action-group { display: flex; gap: 12px; }
+    .btn-action-group { display: flex; gap: 10px; }
     
     .btn-header-shared {
-        height: 42px; padding: 0 20px; border-radius: 8px;
-        font-weight: 600; font-size: 13px; display: inline-flex; align-items: center;
-        justify-content: center; gap: 8px; text-decoration: none !important;
+        height: 38px; padding: 0 16px; border-radius: 7px;
+        font-weight: 600; font-size: 12.5px; display: inline-flex; align-items: center;
+        justify-content: center; gap: 7px; text-decoration: none !important;
         transition: all 0.2s ease;
     }
 
@@ -129,67 +129,63 @@
 
     .btn-primary-modern {
         background: var(--primary); border: 1px solid var(--primary); color: white !important;
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 3px 5px -1px rgba(37, 99, 235, 0.25);
     }
-    .btn-primary-modern:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.3); }
+    .btn-primary-modern:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 5px 10px -2px rgba(37, 99, 235, 0.3); }
     
-    /* --- CARD & FILTER --- */
+    /* --- CARD & FILTER (COMPACT & EXPANDED) --- */
     .modern-card {
-        background: white; border-radius: 12px; border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 24px;
+        background: white; border-radius: 10px; border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 20px; width: 100%;
     }
 
-    .filter-container { padding: 24px; background: #fff; border-bottom: 1px solid var(--border-color); }
+    .filter-container { padding: 14px 18px; background: #fff; border-bottom: 1px solid var(--border-color); }
     
-    .filter-grid { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; width: 100%; }
+    .filter-grid { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; width: 100%; }
 
-    .form-group-modern { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
-    .form-group-modern label { font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group-modern { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+    .form-group-modern label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0; }
     
     .form-control-modern {
-        border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px;
-        font-size: 13px; color: #1e293b; height: 42px; width: 100%;
+        border: 1px solid #cbd5e1; border-radius: 7px; padding: 6px 12px;
+        font-size: 13px; color: #1e293b; height: 38px; width: 100%;
     }
     .form-control-modern:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-    /* FIX: Input Flatpickr agar background putih */
     .form-control-modern.flatpickr-input { background-color: #fff !important; }
 
-    /* --- CUSTOM SELECT2 OVERRIDES (PERFECT POSITION) --- */
+    /* --- CUSTOM SELECT2 OVERRIDES --- */
     .select2-container .select2-selection--single {
-        height: 42px !important;
+        height: 38px !important;
         border: 1px solid #cbd5e1 !important;
-        border-radius: 8px !important;
+        border-radius: 7px !important;
         display: flex;
         align-items: center;
         background-color: #fff;
-        position: relative; /* Penting untuk positioning X */
+        position: relative;
     }
     .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 42px !important;
+        line-height: 38px !important;
         color: #1e293b !important;
         font-size: 13px;
-        padding-left: 14px;
-        padding-right: 45px !important; /* Kasih space kanan biar teks gak nabrak X */
+        padding-left: 12px;
+        padding-right: 42px !important;
     }
     .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 40px !important;
+        height: 36px !important;
         right: 8px !important;
     }
     
-    /* FIX POSISI TOMBOL X (CLEAR) */
     .select2-container--default .select2-selection--single .select2-selection__clear {
         position: absolute !important;
-        right: 30px !important; /* Geser ke kiri panah */
+        right: 28px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         margin-right: 0 !important;
-        color: #ef4444 !important; /* Merah Modern */
+        color: #ef4444 !important;
         font-weight: bold;
-        font-size: 18px;
+        font-size: 16px;
         z-index: 2;
         line-height: 1;
-        height: auto;
-        width: auto;
         cursor: pointer;
     }
     .select2-container--default .select2-selection--single .select2-selection__clear:hover {
@@ -198,100 +194,194 @@
 
     .select2-dropdown {
         border-color: var(--primary) !important;
-        border-radius: 8px !important;
+        border-radius: 7px !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     .select2-search__field {
         border-radius: 6px !important;
-        padding: 8px !important;
+        padding: 6px 10px !important;
         border: 1px solid #cbd5e1 !important;
     }
     .select2-results__option {
-        padding: 8px 12px;
-        font-size: 13px;
+        padding: 6px 12px;
+        font-size: 12.5px;
     }
     .select2-results__option--highlighted[aria-selected] {
-        background-color: #eff6ff !important; /* Light Blue Hover */
+        background-color: #eff6ff !important;
         color: var(--primary) !important;
     }
-    /* Fix width 100% untuk select2 container */
     .select2-container { width: 100% !important; }
 
-    .filter-buttons { display: flex; gap: 10px; margin-left: auto; }
+    .filter-buttons { display: flex; gap: 8px; margin-left: auto; }
     .btn-filter {
-        height: 42px; padding: 0 20px; border-radius: 8px; font-size: 13px;
+        height: 38px; padding: 0 16px; border-radius: 7px; font-size: 12.5px;
         font-weight: 600; border: none; cursor: pointer; display: inline-flex;
-        align-items: center; gap: 8px; outline: none;
+        align-items: center; gap: 6px; outline: none;
     }
     .btn-apply { background: var(--primary); color: white !important; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2); }
     .btn-apply:hover { background: var(--primary-hover); }
     .btn-reset { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; text-decoration: none; }
     .btn-reset:hover { background: #e2e8f0; color: #475569; }
 
-    /* --- TABLE --- */
+    /* --- TABLE COMPACT --- */
     .table-responsive { overflow-x: auto; width: 100%; }
     .table-modern { width: 100%; border-collapse: collapse; }
     .table-modern thead th {
-        background: #f8fafc; color: #475569; font-weight: 600; font-size: 12px;
-        text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 20px;
+        background: #f8fafc; color: #475569; font-weight: 700; font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.5px; padding: 9px 12px;
         border-bottom: 1px solid var(--border-color); white-space: nowrap;
     }
-    .table-modern tbody tr { border-bottom: 1px solid var(--border-color); transition: background 0.1s; }
+    .table-modern tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease; }
     .table-modern tbody tr:hover { background: #f8fafc; }
-    .table-modern td { padding: 14px 20px; font-size: 13px; color: #334155; vertical-align: middle; }
+    .table-modern td { padding: 8px 12px; font-size: 13px; color: #334155; vertical-align: middle; }
+
+    .bon-num-code {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 13px;
+        letter-spacing: -0.2px;
+    }
+    .date-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        color: #475569;
+        white-space: nowrap;
+    }
+    .date-cell i { color: #94a3b8; font-size: 11px; }
+
+    .dept-title {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 13px;
+        line-height: 1.25;
+    }
+    .div-subtitle {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 2px;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .badge-item-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
 
     /* --- CHIPS & BADGES --- */
-    .chip-btn {
-        padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-        text-decoration: none !important; display: inline-flex; align-items: center; gap: 6px;
-        border: 1px solid transparent; cursor: pointer;
+    .action-chips {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
     }
-    .chip-view { background: #f0f9ff; color: #0369a1; border-color: #e0f2fe; }
-    .chip-view:hover { background: #e0f2fe; }
+    .chip-btn {
+        padding: 4px 9px;
+        border-radius: 5px;
+        font-size: 11.5px;
+        font-weight: 600;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        line-height: 1.25;
+        transition: all 0.15s ease;
+    }
+    .chip-view { background: #f0f9ff; color: #0284c7; border-color: #bae6fd; }
+    .chip-view:hover { background: #e0f2fe; color: #0369a1; }
     
-    .chip-edit { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
-    .chip-edit:hover { background: #ffedd5; }
+    .chip-edit { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+    .chip-edit:hover { background: #ffedd5; color: #9a3412; }
     
-    .chip-delete { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
-    .chip-delete:hover { background: #fee2e2; }
+    .chip-delete { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .chip-delete:hover { background: #fee2e2; color: #b91c1c; }
 
     /* Status Badges */
-    .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid transparent; letter-spacing: 0.5px; }
+    .status-badge {
+        padding: 3px 9px;
+        border-radius: 99px;
+        font-size: 10.5px;
+        font-weight: 700;
+        border: 1px solid transparent;
+        letter-spacing: 0.4px;
+        display: inline-block;
+        line-height: 1.2;
+    }
     .st-pending { background: var(--st-pending-bg); color: var(--st-pending-text); border-color: var(--st-pending-border); }
     .st-approved { background: var(--st-approved-bg); color: var(--st-approved-text); border-color: var(--st-approved-border); }
     .st-issued { background: var(--st-issued-bg); color: var(--st-issued-text); border-color: var(--st-issued-border); }
     .st-rejected, .st-cancelled { background: var(--st-rejected-bg); color: var(--st-rejected-text); border-color: var(--st-rejected-border); }
 
-    /* Detail Toggle */
+    /* Detail Toggle Button */
     .btn-toggle-round {
-        width: 32px; height: 32px; border-radius: 50%; border: 1px solid #cbd5e1;
-        background: white; display: flex; align-items: center; justify-content: center;
-        color: #64748b; cursor: pointer; transition: all 0.2s; outline: none;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        outline: none;
+        font-size: 12px;
+        padding: 0;
     }
     .btn-toggle-round:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
     .btn-toggle-round.active { background: var(--primary); border-color: var(--primary); color: white; transform: rotate(180deg); }
 
     /* --- DETAIL INNER --- */
-    .detail-row-content { background: #f8fafc; padding: 20px 24px; box-shadow: inset 0 4px 6px -1px rgba(0,0,0,0.02); border-top: 1px solid #e2e8f0; }
-    .detail-card-inner { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .detail-table-inner th { background: #f1f5f9; font-size: 11px; text-transform: uppercase; color: #64748b; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; }
-    .detail-table-inner td { font-size: 12px; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; color: #475569; }
+    .detail-row-content { background: #f8fafc; padding: 10px 14px; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02); border-top: 1px solid #e2e8f0; }
+    .detail-card-inner { background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .detail-table-inner th { background: #f1f5f9; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; padding: 7px 12px; border-bottom: 1px solid #e2e8f0; }
+    .detail-table-inner td { font-size: 12px; padding: 7px 12px; border-bottom: 1px solid #f1f5f9; color: #475569; }
+
+    /* --- PAGINATION WRAPPER --- */
+    .bon-pagination-wrap .pagination { margin: 0; }
+    .bon-pagination-wrap .pagination > li > a,
+    .bon-pagination-wrap .pagination > li > span {
+        padding: 4px 10px;
+        font-size: 12px;
+        color: #475569;
+    }
+    .bon-pagination-wrap .pagination > .active > a,
+    .bon-pagination-wrap .pagination > .active > span {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
 
     /* --- MODAL --- */
-    .modern-modal .modal-content { border: none; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; }
-    .modern-modal .modal-header { background: #fff; border-bottom: none; padding: 20px 20px 5px 20px; }
-    .modern-modal .modal-body { padding: 5px 24px 24px 24px; background: #fff; }
-    .modern-modal .modal-footer { background: #f8fafc; padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px; }
-    .btn-modal-cancel { padding: 8px 16px; border-radius: 8px; background: white; border: 1px solid #cbd5e1; color: #475569; font-weight: 600; }
-    .btn-modal-danger { padding: 8px 16px; border-radius: 8px; background: #ef4444; border: none; color: white; font-weight: 600; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
+    .modern-modal .modal-content { border: none; border-radius: 14px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; }
+    .modern-modal .modal-header { background: #fff; border-bottom: none; padding: 18px 20px 5px 20px; }
+    .modern-modal .modal-body { padding: 5px 20px 20px 20px; background: #fff; }
+    .modern-modal .modal-footer { background: #f8fafc; padding: 14px 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-modal-cancel { padding: 7px 14px; border-radius: 7px; background: white; border: 1px solid #cbd5e1; color: #475569; font-weight: 600; font-size: 12.5px; }
+    .btn-modal-danger { padding: 7px 14px; border-radius: 7px; background: #ef4444; border: none; color: white; font-weight: 600; font-size: 12.5px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
 
     /* Empty State */
-    .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
-    .empty-icon { font-size: 56px; margin-bottom: 16px; color: #e2e8f0; }
+    .empty-state { text-align: center; padding: 50px 20px; color: #94a3b8; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; color: #cbd5e1; }
 
     @media (max-width: 992px) {
         .filter-grid { flex-direction: column; align-items: stretch; }
-        .filter-buttons { margin-left: 0; margin-top: 8px; }
+        .filter-buttons { margin-left: 0; margin-top: 6px; }
     }
 </style>
 
@@ -400,16 +490,16 @@
             <table class="table-modern">
                 <thead>
                     <tr>
-                        <th style="width: 50px; text-align: center;">
-                            <i class="fa fa-angle-down" style="font-size:14px; color:#94a3b8;"></i>
+                        <th style="width: 44px; text-align: center;">
+                            <i class="fa fa-angle-down" style="font-size:13px; color:#94a3b8;"></i>
                         </th>
-                        <th style="width: 60px; text-align: center;">No</th>
-                        <th style="width: 200px;">No. BON</th>
-                        <th style="width: 300px;">Tanggal</th>
-                        <th style="width: 300px;">Departemen / Divisi</th>
-                        <th style="text-align: center;">Status</th>
-                        <th style="text-align: center;">Total Item</th>
-                        <th style="text-align: center; width: 270px;">Aksi</th>
+                        <th style="width: 48px; text-align: center;">No</th>
+                        <th style="width: 170px;">No. BON</th>
+                        <th style="width: 130px;">Tanggal</th>
+                        <th>Departemen / Divisi</th>
+                        <th style="text-align: center; width: 110px;">Status</th>
+                        <th style="text-align: center; width: 95px;">Total Item</th>
+                        <th style="text-align: center; width: 190px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -430,33 +520,33 @@
                             <td style="text-align: center;">
                                 @if($detailCount > 0)
                                     <button type="button" class="btn-toggle-round" 
-                                            onclick="toggleDetail({{ $bon->id }}, this)">
+                                            onclick="toggleDetail({{ $bon->id }}, this)"
+                                            title="Tampilkan/Sembunyikan Rincian">
                                         <i class="fa fa-angle-down"></i>
                                     </button>
                                 @else
-                                    <span style="color:#cbd5e1;">-</span>
+                                    <span style="color:#cbd5e1; font-size:11px;">-</span>
                                 @endif
                             </td>
-                            <td style="text-align: center; font-weight: 500; color: #64748b;">
+                            <td style="text-align: center; font-weight: 500; color: #64748b; font-size:12px;">
                                 {{ $rowNumber }}
                             </td>
                             <td>
-                                <div style="font-weight: 700; color: #1e293b; font-size:14px;">{{ $bon->bon_number }}</div>
+                                <span class="bon-num-code">{{ $bon->bon_number }}</span>
                             </td>
                             <td>
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <i class="fa fa-calendar-o" style="color: #94a3b8; font-size:12px;"></i>
-                                    {{-- Format tanggal PHP tetap jalan normal --}}
-                                    <span style="font-weight:500;">{{ $bon->date ? $bon->date->format('d M Y') : '-' }}</span>
+                                <div class="date-cell">
+                                    <i class="fa fa-calendar-o"></i>
+                                    <span>{{ $bon->date ? $bon->date->format('d M Y') : '-' }}</span>
                                 </div>
                             </td>
                             <td>
-                                <div style="font-weight: 600; color: #334155;">
+                                <div class="dept-title">
                                     {{ $bon->department ? $bon->department->name : '-' }}
                                 </div>
                                 @if($bon->division_name)
-                                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
-                                        <i class="fa fa-users" style="font-size:10px; margin-right:4px;"></i> {{ $bon->division_name }}
+                                    <div class="div-subtitle">
+                                        <i class="fa fa-users" style="font-size:10px;"></i> {{ $bon->division_name }}
                                     </div>
                                 @endif
                             </td>
@@ -466,10 +556,12 @@
                                 </span>
                             </td>
                             <td style="text-align: center;">
-                                <span style="font-weight: 700; color: #334155;">{{ $detailCount }}</span>
+                                <span class="badge-item-count">
+                                    {{ $detailCount }} <span style="font-size:10px; font-weight:normal; opacity:0.8;">item</span>
+                                </span>
                             </td>
                             <td>
-                                <div class="action-chips" style="justify-content: center;">
+                                <div class="action-chips">
                                     {{-- DETAIL / PROSES --}}
                                     <a href="{{ route('bons.show', $bon->id) }}" class="chip-btn chip-view" title="Lihat Detail / Proses">
                                         <i class="fa fa-eye"></i> Lihat
@@ -496,11 +588,11 @@
                             <td colspan="8" style="padding: 0; border: none;">
                                 <div class="detail-row-content">
                                     <div class="detail-card-inner">
-                                        <div style="padding: 16px 20px; background: #fff; border-bottom: 1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                                            <span style="font-weight: 700; color: #334155; font-size: 13px;">
+                                        <div style="padding: 8px 14px; background: #fff; border-bottom: 1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                            <span style="font-weight: 700; color: #334155; font-size: 12px;">
                                                 <i class="fa fa-list text-primary" style="margin-right:6px;"></i> Rincian Permintaan
                                             </span>
-                                            <span style="font-size: 12px; color: #64748b; font-style:italic;">
+                                            <span style="font-size: 11.5px; color: #64748b; font-style:italic;">
                                                 Catatan: {{ $bon->notes ?: '-' }}
                                             </span>
                                         </div>
@@ -508,30 +600,30 @@
                                             <thead>
                                                 <tr>
                                                     <th style="width: 40px; text-align: center;">No</th>
-                                                    <th>Kode Barang</th>
+                                                    <th style="width: 140px;">Kode Barang</th>
                                                     <th>Nama Barang</th>
-                                                    <th style="text-align: center;">Qty Diminta</th>
-                                                    <th style="text-align: center;">Qty Disetujui</th>
-                                                    <th style="text-align: center;">Satuan</th>
+                                                    <th style="text-align: center; width: 110px;">Qty Diminta</th>
+                                                    <th style="text-align: center; width: 110px;">Qty Disetujui</th>
+                                                    <th style="text-align: center; width: 90px;">Satuan</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($bon->details as $idx => $d)
                                                 <tr>
-                                                    <td style="text-align: center;">{{ $idx + 1 }}</td>
+                                                    <td style="text-align: center; font-size: 11.5px;">{{ $idx + 1 }}</td>
                                                     <td>
                                                         <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #475569; font-size:11px;">
                                                             {{ $d->item ? $d->item->code : '-' }}
                                                         </code>
                                                     </td>
-                                                    <td style="font-weight:500;">{{ $d->item ? $d->item->name : 'Item #'.$d->item_id }}</td>
-                                                    <td style="text-align: center; font-weight: 600;">
+                                                    <td style="font-weight:500; font-size: 12px;">{{ $d->item ? $d->item->name : 'Item #'.$d->item_id }}</td>
+                                                    <td style="text-align: center; font-weight: 600; font-size: 12px;">
                                                         {{ (float)$d->quantity }} {{-- FIX CAST FLOAT --}}
                                                     </td>
-                                                    <td style="text-align: center; font-weight: 600; color: var(--primary);">
+                                                    <td style="text-align: center; font-weight: 600; color: var(--primary); font-size: 12px;">
                                                         {{ (float)$d->approved_quantity }} {{-- FIX CAST FLOAT --}}
                                                     </td>
-                                                    <td style="text-align: center;">{{ $d->item ? $d->item->unit : '-' }}</td>
+                                                    <td style="text-align: center; font-size: 12px;">{{ $d->item ? $d->item->unit : '-' }}</td>
                                                 </tr>
                                                 @endforeach
                                             </tbody>
@@ -545,8 +637,8 @@
                             <td colspan="8">
                                 <div class="empty-state">
                                     <div class="empty-icon"><i class="fa fa-folder-open-o"></i></div>
-                                    <h4 style="font-size: 18px; font-weight: 600; margin: 0 0 8px 0; color: #475569;">Data Tidak Ditemukan</h4>
-                                    <p style="font-size: 14px; margin: 0;">Silakan ubah filter pencarian atau buat BON baru.</p>
+                                    <h4 style="font-size: 16px; font-weight: 600; margin: 0 0 6px 0; color: #475569;">Data Tidak Ditemukan</h4>
+                                    <p style="font-size: 13px; margin: 0;">Silakan ubah filter pencarian atau buat BON baru.</p>
                                 </div>
                             </td>
                         </tr>
@@ -556,11 +648,11 @@
         </div>
 
         {{-- PAGINATION --}}
-        <div style="padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-size: 13px; color: #64748b;">
+        <div style="padding: 12px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fff; flex-wrap: wrap; gap: 10px;">
+            <div style="font-size: 12.5px; color: #64748b;">
                 Menampilkan <strong>{{ $bons->count() }}</strong> dari <strong>{{ $bons->total() }}</strong> data
             </div>
-            <div>
+            <div class="bon-pagination-wrap">
                 {{ $bons->appends(['q' => $q, 'from' => $from, 'to' => $to, 'department' => $department, 'status' => $status, 'perPage' => $perPage])->links() }}
             </div>
         </div>
