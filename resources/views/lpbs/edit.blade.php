@@ -24,6 +24,7 @@
 @section('content')
 {{-- Load Select2 CSS --}}
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet">
 {{-- Load Flatpickr CSS (Format d/m/Y) --}}
 <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -59,27 +60,33 @@
     
     /* --- FIX: PERKECIL UKURAN FLATPICKR (Sesuai Request) --- */
     .flatpickr-calendar {
-        font-size: 12px !important; /* Perkecil base font */
-        width: 310px !important;    /* Perkecil lebar total */
+        font-size: 12px !important;
+        width: 310px !important;
     }
     .flatpickr-rContainer, .flatpickr-days, .dayContainer {
-        width: 310px !important;    /* Sesuaikan lebar container hari */
+        width: 310px !important;
     }
     .flatpickr-day {
-        height: 32px !important;    /* Perkecil area klik tanggal */
+        height: 32px !important;
         line-height: 32px !important;
         max-width: 42px !important;
     }
     .flatpickr-current-month {
-        font-size: 110% !important; /* Sesuaikan ukuran font bulan */
+        font-size: 110% !important;
         padding-top: 10px !important;
     }
 
+    /* --- LAYOUT UTAMA: Diperluas tanpa margin kosong berlebih --- */
     .page-container {
         width: 100%;
-        padding: 30px 40px;
+        padding: 0 0 20px 0;
         box-sizing: border-box;
     }
+
+    /* Category indicators */
+    .dot-cat { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-gen { background-color: #16a34a; box-shadow: 0 0 0 2px #dcfce7; } 
+    .dot-app { background-color: #d97706; box-shadow: 0 0 0 2px #fef3c7; }
 
     /* --- HEADER SECTION --- */
     .dashboard-header {
@@ -512,89 +519,116 @@
 
         {{-- SECTION 2: DETAIL --}}
         <div class="card-section">
-            <div class="card-header" style="justify-content: space-between;">
+            <div class="card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <div class="header-icon-wrapper-small" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
                         <i class="fa fa-cubes"></i>
                     </div>
                     <h3 class="card-title">Detail Barang</h3>
                 </div>
-                <button type="button" class="btn-add-row" id="btn-add-row">
-                    <i class="fa fa-plus"></i> Tambah Baris
-                </button>
+                <div style="font-size:11px; color:#64748b; font-weight:600;">
+                    Pilih item dari dropdown di bawah untuk menambah ke tabel.
+                </div>
             </div>
             
             <div class="card-body" style="padding:0;">
                 <div style="padding: 20px;">
+                    {{-- CARI & TAMBAH ITEM (AJAX ON-DEMAND SEPERTI REQUESTS/CREATE) --}}
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 700;">Cari & Tambah Item</label>
+                        <select id="itemPicker" class="form-control" style="width: 100%;"></select>
+                        <small style="font-size: 11px; color: var(--text-gray); margin-top: 4px; display: block;">
+                            <i class="fa fa-info-circle text-primary"></i> Ketik kode atau nama barang untuk mencari via server (cepat & hemat memori), lalu klik barang untuk menambahkannya ke tabel.
+                        </small>
+                    </div>
+
                     <div class="table-container">
                         <table class="table" id="items-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px; text-align: center;">No</th>
-                                    <th style="min-width: 350px;">Nama Barang</th>
-                                    <th style="width: 150px;">Satuan</th>
-                                    <th style="width: 200px;">Jumlah</th>
-                                    <th style="width: 50px; text-align: center;">Aksi</th>
+                                    <th style="width: 50px; text-align: center;">No</th>
+                                    <th>Nama Barang</th>
+                                    <th style="width: 140px; text-align: center;">Satuan</th>
+                                    <th style="width: 180px;">Jumlah</th>
+                                    <th style="width: 60px; text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
                                     $rows = [];
                                     if(old('items')) {
-                                        $rows = old('items');
+                                        $oldItems = old('items');
+                                        $itemIds = array_filter(array_map(function($r) { return isset($r['item_id']) ? $r['item_id'] : null; }, $oldItems));
+                                        $itemModels = count($itemIds) ? \App\Item::with('category')->whereIn('id', $itemIds)->get()->keyBy('id') : collect([]);
+                                        foreach($oldItems as $r) {
+                                            $iId = isset($r['item_id']) ? $r['item_id'] : null;
+                                            $rows[] = [
+                                                'item_id' => $iId,
+                                                'item'    => $iId && isset($itemModels[$iId]) ? $itemModels[$iId] : null,
+                                                'unit'    => isset($r['unit']) ? $r['unit'] : '',
+                                                'quantity'=> isset($r['quantity']) ? $r['quantity'] : ''
+                                            ];
+                                        }
                                     } else {
                                         foreach($hdr->details as $d) {
                                             $rows[] = [
                                                 'item_id' => $d->item_id,
-                                                'unit' => isset($d->item->unit) ? $d->item->unit : '',
-                                                'quantity' => $d->quantity
+                                                'item'    => $d->item,
+                                                'unit'    => isset($d->item->unit) ? $d->item->unit : '',
+                                                'quantity'=> (float) $d->quantity
                                             ];
                                         }
                                     }
-                                    if(count($rows) == 0) $rows = [[]];
                                 @endphp
 
-                                @foreach($rows as $idx => $row)
+                                @forelse($rows as $idx => $row)
                                     @php
-                                        $valId  = isset($row['item_id']) ? $row['item_id'] : '';
-                                        $valUnit = isset($row['unit']) ? $row['unit'] : '';
-                                        $valQty = isset($row['quantity']) ? $row['quantity'] : '';
+                                        $valId   = isset($row['item_id']) ? $row['item_id'] : '';
+                                        $valItem = isset($row['item']) ? $row['item'] : null;
+                                        $valUnit = isset($row['unit']) ? $row['unit'] : ($valItem ? $valItem->unit : '');
+                                        $valQty  = isset($row['quantity']) ? $row['quantity'] : '';
+                                        $code    = $valItem ? ($valItem->harmoni_code ?: $valItem->code) : '';
+                                        $name    = $valItem ? $valItem->name : 'Item #'.$valId;
+                                        $catCode = ($valItem && $valItem->category) ? strtoupper($valItem->category->code) : '';
+                                        $isApp   = in_array($catCode, ['AK', 'PK']);
                                     @endphp
-                                    <tr>
-                                        <td style="text-align: center;">
+                                    <tr class="item-row" data-item-id="{{ $valId }}">
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <div class="row-number">{{ $idx + 1 }}</div>
+                                            <input type="hidden" name="items[{{ $idx }}][item_id]" value="{{ $valId }}" class="item-id-input">
                                         </td>
-                                        <td>
-                                            {{-- HAPUS REQUIRED --}}
-                                            <select name="items[{{ $idx }}][item_id]" class="form-control item-select">
-                                                <option value="">-- Cari Barang --</option>
-                                                @foreach($items as $item)
-                                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}"
-                                                        {{ $valId == $item->id ? 'selected' : '' }}>
-                                                        [{{ $item->code }}] {{ $item->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                        <td style="vertical-align: middle;">
+                                            <div style="font-weight: 700; color: #1e293b; font-size: 13.5px; display: flex; align-items: center; gap: 8px;">
+                                                <span class="dot-cat {{ $isApp ? 'dot-app' : 'dot-gen' }}" title="{{ $isApp ? 'Apparel' : 'General' }}"></span>
+                                                <span>@if($code)[{{ $code }}] @endif{{ $name }}</span>
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <input type="text" name="items[{{ $idx }}][unit]"
                                                    class="form-control unit-input"
-                                                   value="{{ $valUnit }}" readonly tabindex="-1">
+                                                   value="{{ $valUnit }}" readonly tabindex="-1"
+                                                   style="background-color: #f8fafc; text-align: center; font-weight: 600;">
                                         </td>
-                                        <td>
-                                            {{-- FIX: Tambah step="0.01" biar bisa input desimal --}}
+                                        <td style="vertical-align: middle;">
                                             <input type="number" name="items[{{ $idx }}][quantity]"
                                                    class="form-control qty-input"
                                                    min="0.01" step="0.01"
-                                                   value="{{ $valQty }}">
+                                                   value="{{ $valQty }}" required>
                                         </td>
-                                        <td style="text-align: center;">
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr id="empty-state-row">
+                                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">
+                                            <i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 6px; color: #cbd5e1;"></i>
+                                            Belum ada barang. Gunakan pencarian di atas untuk menambahkan barang ke tabel.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -621,99 +655,158 @@
     (function($) {
         'use strict';
 
-        function initSelect2($element) {
-            $element.select2({
-                placeholder: "-- Cari Barang --",
-                allowClear: true,
-                width: '100%',
-                theme: "default"
-            });
+        var APPAREL_CODES = ['AK', 'PK'];
+        function isApparel(catCode) {
+            if(!catCode) return false;
+            return APPAREL_CODES.indexOf(catCode.toUpperCase()) > -1;
         }
 
         function renumberRows() {
-            $('#items-table tbody tr').each(function(index) {
+            var rows = $('#items-table tbody tr.item-row');
+            if (rows.length === 0) {
+                if ($('#empty-state-row').length === 0) {
+                    $('#items-table tbody').html(
+                        '<tr id="empty-state-row">' +
+                            '<td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">' +
+                                '<i class="fa fa-inbox" style="font-size: 24px; display: block; margin-bottom: 6px; color: #cbd5e1;"></i>' +
+                                'Belum ada barang. Gunakan pencarian di atas untuk menambahkan barang ke tabel.' +
+                            '</td>' +
+                        '</tr>'
+                    );
+                }
+                return;
+            }
+
+            $('#empty-state-row').remove();
+            rows.each(function(index) {
                 $(this).find('.row-number').text(index + 1);
-                $(this).find('select, input').each(function() {
-                    let name = $(this).attr('name');
+                $(this).find('input').each(function() {
+                    var name = $(this).attr('name');
                     if (name) {
-                        let newName = name.replace(/items\[\d+\]/, 'items[' + index + ']');
+                        var newName = name.replace(/items\[\d+\]/, 'items[' + index + ']');
                         $(this).attr('name', newName);
                     }
                 });
             });
         }
 
-        // Logic Unit Check for Edit Mode
-        function checkExistingUnits() {
-            $('.item-select').each(function(){
-                let $sel = $(this);
-                let $row = $sel.closest('tr');
-                let $unitInput = $row.find('.unit-input');
-                
-                if($sel.val() && $unitInput.val() === '') {
-                    let unit = $sel.find('option:selected').data('unit');
-                    $unitInput.val(unit || '');
+        function existsItemId(itemId) {
+            var found = false;
+            $('#items-table tbody input.item-id-input').each(function() {
+                if (parseInt($(this).val(), 10) === parseInt(itemId, 10)) {
+                    found = true;
                 }
             });
+            return found;
+        }
+
+        function addItemToTable(it) {
+            if (!it || !it.id) return;
+            var itemId = it.id;
+
+            if (existsItemId(itemId)) {
+                alert('Barang sudah ada di dalam tabel.');
+                return;
+            }
+
+            $('#empty-state-row').remove();
+
+            var rowCount = $('#items-table tbody tr.item-row').length;
+            var isApp = isApparel(it.cat_code);
+            var dotClass = isApp ? 'dot-app' : 'dot-gen';
+            var typeLabel = isApp ? 'Apparel' : 'General';
+            var displayCode = it.harmoni_code || it.code || '-';
+
+            var tr = 
+                '<tr class="item-row" data-item-id="' + itemId + '">' +
+                    '<td style="text-align: center; vertical-align: middle;">' +
+                        '<div class="row-number">' + (rowCount + 1) + '</div>' +
+                        '<input type="hidden" name="items[' + rowCount + '][item_id]" value="' + itemId + '" class="item-id-input">' +
+                    '</td>' +
+                    '<td style="vertical-align: middle;">' +
+                        '<div style="font-weight: 700; color: #1e293b; font-size: 13.5px; display: flex; align-items: center; gap: 8px;">' +
+                            '<span class="dot-cat ' + dotClass + '" title="' + typeLabel + '"></span> ' +
+                            '<span>[' + displayCode + '] ' + (it.name || '') + '</span>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td style="text-align: center; vertical-align: middle;">' +
+                        '<input type="text" name="items[' + rowCount + '][unit]" class="form-control unit-input" value="' + (it.unit || '') + '" readonly tabindex="-1" style="background-color: #f8fafc; text-align: center; font-weight: 600;">' +
+                    '</td>' +
+                    '<td style="vertical-align: middle;">' +
+                        '<input type="number" name="items[' + rowCount + '][quantity]" class="form-control qty-input" min="0.01" step="0.01" value="1" required>' +
+                    '</td>' +
+                    '<td style="text-align: center; vertical-align: middle;">' +
+                        '<button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">' +
+                            '<i class="fa fa-trash"></i>' +
+                        '</button>' +
+                    '</td>' +
+                '</tr>';
+
+            $('#items-table tbody').append(tr);
+            renumberRows();
         }
 
         $(document).ready(function() {
-            // FIX: Inisialisasi Flatpickr
+            // Flatpickr
             flatpickr(".datepicker-flat", {
-                altInput: true,      
-                altFormat: "d/m/Y",  
-                dateFormat: "Y-m-d", 
-                locale: "id",        
-                allowInput: true     
+                altInput: true,
+                altFormat: "d/m/Y",
+                dateFormat: "Y-m-d",
+                locale: "id",
+                allowInput: true
             });
 
-            // Init
-            $('.item-select').each(function() { initSelect2($(this)); });
-            checkExistingUnits();
+            // SELECT2 ITEM PICKER (AJAX / On-Demand seperti requests/create)
+            var $picker = $('#itemPicker');
+            $picker.select2({
+                theme: 'bootstrap',
+                width: '100%',
+                placeholder: 'Pilih atau cari barang...',
+                allowClear: true,
+                minimumInputLength: 0,
+                ajax: {
+                    url: '{{ route("lpbs.lookup.items") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return { q: params.term };
+                    },
+                    processResults: function(data) {
+                        return { results: data };
+                    },
+                    cache: true
+                },
+                templateResult: function(item) {
+                    if (item.loading) return item.text;
+                    if (!item.id) return item.text;
 
-            // Add Row
-            $('#btn-add-row').on('click', function() {
-                let tbody = $('#items-table tbody');
-                let rowCount = tbody.find('tr').length;
-                
-                // TEMPLATE BARIS BARU (TANPA REQUIRED)
-                // FIX: Tambah step="0.01" di input quantity
-                let newRow = `
-                    <tr>
-                        <td style="text-align: center;">
-                            <div class="row-number">${rowCount + 1}</div>
-                        </td>
-                        <td>
-                            <select name="items[${rowCount}][item_id]" class="form-control item-select">
-                                <option value="">-- Cari Barang --</option>
-                                @foreach($items as $item)
-                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}">
-                                        [{{ $item->code }}] {{ $item->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="items[${rowCount}][unit]" class="form-control unit-input" readonly tabindex="-1" placeholder="Auto">
-                        </td>
-                        <td>
-                            <input type="number" name="items[${rowCount}][quantity]" class="form-control" min="0.01" step="0.01" placeholder="0">
-                        </td>
-                        <td style="text-align: center;">
-                            <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                let $newRowObj = $(newRow);
-                tbody.append($newRowObj);
-                initSelect2($newRowObj.find('.item-select'));
+                    var isApp = isApparel(item.cat_code);
+                    var dotClass = isApp ? 'dot-app' : 'dot-gen';
+                    var typeLabel = isApp ? 'Apparel' : 'General';
+                    var displayCode = item.harmoni_code || item.code || '';
+
+                    return $(
+                        '<div style="padding:4px 0;">' +
+                            '<div class="s2-code" style="font-weight:bold; font-size:13px; color:#1e293b;">' +
+                                '<span class="dot-cat ' + dotClass + '" title="' + typeLabel + '"></span> [' + displayCode + '] ' + (item.name || '') +
+                            '</div>' +
+                            '<div class="s2-sub" style="font-size:11px; color:#64748b;">Unit: ' + (item.unit || '-') + '</div>' +
+                        '</div>'
+                    );
+                },
+                templateSelection: function(item) {
+                    return item.text || 'Ketik kode / nama item...';
+                }
+            });
+
+            $picker.on('select2:select', function(e) {
+                addItemToTable(e.params.data);
+                $(this).val(null).trigger('change');
             });
 
             // Remove Row
             $('#items-table').on('click', '.btn-remove-row', function() {
-                if ($('#items-table tbody tr').length > 1) {
+                if ($('#items-table tbody tr.item-row').length > 1) {
                     $(this).closest('tr').remove();
                     renumberRows();
                 } else {
@@ -721,10 +814,13 @@
                 }
             });
 
-            // Auto-fill Unit
-            $('#items-table').on('change', '.item-select', function() {
-                let unit = $(this).find('option:selected').data('unit');
-                $(this).closest('tr').find('.unit-input').val(unit ? unit : '');
+            // Validasi sebelum submit
+            $('#lpb-form').on('submit', function(e) {
+                if ($('#items-table tbody tr.item-row').length === 0) {
+                    e.preventDefault();
+                    alert('Harap masukkan minimal 1 barang ke dalam tabel.');
+                    return false;
+                }
             });
         });
 

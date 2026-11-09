@@ -443,18 +443,54 @@ class LpbController extends Controller
         return redirect()->route('lpbs.index');
     }
 
-    public function edit($id)
+    public function lookupItems(Request $request)
     {
-        $hdr = LpbHeader::with('details.item')->findOrFail($id);
+        $q = trim($request->get('q', ''));
+        $op = (DB::getDriverName() === 'pgsql') ? 'ILIKE' : 'like';
 
         $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
 
-        $itemsQuery = Item::orderBy('name', 'asc');
-        if (is_array($allowedItemIds)) {
-            $itemsQuery->whereIn('id', $allowedItemIds);
+        $items = Item::with('category')->where('current_status', 'ACTIVE');
+
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            $items->where(function ($qq) use ($like, $op) {
+                $qq->where('harmoni_code', $op, $like)
+                   ->orWhere('code', $op, $like)
+                   ->orWhere('name', $op, $like);
+            });
         }
 
-        $items = $itemsQuery->get();
+        if (is_array($allowedItemIds)) {
+            $items->whereIn('id', $allowedItemIds);
+        }
+
+        $items = $items->orderBy('code', 'asc')->limit(30)->get();
+
+        $out = [];
+        foreach ($items as $it) {
+            $catCode = ($it->category && $it->category->code) ? strtoupper($it->category->code) : '';
+            $catName = ($it->category && $it->category->name) ? strtoupper($it->category->name) : '';
+            $displayCode = $it->harmoni_code ? $it->harmoni_code : $it->code;
+
+            $out[] = [
+                'id'           => $it->id,
+                'code'         => $it->code,
+                'harmoni_code' => $it->harmoni_code,
+                'name'         => $it->name,
+                'unit'         => $it->unit,
+                'cat_code'     => $catCode,
+                'cat_name'     => $catName,
+                'text'         => '[' . $displayCode . '] ' . $it->name,
+            ];
+        }
+
+        return response()->json($out);
+    }
+
+    public function edit($id)
+    {
+        $hdr = LpbHeader::with('details.item.category')->findOrFail($id);
 
         $purchaseOrders = \App\PurchaseOrder::whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED'])
             ->orWhere('id', $hdr->purchase_order_id)
@@ -464,7 +500,7 @@ class LpbController extends Controller
         return view('lpbs.edit', array(
             'header'         => $hdr,
             'hdr'            => $hdr, 
-            'items'          => $items,
+            'items'          => [],
             'purchaseOrders' => $purchaseOrders,
         ));
     }
