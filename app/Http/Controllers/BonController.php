@@ -1187,7 +1187,7 @@ class BonController extends Controller
 
     protected function generateBonNumber(Carbon $date)
     {
-        $prefix = 'BON/' . $date->format('Ym') . '/';
+        $prefix = $date->format('Y/m') . '/';
 
         $last = BonHeader::where('bon_number', 'LIKE', $prefix . '%')
             ->orderBy('bon_number', 'desc')

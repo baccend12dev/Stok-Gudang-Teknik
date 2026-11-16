@@ -1697,13 +1697,18 @@ class RequestController extends Controller
     // ============================================================
     protected function generateBonNumber(Carbon $date)
     {
-        $prefix = 'BON/' . $date->format('Ym') . '/';
+        $prefix = $date->format('Y/m') . '/';
         $last = BonHeader::where('bon_number', 'LIKE', $prefix . '%')
             ->orderBy('bon_number', 'desc')
             ->first();
 
-        $next = $last ? ((int) substr($last->bon_number, -4)) + 1 : 1;
-        return $prefix . str_pad($next, 4, '0', STR_PAD_LEFT);
+        $nextNumber = 1;
+        if ($last) {
+            $lastNumber = (int) substr($last->bon_number, strlen($prefix));
+            $nextNumber = $lastNumber + 1;
+        }
+
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     protected function generateRequestNumber()

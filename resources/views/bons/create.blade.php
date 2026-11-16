@@ -179,7 +179,7 @@
                         <input type="text" name="bon_number" class="form-control" 
                                value="{{ old('bon_number') }}" 
                                placeholder="Otomatis jika dikosongkan">
-                        <div class="help-text">Format otomatis: BON/YYYYMM/XXXX</div>
+                        <div class="help-text">Format otomatis: YYYY/MM/XXXX (contoh: {{ date('Y/m') }}/0001)</div>
                     </div>
 
                     <div class="form-group">
