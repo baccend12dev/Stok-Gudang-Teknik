@@ -91,7 +91,11 @@ class LpbController extends Controller
 
         $items = $itemsQuery->get();
 
-        return view('lpbs.create', compact('items'));
+        $activePurchaseOrders = \App\PurchaseOrder::whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return view('lpbs.create', compact('items', 'activePurchaseOrders'));
     }
 
     public function checkExists(Request $request)
@@ -340,6 +344,30 @@ class LpbController extends Controller
             DB::beginTransaction();
 
             $poId = $request->get('purchase_order_id') ? (int) $request->get('purchase_order_id') : null;
+            $items = $request->get('items');
+
+            // Auto-detect PR: Jika tidak dipilih manual, cari apakah ada barang di LPB ini yang cocok dengan PR aktif
+            if (!$poId && is_array($items)) {
+                $itemIds = [];
+                foreach ($items as $row) {
+                    $iId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
+                    if ($iId > 0) {
+                        $itemIds[] = $iId;
+                    }
+                }
+
+                if (!empty($itemIds)) {
+                    $matchedPoDetail = \App\PurchaseOrderDetail::whereIn('item_id', $itemIds)
+                        ->whereHas('purchaseOrder', function ($q) {
+                            $q->whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+                        })
+                        ->first();
+
+                    if ($matchedPoDetail) {
+                        $poId = $matchedPoDetail->purchase_order_id;
+                    }
+                }
+            }
 
             $hdr = LpbHeader::create(array(
                 'lpb_number'        => $request->get('lpb_number'),
@@ -349,8 +377,6 @@ class LpbController extends Controller
                 'notes'             => $request->get('notes'),
                 'purchase_order_id' => $poId
             ));
-
-            $items = $request->get('items');
             $savedCount = 0;
 
             if (is_array($items)) {
@@ -517,6 +543,30 @@ class LpbController extends Controller
             $hdr = LpbHeader::findOrFail($id);
             $oldPoId = $hdr->purchase_order_id;
             $newPoId = $request->get('purchase_order_id') ? (int) $request->get('purchase_order_id') : null;
+            $items = $request->get('items');
+
+            // Auto-detect PR jika tidak diinput manual
+            if (!$newPoId && is_array($items)) {
+                $itemIds = [];
+                foreach ($items as $row) {
+                    $iId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
+                    if ($iId > 0) {
+                        $itemIds[] = $iId;
+                    }
+                }
+
+                if (!empty($itemIds)) {
+                    $matchedPoDetail = \App\PurchaseOrderDetail::whereIn('item_id', $itemIds)
+                        ->whereHas('purchaseOrder', function ($q) {
+                            $q->whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+                        })
+                        ->first();
+
+                    if ($matchedPoDetail) {
+                        $newPoId = $matchedPoDetail->purchase_order_id;
+                    }
+                }
+            }
             
             InventoryHelper::deleteMovement('LPB', $hdr->id);
 
@@ -528,8 +578,6 @@ class LpbController extends Controller
             $hdr->save();
 
             LpbDetail::where('lpb_header_id', $hdr->id)->delete();
-
-            $items = $request->get('items');
             if (is_array($items)) {
                 foreach ($items as $row) {
                     $itemId = isset($row['item_id']) ? (int) $row['item_id'] : 0;

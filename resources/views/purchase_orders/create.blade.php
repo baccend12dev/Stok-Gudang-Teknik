@@ -647,6 +647,11 @@
             if (!item || !item.id) return;
             var tbody = $('#items-table tbody');
 
+            if (item.is_in_active_po) {
+                alert('Barang [' + (item.name || '') + '] tidak dapat ditambahkan karena masih dalam proses pemesanan aktif di PR No. ' + item.active_po_number + ' (belum diterima lengkap).');
+                return;
+            }
+
             // Cek duplikasi
             var exists = false;
             tbody.find('input[type="hidden"][name$="[item_id]"]').each(function() {

@@ -24,6 +24,10 @@
             Seluruh barang dalam PO telah diterima di gudang. Proses PO selesai.
         </li>
         <li>
+            <span class="badge" style="background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe;">CLOSED</span> : 
+            Pemesanan ditutup/diselesaikan lebih awal meskipun ada sisa barang yang tidak datang.
+        </li>
+        <li>
             <span class="badge badge-danger" style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5;">CANCELLED</span> : 
             Pemesanan dibatalkan. Kuantitas pesanan tidak dihitung lagi.
         </li>
@@ -73,6 +77,7 @@ select.form-control {
 .badge-ordered { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
 .badge-partial { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
 .badge-received { background: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; }
+.badge-closed { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
 .badge-cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
 
 .col-expand { width: 40px; text-align: center; }
@@ -161,6 +166,7 @@ select.form-control {
                         <option value="ORDERED" {{ $status == 'ORDERED' ? 'selected' : '' }}>ON ORDER (Dalam Pemesanan)</option>
                         <option value="PARTIALLY_RECEIVED" {{ $status == 'PARTIALLY_RECEIVED' ? 'selected' : '' }}>PARTIAL (Diterima Sebagian)</option>
                         <option value="RECEIVED" {{ $status == 'RECEIVED' ? 'selected' : '' }}>RECEIVED (Selesai)</option>
+                        <option value="CLOSED" {{ $status == 'CLOSED' ? 'selected' : '' }}>CLOSED (Ditutup)</option>
                         <option value="CANCELLED" {{ $status == 'CANCELLED' ? 'selected' : '' }}>CANCELLED (Batal)</option>
                     </select>
                 </div>
@@ -222,6 +228,8 @@ select.form-control {
                                 <span class="badge badge-partial">Partial</span>
                             @elseif($po->status === 'RECEIVED')
                                 <span class="badge badge-received">Received</span>
+                            @elseif($po->status === 'CLOSED')
+                                <span class="badge badge-closed">Closed</span>
                             @elseif($po->status === 'CANCELLED')
                                 <span class="badge badge-cancelled">Cancelled</span>
                             @endif

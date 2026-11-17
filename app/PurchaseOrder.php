@@ -27,8 +27,8 @@ class PurchaseOrder extends Model
         $po = self::with('details')->find($poId);
         if (!$po) return;
 
-        // If PO is cancelled or in draft, don't auto-update from LPB
-        if (in_array($po->status, ['DRAFT', 'CANCELLED'])) {
+        // If PO is cancelled, in draft, or manually closed, don't auto-update from LPB
+        if (in_array($po->status, ['DRAFT', 'CANCELLED', 'CLOSED'])) {
             return;
         }
 

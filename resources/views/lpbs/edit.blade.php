@@ -504,6 +504,19 @@
                                value="{{ old('date', $hdr->date ? $hdr->date->format('Y-m-d') : date('Y-m-d')) }}" 
                                placeholder="dd/mm/yyyy" required>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Hubungkan ke PR Internal (Opsional / Otomatis)</label>
+                        <select name="purchase_order_id" class="form-control" style="font-size:13px;">
+                            <option value="">-- Otomatis Cocokkan Barang ke PR Aktif --</option>
+                            @if(isset($purchaseOrders))
+                                @foreach($purchaseOrders as $apo)
+                                    <option value="{{ $apo->id }}" {{ old('purchase_order_id', $hdr->purchase_order_id) == $apo->id ? 'selected' : '' }}>
+                                        [{{ $apo->po_number }}] {{ $apo->supplier_name ? $apo->supplier_name . ' - ' : '' }}{{ date('d/m/Y', strtotime($apo->date)) }} ({{ $apo->status == 'ORDERED' ? 'On Order' : ($apo->status == 'PARTIALLY_RECEIVED' ? 'Partial' : $apo->status) }})
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
                     <div class="form-group full-width">
                         <label class="form-label">Pemasok / Referensi</label>
                         <input type="text" name="vendor" class="form-control"

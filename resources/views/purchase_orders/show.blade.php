@@ -102,6 +102,8 @@
                     <span class="badge badge-partial">Diterima Sebagian</span>
                 @elseif($po->status === 'RECEIVED')
                     <span class="badge badge-received">Diterima Lengkap</span>
+                @elseif($po->status === 'CLOSED')
+                    <span class="badge badge-closed" style="background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe;">Ditutup / Selesai</span>
                 @elseif($po->status === 'CANCELLED')
                     <span class="badge badge-cancelled">Dibatalkan</span>
                 @endif
@@ -144,7 +146,10 @@
                 @endif
 
                 @if(in_array($po->status, ['ORDERED', 'PARTIALLY_RECEIVED']))
-                    <!-- <a href="{{ route('lpbs.create', ['po_id' => $po->id]) }}" class="btn btn-action-success"><i class="fa fa-download"></i> Terima Barang (Buat LPB)</a> -->
+                    <form action="{{ route('purchase-orders.close', $po->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tutup / selesaikan PR ini? Sisa barang yang belum datang akan dianggap selesai/batal dan kuncian barang akan terlepas.')">
+                        {{ csrf_field() }}
+                        <button type="submit" class="btn btn-action-success" style="background: linear-gradient(145deg, #8b5cf6, #6d28d9);"><i class="fa fa-check-circle"></i> Tutup / Selesaikan PR</button>
+                    </form>
                     <a href="{{ route('purchase-orders.edit', $po->id) }}" class="btn btn-action-light"><i class="fa fa-pencil"></i> Edit PR</a>
                     <form action="{{ route('purchase-orders.cancel', $po->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Batalkan pemesanan PO ini?')">
                         {{ csrf_field() }}

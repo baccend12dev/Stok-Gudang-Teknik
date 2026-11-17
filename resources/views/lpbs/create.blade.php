@@ -546,6 +546,22 @@
                                value="{{ old('no_po') }}" readonly style="background-color: #f8fafc; font-weight: 600; color: #1e293b;">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Hubungkan ke PR Internal (Opsional / Otomatis)</label>
+                        <select name="purchase_order_id" id="purchase_order_id_select" class="form-control" style="font-size:13px;">
+                            <option value="">-- Otomatis Cocokkan Barang ke PR Aktif --</option>
+                            @if(isset($activePurchaseOrders))
+                                @foreach($activePurchaseOrders as $apo)
+                                    <option value="{{ $apo->id }}" {{ old('purchase_order_id') == $apo->id ? 'selected' : '' }}>
+                                        [{{ $apo->po_number }}] {{ $apo->supplier_name ? $apo->supplier_name . ' - ' : '' }}{{ date('d/m/Y', strtotime($apo->date)) }} ({{ $apo->status == 'ORDERED' ? 'On Order' : 'Partial' }})
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <small style="font-size: 11px; color: var(--text-gray); margin-top: 4px; display: block;">
+                            <i class="fa fa-info-circle text-primary"></i> Jika dibiarkan otomatis, sistem akan langsung mencocokkan barang yang diterima dengan PR aktif yang bersesuaian.
+                        </small>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Pemasok / Vendor</label>
                         <input type="text" name="vendor" id="vendor-input" class="form-control"
                                placeholder="Nama Supplier"

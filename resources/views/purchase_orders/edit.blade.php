@@ -662,6 +662,11 @@
             if (!it || !it.id) return;
             var itemId = it.id;
 
+            if (it.is_in_active_po) {
+                alert('Barang [' + (it.name || '') + '] tidak dapat ditambahkan karena masih dalam proses pemesanan aktif di PR No. ' + it.active_po_number + ' (belum diterima lengkap).');
+                return;
+            }
+
             if (existsItemId(itemId)) {
                 alert('Barang ini sudah ada di dalam tabel.');
                 return;

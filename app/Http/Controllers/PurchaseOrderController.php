@@ -152,17 +152,36 @@ class PurchaseOrderController extends Controller
             ->limit(30)
             ->get();
 
+        $itemIds = $items->pluck('id')->toArray();
+        $activePoMap = [];
+        if (!empty($itemIds)) {
+            $activeDetails = PurchaseOrderDetail::whereIn('item_id', $itemIds)
+                ->whereHas('purchaseOrder', function($q) {
+                    $q->whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+                })
+                ->with('purchaseOrder')
+                ->get();
+            foreach ($activeDetails as $ad) {
+                if ($ad->purchaseOrder) {
+                    $activePoMap[$ad->item_id] = $ad->purchaseOrder->po_number;
+                }
+            }
+        }
+
         $out = [];
         foreach ($items as $it) {
             $displayCode = $it->harmoni_code ? $it->harmoni_code : $it->code;
+            $activePoNo = isset($activePoMap[$it->id]) ? $activePoMap[$it->id] : null;
             $out[] = [
-                'id'           => $it->id,
-                'code'         => $it->code,
-                'harmoni_code' => $it->harmoni_code,
-                'display_code' => $displayCode,
-                'name'         => $it->name,
-                'unit'         => $it->unit,
-                'text'         => '[' . $displayCode . '] ' . $it->name,
+                'id'               => $it->id,
+                'code'             => $it->code,
+                'harmoni_code'     => $it->harmoni_code,
+                'display_code'     => $displayCode,
+                'name'             => $it->name,
+                'unit'             => $it->unit,
+                'is_in_active_po'  => $activePoNo !== null,
+                'active_po_number' => $activePoNo,
+                'text'             => '[' . $displayCode . '] ' . $it->name . ($activePoNo ? ' (AKTIF DI PR: ' . $activePoNo . ')' : ''),
             ];
         }
 
@@ -221,6 +240,36 @@ class PurchaseOrderController extends Controller
 
             $status = $request->get('action') === 'ordered' ? 'ORDERED' : 'DRAFT';
 
+            $items = $request->get('items');
+
+            // Validasi Anti-Double Order: Jika PR diterbitkan (ORDERED), periksa apakah ada barang yang masih aktif di PR lain
+            if ($status === 'ORDERED' && is_array($items)) {
+                $requestedItemIds = [];
+                foreach ($items as $row) {
+                    $iId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
+                    if ($iId > 0) {
+                        $requestedItemIds[] = $iId;
+                    }
+                }
+
+                if (!empty($requestedItemIds)) {
+                    $activeExisting = PurchaseOrderDetail::whereIn('item_id', $requestedItemIds)
+                        ->whereHas('purchaseOrder', function ($q) {
+                            $q->whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+                        })
+                        ->with(['item', 'purchaseOrder'])
+                        ->first();
+
+                    if ($activeExisting) {
+                        $existingName = $activeExisting->item ? $activeExisting->item->name : 'Item #' . $activeExisting->item_id;
+                        $existingCode = $activeExisting->item ? ($activeExisting->item->harmoni_code ?: $activeExisting->item->code) : '';
+                        $existingPoNo = $activeExisting->purchaseOrder ? $activeExisting->purchaseOrder->po_number : '-';
+                        DB::rollBack();
+                        return back()->withInput()->with('error', "Barang [{$existingCode}] {$existingName} tidak dapat dipesan karena masih dalam proses pemesanan aktif di PR No. {$existingPoNo} (belum tuntas diterima).");
+                    }
+                }
+            }
+
             $po = PurchaseOrder::create([
                 'po_number'     => $request->get('po_number'),
                 'date'          => $request->get('date'),
@@ -228,8 +277,6 @@ class PurchaseOrderController extends Controller
                 'status'        => $status,
                 'notes'         => $request->get('notes')
             ]);
-
-            $items = $request->get('items');
             foreach ($items as $row) {
                 $itemId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
                 $qty = isset($row['quantity']) ? (float) $row['quantity'] : 0;
@@ -282,9 +329,9 @@ class PurchaseOrderController extends Controller
     {
         $po = PurchaseOrder::with('details.item')->findOrFail($id);
 
-        if (in_array($po->status, ['RECEIVED', 'CANCELLED'])) {
+        if (in_array($po->status, ['RECEIVED', 'CANCELLED', 'CLOSED'])) {
             return redirect()->route('purchase-orders.show', $po->id)
-                ->with('error', 'PO yang sudah selesai / dibatalkan tidak dapat diedit.');
+                ->with('error', 'PO yang sudah selesai / ditutup / dibatalkan tidak dapat diedit.');
         }
 
         return view('purchase_orders.edit', compact('po'));
@@ -294,9 +341,9 @@ class PurchaseOrderController extends Controller
     {
         $po = PurchaseOrder::findOrFail($id);
 
-        if (in_array($po->status, ['RECEIVED', 'CANCELLED'])) {
+        if (in_array($po->status, ['RECEIVED', 'CANCELLED', 'CLOSED'])) {
             return redirect()->route('purchase-orders.show', $po->id)
-                ->with('error', 'PO yang sudah selesai / dibatalkan tidak dapat diupdate.');
+                ->with('error', 'PO yang sudah selesai / ditutup / dibatalkan tidak dapat diupdate.');
         }
 
         $this->validate($request, [
@@ -313,6 +360,37 @@ class PurchaseOrderController extends Controller
                 $status = 'ORDERED';
             }
 
+            $items = $request->get('items');
+
+            // Validasi Anti-Double Order pada update: periksa apakah ada barang yang aktif di PR lain
+            if (in_array($status, ['ORDERED', 'PARTIALLY_RECEIVED']) && is_array($items)) {
+                $requestedItemIds = [];
+                foreach ($items as $row) {
+                    $iId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
+                    if ($iId > 0) {
+                        $requestedItemIds[] = $iId;
+                    }
+                }
+
+                if (!empty($requestedItemIds)) {
+                    $activeExisting = PurchaseOrderDetail::whereIn('item_id', $requestedItemIds)
+                        ->where('purchase_order_id', '!=', $po->id)
+                        ->whereHas('purchaseOrder', function ($q) {
+                            $q->whereIn('status', ['ORDERED', 'PARTIALLY_RECEIVED']);
+                        })
+                        ->with(['item', 'purchaseOrder'])
+                        ->first();
+
+                    if ($activeExisting) {
+                        $existingName = $activeExisting->item ? $activeExisting->item->name : 'Item #' . $activeExisting->item_id;
+                        $existingCode = $activeExisting->item ? ($activeExisting->item->harmoni_code ?: $activeExisting->item->code) : '';
+                        $existingPoNo = $activeExisting->purchaseOrder ? $activeExisting->purchaseOrder->po_number : '-';
+                        DB::rollBack();
+                        return back()->withInput()->with('error', "Barang [{$existingCode}] {$existingName} tidak dapat dipesan karena masih dalam proses pemesanan aktif di PR No. {$existingPoNo} (belum tuntas diterima).");
+                    }
+                }
+            }
+
             $po->date = $request->get('date');
             $po->supplier_name = $request->get('supplier_name');
             $po->notes = $request->get('notes');
@@ -322,7 +400,6 @@ class PurchaseOrderController extends Controller
             // Hapus detail lama dan ganti dengan yang baru
             PurchaseOrderDetail::where('purchase_order_id', $po->id)->delete();
 
-            $items = $request->get('items');
             foreach ($items as $row) {
                 $itemId = isset($row['item_id']) ? (int) $row['item_id'] : 0;
                 $qty = isset($row['quantity']) ? (float) $row['quantity'] : 0;
@@ -390,6 +467,25 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.show', $po->id)
             ->with('success', 'Status PO berhasil diubah menjadi On Order (Dalam Pemesanan).');
+    }
+
+    public function close(Request $request, $id)
+    {
+        $po = PurchaseOrder::findOrFail($id);
+
+        if (!in_array($po->status, ['ORDERED', 'PARTIALLY_RECEIVED'])) {
+            return back()->with('error', 'Hanya PO berstatus On Order atau Partial yang dapat ditutup/diselesaikan.');
+        }
+
+        $closeReason = $request->get('close_reason');
+        $po->status = 'CLOSED';
+        if ($closeReason) {
+            $po->notes = trim($po->notes . "\n[DITUTUP: " . $closeReason . "]");
+        }
+        $po->save();
+
+        return redirect()->route('purchase-orders.show', $po->id)
+            ->with('success', 'Purchase Order (PR) berhasil ditutup/diselesaikan. Kuncian barang telah dilepas.');
     }
 
     public function cancel($id)
