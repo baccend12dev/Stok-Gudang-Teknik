@@ -97,7 +97,7 @@
                 @if($po->status === 'DRAFT')
                     <span class="badge badge-draft">Draft (Rencana)</span>
                 @elseif($po->status === 'ORDERED')
-                    <span class="badge badge-ordered">Ordered (Dalam Pemesanan)</span>
+                    <span class="badge badge-ordered">On Order (Dalam Pemesanan)</span>
                 @elseif($po->status === 'PARTIALLY_RECEIVED')
                     <span class="badge badge-partial">Diterima Sebagian</span>
                 @elseif($po->status === 'RECEIVED')

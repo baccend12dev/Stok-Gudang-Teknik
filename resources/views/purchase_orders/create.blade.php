@@ -11,7 +11,7 @@
             <strong>Simpan sebagai Draft:</strong> Menyimpan sebagai rencana pembelian (Status: `DRAFT`). Barang **TIDAK** masuk ke status "Sedang Dipesan". Masih bisa diubah kapan saja.
         </li>
         <li>
-            <strong>Simpan & Pesan:</strong> Menerbitkan PO resmi (Status: `ORDERED` / Dalam Pemesanan). Jumlah pesanan akan langsung dihitung di kolom **"Sedang Dipesan"** pada dashboard dan monitor stok.
+            <strong>Simpan & Pesan:</strong> Menerbitkan PO resmi (Status: `ON ORDER` / Dalam Pemesanan). Jumlah pesanan akan langsung dihitung di kolom **"Sedang Dipesan"** pada dashboard dan monitor stok.
         </li>
     </ul>
 @endsection

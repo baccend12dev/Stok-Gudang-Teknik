@@ -9,6 +9,7 @@
 
 @section('content')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -473,99 +474,127 @@
         </div>
 
         <div class="card-section">
-            <div class="card-header" style="justify-content: space-between;">
+            <div class="card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <div class="header-icon-wrapper-small" style="background: rgba(16, 185, 129, 0.1); color: var(--success);"><i class="fa fa-cubes"></i></div>
                     <h3 class="card-title">Detail Barang Pesanan</h3>
                 </div>
-                <button type="button" class="btn-add-row" id="btn-add-row">
-                    <i class="fa fa-plus"></i> Tambah Baris
-                </button>
+                <div style="font-size:12px; color:#64748b; font-weight:500;">
+                    Pilih barang dari pencarian di bawah untuk menambah ke tabel.
+                </div>
             </div>
             
             <div class="card-body" style="padding:0;">
-                <div style="padding: 12px;">
+                <div style="padding: 20px;">
+                    {{-- CARI & TAMBAH ITEM (AJAX ON-DEMAND SEPERTI LPB & CREATE PO) --}}
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="font-weight: 700;">Cari & Tambah Barang</label>
+                        <select id="itemPicker" class="form-control" style="width: 100%;"></select>
+                        <small style="font-size: 11px; color: var(--text-gray); margin-top: 4px; display: block;">
+                            <i class="fa fa-info-circle text-primary"></i> Ketik nama atau kode barang untuk mencari via server (cepat & hemat memori), lalu klik barang untuk menambahkannya ke tabel.
+                        </small>
+                    </div>
+
                     <div class="table-container">
                         <table class="table" id="items-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px; text-align: center;">No</th>
-                                    <th style="min-width: 320px;">Nama Barang</th>
+                                    <th style="width: 50px; text-align: center;">No</th>
+                                    <th style="min-width: 280px;">Nama Barang</th>
                                     <th style="width: 120px; text-align: center;">Satuan</th>
-                                    <th style="width: 180px; text-align: center;">Kuantitas Pesan</th>
-                                    <th style="width: 250px;">Catatan Item (Opsional)</th>
-                                    <th style="width: 80px; text-align: center;">Aksi</th>
+                                    <th style="width: 160px; text-align: center;">Kuantitas Pesan</th>
+                                    <th>Catatan Item (Opsional)</th>
+                                    <th style="width: 70px; text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
-                                    $oldItems = old('items');
-                                    if (!is_array($oldItems) || count($oldItems) == 0) {
-                                        $oldItems = [];
+                                    $rows = [];
+                                    if(old('items')) {
+                                        $oldItems = old('items');
+                                        $itemIds = array_filter(array_map(function($r) { return isset($r['item_id']) ? $r['item_id'] : null; }, $oldItems));
+                                        $itemModels = count($itemIds) ? \App\Item::whereIn('id', $itemIds)->get()->keyBy('id') : collect([]);
+                                        foreach($oldItems as $r) {
+                                            $iId = isset($r['item_id']) ? $r['item_id'] : null;
+                                            $rows[] = [
+                                                'item_id' => $iId,
+                                                'item'    => $iId && isset($itemModels[$iId]) ? $itemModels[$iId] : null,
+                                                'unit'    => isset($r['unit']) ? $r['unit'] : '',
+                                                'quantity'=> isset($r['quantity']) ? $r['quantity'] : '',
+                                                'notes'   => isset($r['notes']) ? $r['notes'] : ''
+                                            ];
+                                        }
+                                    } else {
                                         foreach($po->details as $d) {
-                                            $oldItems[] = [
+                                            $rows[] = [
                                                 'item_id' => $d->item_id,
-                                                'unit' => $d->item->unit,
-                                                'quantity' => (float)$d->quantity,
-                                                'notes' => $d->notes
+                                                'item'    => $d->item,
+                                                'unit'    => isset($d->item->unit) ? $d->item->unit : '',
+                                                'quantity'=> (float) $d->quantity,
+                                                'notes'   => $d->notes
                                             ];
                                         }
                                     }
                                 @endphp
 
-                                @foreach($oldItems as $idx => $row)
+                                @forelse($rows as $idx => $row)
                                     @php
-                                        $oldItemId = isset($row['item_id']) ? $row['item_id'] : '';
-                                        $oldUnit   = isset($row['unit']) ? $row['unit'] : '';
-                                        $oldQty    = isset($row['quantity']) ? $row['quantity'] : '';
-                                        $oldNotes  = isset($row['notes']) ? $row['notes'] : '';
+                                        $valId   = isset($row['item_id']) ? $row['item_id'] : '';
+                                        $valItem = isset($row['item']) ? $row['item'] : null;
+                                        $valUnit = isset($row['unit']) ? $row['unit'] : ($valItem ? $valItem->unit : '');
+                                        $valQty  = isset($row['quantity']) ? $row['quantity'] : '';
+                                        $valNotes= isset($row['notes']) ? $row['notes'] : '';
+                                        $displayCode = $valItem ? ($valItem->harmoni_code ?: $valItem->code) : '';
+                                        $name    = $valItem ? $valItem->name : 'Item #'.$valId;
                                     @endphp
-                                    <tr>
-                                        <td style="text-align: center;">
+                                    <tr class="item-row" data-item-id="{{ $valId }}">
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <div class="row-number">{{ $idx + 1 }}</div>
+                                            <input type="hidden" name="items[{{ $idx }}][item_id]" value="{{ $valId }}" class="item-id-input">
                                         </td>
-                                        <td>
-                                            <select name="items[{{ $idx }}][item_id]" class="form-control item-select">
-                                                <option value="">-- Cari Barang --</option>
-                                                @foreach($allItems as $item)
-                                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}"
-                                                        {{ $oldItemId == $item->id ? 'selected' : '' }}>
-                                                        [{{ $item->code }}] {{ $item->name }}
-                                                     </option>
-                                                @endforeach
-                                            </select>
+                                        <td style="vertical-align: middle;">
+                                            <div style="font-weight: 600; color: #1e293b; font-size: 13.5px;">
+                                                @if($displayCode)[{{ $displayCode }}] @endif{{ $name }}
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <input type="text" name="items[{{ $idx }}][unit]"
                                                    class="form-control unit-input"
-                                                   value="{{ $oldUnit }}" readonly tabindex="-1"
-                                                   placeholder="Auto" style="text-align: center;">
+                                                   value="{{ $valUnit }}" readonly tabindex="-1"
+                                                   placeholder="Auto" style="text-align: center; background-color: #f8fafc; font-weight: 600;">
                                         </td>
-                                        <td>
+                                        <td style="vertical-align: middle;">
                                             <input type="number" name="items[{{ $idx }}][quantity]"
                                                    class="form-control qty-input"
                                                    min="0.01" step="0.01" placeholder="0"
-                                                   value="{{ $oldQty }}" style="text-align: center;" required>
+                                                   value="{{ $valQty }}" style="text-align: center;" required>
                                         </td>
-                                        <td>
+                                        <td style="vertical-align: middle;">
                                             <input type="text" name="items[{{ $idx }}][notes]"
                                                    class="form-control"
                                                    placeholder="Catatan ukuran, merk, dll..."
-                                                   value="{{ $oldNotes }}">
+                                                   value="{{ $valNotes }}">
                                         </td>
-                                        <td style="text-align: center;">
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr id="empty-state-row">
+                                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">
+                                            <i class="fa fa-shopping-basket" style="font-size: 24px; display: block; margin-bottom: 6px; color: #cbd5e1;"></i>
+                                            Belum ada barang. Gunakan pencarian di atas untuk menambahkan barang ke tabel.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div style="background: #f8fafc; padding: 10px 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; gap:12px;">
+                <div style="background: #f8fafc; padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; gap:12px;">
                     <button type="submit" name="action" value="save" class="btn-draft">
                         <i class="fa fa-save"></i> <span>Simpan Perubahan</span>
                     </button>
@@ -590,26 +619,86 @@
     (function($) {
         'use strict';
 
-        function initSelect2($element) {
-            $element.select2({
-                placeholder: "-- Cari Barang --",
-                allowClear: true,
-                width: '100%'
-            });
-        }
-
         function renumberRows() {
-            $('#items-table tbody tr').each(function(index) {
+            var rows = $('#items-table tbody tr.item-row');
+            if (rows.length === 0) {
+                if ($('#empty-state-row').length === 0) {
+                    $('#items-table tbody').html(
+                        '<tr id="empty-state-row">' +
+                            '<td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">' +
+                                '<i class="fa fa-shopping-basket" style="font-size: 24px; display: block; margin-bottom: 6px; color: #cbd5e1;"></i>' +
+                                'Belum ada barang. Gunakan pencarian di atas untuk menambahkan barang ke tabel.' +
+                            '</td>' +
+                        '</tr>'
+                    );
+                }
+                return;
+            }
+
+            $('#empty-state-row').remove();
+            rows.each(function(index) {
                 $(this).find('.row-number').text(index + 1);
-                
-                $(this).find('select, input').each(function() {
-                    let name = $(this).attr('name');
+                $(this).find('input').each(function() {
+                    var name = $(this).attr('name');
                     if (name) {
-                        let newName = name.replace(/items\[\d+\]/, 'items[' + index + ']');
+                        var newName = name.replace(/items\[\d+\]/, 'items[' + index + ']');
                         $(this).attr('name', newName);
                     }
                 });
             });
+        }
+
+        function existsItemId(itemId) {
+            var found = false;
+            $('#items-table tbody input.item-id-input').each(function() {
+                if (parseInt($(this).val(), 10) === parseInt(itemId, 10)) {
+                    found = true;
+                }
+            });
+            return found;
+        }
+
+        function addItemToTable(it) {
+            if (!it || !it.id) return;
+            var itemId = it.id;
+
+            if (existsItemId(itemId)) {
+                alert('Barang ini sudah ada di dalam tabel.');
+                return;
+            }
+
+            $('#empty-state-row').remove();
+
+            var rowCount = $('#items-table tbody tr.item-row').length;
+            var displayCode = it.harmoni_code || it.code || '';
+
+            var tr = 
+                '<tr class="item-row" data-item-id="' + itemId + '">' +
+                    '<td style="text-align: center; vertical-align: middle;">' +
+                        '<div class="row-number">' + (rowCount + 1) + '</div>' +
+                        '<input type="hidden" name="items[' + rowCount + '][item_id]" value="' + itemId + '" class="item-id-input">' +
+                    '</td>' +
+                    '<td style="vertical-align: middle;">' +
+                        '<div style="font-weight: 600; color: #1e293b; font-size: 13.5px;">[' + displayCode + '] ' + (it.name || '') + '</div>' +
+                    '</td>' +
+                    '<td style="text-align: center; vertical-align: middle;">' +
+                        '<input type="text" name="items[' + rowCount + '][unit]" class="form-control unit-input" value="' + (it.unit || '') + '" readonly tabindex="-1" placeholder="Auto" style="text-align: center; background-color: #f8fafc; font-weight: 600;">' +
+                    '</td>' +
+                    '<td style="vertical-align: middle;">' +
+                        '<input type="number" name="items[' + rowCount + '][quantity]" class="form-control qty-input" min="0.01" step="0.01" placeholder="0" value="1" style="text-align: center;" required>' +
+                    '</td>' +
+                    '<td style="vertical-align: middle;">' +
+                        '<input type="text" name="items[' + rowCount + '][notes]" class="form-control" placeholder="Catatan ukuran, merk, dll...">' +
+                    '</td>' +
+                    '<td style="text-align: center; vertical-align: middle;">' +
+                        '<button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">' +
+                            '<i class="fa fa-trash"></i>' +
+                        '</button>' +
+                    '</td>' +
+                '</tr>';
+
+            $('#items-table tbody').append(tr);
+            renumberRows();
         }
 
         $(document).ready(function() {
@@ -621,78 +710,61 @@
                 allowInput: true     
             });
 
-            $('.item-select').each(function() {
-                initSelect2($(this));
-            });
-
-            // Set unit untuk item pre-filled dari database
-            $('#items-table tbody tr').each(function() {
-                let $row = $(this);
-                let $select = $row.find('.item-select');
-                let unit = $select.find('option:selected').data('unit');
-                if (unit) {
-                    $row.find('.unit-input').val(unit);
+            // Inisialisasi Item Picker (AJAX On-Demand)
+            var $picker = $('#itemPicker');
+            $picker.select2({
+                theme: 'bootstrap',
+                width: '100%',
+                placeholder: 'Pilih atau cari barang...',
+                allowClear: true,
+                minimumInputLength: 0,
+                ajax: {
+                    url: '{{ route("purchase-orders.lookup.items") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return { q: params.term };
+                    },
+                    processResults: function(data) {
+                        return { results: data };
+                    },
+                    cache: true
+                },
+                templateResult: function(item) {
+                    if (item.loading) return item.text;
+                    var displayCode = item.harmoni_code || item.code || '';
+                    return $(
+                        '<div style="padding:4px 0;">' +
+                            '<div style="font-weight:600; font-size:13px; color:#1e293b;">[' + displayCode + '] ' + (item.name || '') + '</div>' +
+                            '<div style="font-size:11px; color:#64748b;">Satuan: ' + (item.unit || '-') + '</div>' +
+                        '</div>'
+                    );
+                },
+                templateSelection: function(item) {
+                    return item.text || 'Ketik Nama atau Kode Barang...';
                 }
             });
 
-            $('#btn-add-row').on('click', function() {
-                let tbody = $('#items-table tbody');
-                let rowCount = tbody.find('tr').length;
-                
-                let newRow = `
-                    <tr>
-                        <td style="text-align: center;">
-                            <div class="row-number">${rowCount + 1}</div>
-                        </td>
-                        <td>
-                            <select name="items[${rowCount}][item_id]" class="form-control item-select">
-                                <option value="">-- Cari Barang --</option>
-                                @foreach($allItems as $item)
-                                    <option value="{{ $item->id }}" data-unit="{{ $item->unit }}">
-                                        [{{ $item->code }}] {{ $item->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="items[${rowCount}][unit]" class="form-control unit-input" readonly tabindex="-1" placeholder="Auto" style="text-align: center;">
-                        </td>
-                        <td>
-                            <input type="number" name="items[${rowCount}][quantity]" class="form-control qty-input" min="0.01" step="0.01" placeholder="0" style="text-align: center;" required>
-                        </td>
-                        <td>
-                            <input type="text" name="items[${rowCount}][notes]" class="form-control" placeholder="Catatan ukuran, merk, dll...">
-                        </td>
-                        <td style="text-align: center;">
-                            <button type="button" class="btn-delete btn-remove-row" title="Hapus Baris">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-
-                let $newRowObj = $(newRow);
-                tbody.append($newRowObj);
-                initSelect2($newRowObj.find('.item-select'));
+            $picker.on('select2:select', function(e) {
+                addItemToTable(e.params.data);
+                $(this).val(null).trigger('change');
             });
 
             $('#items-table').on('click', '.btn-remove-row', function() {
-                if ($('#items-table tbody tr').length > 1) {
+                if ($('#items-table tbody tr.item-row').length > 1) {
                     $(this).closest('tr').remove();
                     renumberRows();
                 } else {
-                    let row = $(this).closest('tr');
-                    row.find('select').val(null).trigger('change');
-                    row.find('input').val('');
+                    alert('Minimal harus ada 1 barang dalam Purchase Order.');
                 }
             });
 
-            $('#items-table').on('change', '.item-select', function() {
-                let $select = $(this);
-                let $row = $select.closest('tr');
-                let selectedOption = $select.find('option:selected');
-                let unit = selectedOption.data('unit');
-                $row.find('.unit-input').val(unit ? unit : '');
+            $('#po-form').on('submit', function(e) {
+                if ($('#items-table tbody tr.item-row').length === 0) {
+                    e.preventDefault();
+                    alert('Harap masukkan minimal 1 barang ke dalam tabel.');
+                    return false;
+                }
             });
         });
 

@@ -12,8 +12,8 @@
             Rencana pembelian barang. Belum dipesan ke supplier. Masih bisa diubah/dihapus.
         </li>
         <li>
-            <span class="badge badge-primary" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">ORDERED</span> : 
-            Barang sudah dipesan ke supplier (Status: **Dalam Pemesanan**). Kuantitas akan tampil di kolom "Sedang Dipesan".
+            <span class="badge badge-primary" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">ON ORDER</span> : 
+            Barang sudah dipesan ke supplier (Status: **On Order** / Dalam Pemesanan). Kuantitas akan tampil di kolom "Sedang Dipesan".
         </li>
         <li>
             <span class="badge badge-warning" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a;">PARTIAL</span> : 
@@ -158,7 +158,7 @@ select.form-control {
                     <select name="status" class="form-control">
                         <option value="all">Semua Status</option>
                         <option value="DRAFT" {{ $status == 'DRAFT' ? 'selected' : '' }}>DRAFT (Rencana)</option>
-                        <option value="ORDERED" {{ $status == 'ORDERED' ? 'selected' : '' }}>ORDERED (Dipesan)</option>
+                        <option value="ORDERED" {{ $status == 'ORDERED' ? 'selected' : '' }}>ON ORDER (Dalam Pemesanan)</option>
                         <option value="PARTIALLY_RECEIVED" {{ $status == 'PARTIALLY_RECEIVED' ? 'selected' : '' }}>PARTIAL (Diterima Sebagian)</option>
                         <option value="RECEIVED" {{ $status == 'RECEIVED' ? 'selected' : '' }}>RECEIVED (Selesai)</option>
                         <option value="CANCELLED" {{ $status == 'CANCELLED' ? 'selected' : '' }}>CANCELLED (Batal)</option>
@@ -217,7 +217,7 @@ select.form-control {
                             @if($po->status === 'DRAFT')
                                 <span class="badge badge-draft">Draft</span>
                             @elseif($po->status === 'ORDERED')
-                                <span class="badge badge-ordered">Ordered</span>
+                                <span class="badge badge-ordered">On Order</span>
                             @elseif($po->status === 'PARTIALLY_RECEIVED')
                                 <span class="badge badge-partial">Partial</span>
                             @elseif($po->status === 'RECEIVED')

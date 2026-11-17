@@ -12,7 +12,7 @@
     
     <ul class="help-list">
         <li>
-            <strong>Barang Sedang PO (Kuning):</strong> Jumlah jenis item barang yang saat ini dalam proses pemesanan ke supplier (status ORDERED atau PARTIALLY_RECEIVED).
+            <strong>Barang Sedang PO (Kuning):</strong> Jumlah jenis item barang yang saat ini dalam proses pemesanan ke supplier (status ON ORDER atau PARTIALLY_RECEIVED).
             <br><span style="font-size:11px; color:#64748b;">Tindakan: Klik untuk melihat daftar Purchase Order (PO).</span>
         </li>
         <li>

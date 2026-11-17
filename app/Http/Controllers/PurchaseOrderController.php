@@ -248,7 +248,7 @@ class PurchaseOrderController extends Controller
             DB::commit();
 
             $message = $status === 'ORDERED' 
-                ? 'Purchase Order berhasil dibuat dan berstatus dalam pemesanan.' 
+                ? 'Purchase Order berhasil dibuat dan berstatus On Order (dalam pemesanan).' 
                 : 'Rencana Pembelian berhasil disimpan sebagai Draft.';
 
             return redirect()->route('purchase-orders.index')->with('success', $message);
@@ -287,14 +287,7 @@ class PurchaseOrderController extends Controller
                 ->with('error', 'PO yang sudah selesai / dibatalkan tidak dapat diedit.');
         }
 
-        $allowedItemIds = $this->getAllowedItemIdsForCurrentUser();
-        $itemsQuery = Item::where('current_status', 'ACTIVE')->orderBy('name', 'asc');
-        if (is_array($allowedItemIds)) {
-            $itemsQuery->whereIn('id', $allowedItemIds);
-        }
-        $allItems = $itemsQuery->get();
-
-        return view('purchase_orders.edit', compact('po', 'allItems'));
+        return view('purchase_orders.edit', compact('po'));
     }
 
     public function update(Request $request, $id)
@@ -396,7 +389,7 @@ class PurchaseOrderController extends Controller
         $po->save();
 
         return redirect()->route('purchase-orders.show', $po->id)
-            ->with('success', 'Status PO berhasil diubah menjadi Dalam Pemesanan.');
+            ->with('success', 'Status PO berhasil diubah menjadi On Order (Dalam Pemesanan).');
     }
 
     public function cancel($id)
